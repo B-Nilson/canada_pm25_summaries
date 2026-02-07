@@ -4,23 +4,6 @@
 $(window).on('load', () => on_page_load("#analysis-of-past-6-months-of-pm2\\.5-observations"));  
 ```
 
-```{r set-options}
-#| echo: false
-
-options(width = 10000)
-knitr::opts_chunk$set(
-  warning = FALSE,
-  include = FALSE,
-  echo = FALSE,
-  fig.width = 12,
-  fig.height = 5,
-  fig.align = 'center',
-  out.width = "100%"
-)
-
-```
-
-
 ```{r setup}
 
 source("R/report-functions.R")
