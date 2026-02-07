@@ -8,22 +8,7 @@ $(window).on('load', () => on_page_load("#analysis-of-past-6-months-of-pm2\\.5-o
 
 source("R/report-functions.R")
 source("R/report-constants.R")
-extrafont::loadfonts(device = "all")
 
-## Uncomment for INIT run only
-# if(cache){
-#   extrafont::font_import(pattern = "Inter", prompt = FALSE)
-# }else{
-#   extrafont::font_import("~/.fonts", pattern = "Inter", prompt = FALSE)
-# }
-
-report_dir = "./"
-report_dir_esc = "\\./"
-
-months_in_seasons = list(
-  "Summer" = 5:10,
-  "Winter" = c(11:12, 1:4)
-)
 # Handle report start/end time
 date_range = get_report_start_end(report_dir,type =  "seasonal",
                                   months_in_seasons = months_in_seasons)

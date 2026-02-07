@@ -8,22 +8,11 @@ $(window).on('load', () => on_page_load("#analysis-of-past-month-of-pm2\\.5-obse
 
 source("R/report-functions.R")
 source("R/report-constants.R")
-extrafont::loadfonts(device = "all")
-
-## Uncomment for INIT run only
-# if(cache){
-#   extrafont::font_import(pattern = "Inter", prompt = FALSE)
-# }else{
-#   extrafont::font_import("~/.fonts", pattern = "Inter", prompt = FALSE)
-# }
 
 # run_location = "server"
 run_future_month = FALSE # If true, will run the next month, not the current month. WONT BE COMPLETE DATA
 
 # Inputs ------------------------------------------------------------------
-
-report_dir = "./"
-report_dir_esc = "\\./"
 
 # Handle report end time - 
 date_range = get_report_start_end(report_dir, "monthly", run_future_month)

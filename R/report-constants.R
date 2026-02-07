@@ -15,6 +15,22 @@ base_loc <- list(
 aqcsv_dir <- paste0(base_loc, 'data/AQCSV/')
 aqcsv_folders <- c(raw = "unvalidated", fem = "fem")
 
+# Output Locations ----
+
+report_dir = "./"
+report_dir_esc = "\\./"
+
+# Font(s) ----------
+
+## Uncomment for INIT run only
+# if(cache){
+#   extrafont::font_import(pattern = "Inter", prompt = FALSE)
+# }else{
+#   extrafont::font_import("~/.fonts", pattern = "Inter", prompt = FALSE)
+# }
+
+extrafont::loadfonts(device = "all")
+
 # File meta ------
 
 # AQCSV Header
@@ -141,4 +157,9 @@ prov_pretty <- list(
   YK = "Yukon",
   NT = "Northwest Territories",
   NU = "Nunavut"
+)
+
+months_in_seasons = list(
+  "Summer" = 5:10,
+  "Winter" = c(11:12, 1:4)
 )

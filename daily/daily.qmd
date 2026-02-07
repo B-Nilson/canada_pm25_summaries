@@ -8,10 +8,6 @@ $(window).on('load', () => on_page_load("#analysis-of-past-24-hours-of-pm2\\.5-o
 
 source("R/report-functions.R")
 source("R/report-constants.R")
-extrafont::loadfonts(device = "all")
-
-report_dir = "./"
-report_dir_esc = "\\./"
 
 # Handle report start/end time
 date_range = get_report_start_end(report_dir, "daily", run_future = FALSE)
