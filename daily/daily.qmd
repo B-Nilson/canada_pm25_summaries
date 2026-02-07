@@ -11,15 +11,13 @@ source("R/report-constants.R")
 
 # Handle report start/end time
 date_range = get_report_start_end(report_dir, "daily", run_future = FALSE)
-min_date = date_range[1]
-max_date = date_range[2]
 
-hours_to_summarise = seq(min_date, max_date, "1 hours")
+hours_to_summarise = seq(date_range[1], date_range[2], "1 hours")
 
 caption_range = paste(
-  min_date |> format("%b %d, %Y %H:%M UTC"),
+  date_range[1] |> format("%b %d, %Y %H:%M UTC"),
   "to",
-  max_date |> format("%b %d %H:%M UTC")
+  date_range[2] |> format("%b %d %H:%M UTC")
 )
 plot_captions = paste(
   "Obs. from Canadian",
@@ -35,7 +33,7 @@ plot_captions = paste(
 
 ```{r loadData, cache=cache }
 
-obs = load_report_data(min_date, max_date, max_pm25_allowed) |>
+obs = load_report_data(date_range[1], date_range[2], max_pm25_allowed) |>
   dplyr::mutate(prov_terr = factor(prov_terr, prov_pretty, names(prov_pretty)))
 
 .tmp = make_summaries(obs, type = "daily")
@@ -50,7 +48,7 @@ for (i in seq_along(.tmp)) {
 old_report_dropdown = handle_old_reports(
   report_dir,
   report_pattern = "[a,b]\\.html$",
-  max_date,
+  date_range[2],
   type = "daily"
 )
 
@@ -134,7 +132,7 @@ for (stat in c("mean", "max")) {
       stringr::str_to_lower() |>
       stringr::str_replace_all(" ", "_"),
     "_",
-    format(max_date, "%F-%Hz"),
+    format(date_range[2], "%F-%Hz"),
     ".png"
   ) |>
     setNames(monitor_groups)
@@ -268,7 +266,7 @@ plot_paths = paste0(
     stringr::str_to_lower() |>
     stringr::str_replace_all(" ", "_"),
   '_',
-  format(max_date, "%F-%Hz"),
+  format(date_range[2], "%F-%Hz"),
   ".html"
 ) |>
   setNames(monitor_groups) |>
@@ -507,7 +505,7 @@ plot_paths = paste0(
     stringr::str_to_lower() |>
     stringr::str_replace_all(" ", "_"),
   '_',
-  format(max_date, "%F-%Hz"),
+  format(date_range[2], "%F-%Hz"),
   ".html"
 ) |>
   setNames(monitor_groups) |>
@@ -747,7 +745,7 @@ plot_paths = report_dir |>
       stringr::str_to_lower() |>
       stringr::str_replace_all(" ", "_"),
     '_',
-    format(max_date, "%F-%Hz"),
+    format(date_range[2], "%F-%Hz"),
     ".png"
   ) |>
   setNames(monitor_groups) |>
@@ -860,7 +858,7 @@ plot_paths = paste0(
   "plots/zone_median_hourly_grid_",
   unlist(prov_order),
   '_',
-  format(max_date, "%F-%Hz"),
+  format(date_range[2], "%F-%Hz"),
   ".png"
 ) |>
   setNames(unlist(prov_order)) |>

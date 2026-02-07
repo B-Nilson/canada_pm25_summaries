@@ -14,15 +14,14 @@ run_future_month = FALSE # If true, will run the next month, not the current mon
 
 # Inputs ------------------------------------------------------------------
 
-# Handle report end time - 
 date_range = get_report_start_end(report_dir, "monthly", run_future_month)
-min_date = date_range[1]
-max_date = date_range[2]
 
-hours_to_summarise = seq(min_date, max_date, "1 hours")
+output_date_fmt <- format(date_range[2],"%Y-%m")
 
-caption_range = paste(min_date|> format("%b %d, %Y %H:%M UTC"), "to",
-                      max_date|> format("%b %d %H:%M UTC"))
+hours_to_summarise = seq(date_range[1], date_range[2], "1 hours")
+
+caption_range = paste(date_range[1]|> format("%b %d, %Y %H:%M UTC"), "to",
+                      date_range[2]|> format("%b %d %H:%M UTC"))
 plot_captions = paste("Obs. from Canadian", names(monitor_groups), 
                       "monitors from", caption_range) |>
   setNames(names(monitor_groups)) |> as.list()
@@ -31,9 +30,9 @@ plot_captions = paste("Obs. from Canadian", names(monitor_groups),
 ```{r loadData, cache=cache }
 
 # Load data from rds from last run if exists, if not, pull from database and create RDS
-rds_copy = file.path(report_dir, "data", format(min_date, "%Y_%m.rds"))
+rds_copy = file.path(report_dir, "data", format(date_range[1], "%Y_%m.rds"))
 if(!file.exists(rds_copy)){
-  obs = load_report_data(min_date, max_date, max_pm25_allowed) |>
+  obs = load_report_data(date_range[1], date_range[2], max_pm25_allowed) |>
     dplyr::mutate(prov_terr = factor(prov_terr, prov_pretty, names(prov_pretty)))
   saveRDS(obs, rds_copy)
 }else{
@@ -199,7 +198,7 @@ coverage = dplyr::bind_rows(pop_coverage, fnic_coverage)
 
 old_report_dropdown = report_dir |>
   handle_old_reports(report_pattern = "\\d\\.html$",
-                     max_date, type = "monthly")
+                     date_range[2], type = "monthly")
 
 ```
 
@@ -278,7 +277,7 @@ for(stat in c("mean", "max")){
     monitor_groups |> 
       stringr::str_to_lower() |> 
       stringr::str_replace_all(" ", "_"),
-    "_", format(max_date, "%Y-%m"), ".png"
+    "_", output_date_fmt, ".png"
   ) |> setNames(monitor_groups)
   
   # Make and save donut plots
@@ -289,7 +288,7 @@ for(stat in c("mean", "max")){
           pth = plot_paths[[stat]][[m]]
           pd[[stat]] |> 
             make_donut_plot(labels, m |> stringr::str_remove(" Only"), 
-                            stringr::str_to_title(stat), format(max_date, "%b.")) |> 
+                            stringr::str_to_title(stat), format(date_range[2], "%b.")) |> 
             ggsave(filename = pth, dpi = 300, units = fig_dims$u, 
                    height = fig_dims$h, width = fig_dims$w)
       }
@@ -320,7 +319,7 @@ p_pa = subset(.tmp, monitor =="PA")
 <details>
 <summary>Click for an automated text summary.</summary>
 
-There was <strong>`r sum(p_fem$n)` FEM sites</strong> and <strong>`r sum(p_pa$n)` PA sites</strong> reporting PM<sub>2.5</sub> in Canada in `r format(max_date, "%B %Y")`. <strong>
+There was <strong>`r sum(p_fem$n)` FEM sites</strong> and <strong>`r sum(p_pa$n)` PA sites</strong> reporting PM<sub>2.5</sub> in Canada in `r format(date_range[2], "%B %Y")`. <strong>
 
 - `r  p_fem$p[4]`%</strong> of the FEM sites had a 1-month mean exceeding 100 &mu;g m<sup>-3</sup>, <strong> `r p_fem$p[3]`%</strong> were between 60 and 100 &mu;g m<sup>-3</sup>, and <strong> `r p_fem$p[2]`%</strong> were between 30 and 60 &mu;g m<sup>-3</sup>.<strong> 
 
@@ -389,7 +388,7 @@ coverage_barcharts = lapply(c_types,
 
 plot_paths =  paste0(report_dir,
     "plots/coverage_", c_types, 
-    "_", format(max_date, "%Y-%m"), ".png"
+    "_", output_date_fmt, ".png"
   ) |> 
   as.list() |>
   setNames(c_types)
@@ -402,7 +401,7 @@ for(ct in names(plot_paths)){
 plot_text = paste(
   "Estimated percentage of Canadian %c within 25 km of a",
   "regulatory (FEM) and/or low-cost PurpleAir (PA) PM<sub>2.5</sub> monitor",
-  "during the month of", format(max_date, "%B, %Y."),
+  "during the month of", format(date_range[2], "%B, %Y."),
   "The patterned section shows overlapping coverage of the two networks (i.e. %c covered by both networks).",
   "Data for %c sourced from %s.")
 
@@ -499,7 +498,7 @@ reg_summ = td |>
 <details>
 <summary>Click for an automated text summary.</summary>
 
-Across Canada, `r dplyr::filter(reg_summ, Region == "Canada")$p_total[1]`% of the population (`r dplyr::filter(reg_summ, Region == "Canada")$p_rural[1]`% of rural and `r dplyr::filter(reg_summ, Region == "Canada")$p_urban[1]`% of urban) and `r dplyr::filter(reg_summ, Region == "Canada")$p_fnic[1]`% of Indigenous communities were within 25 km of a regulatory or low-cost PurpleAir PM<sub>2.5</sub> monitor in `r format(max_date, "%B of %Y")`.
+Across Canada, `r dplyr::filter(reg_summ, Region == "Canada")$p_total[1]`% of the population (`r dplyr::filter(reg_summ, Region == "Canada")$p_rural[1]`% of rural and `r dplyr::filter(reg_summ, Region == "Canada")$p_urban[1]`% of urban) and `r dplyr::filter(reg_summ, Region == "Canada")$p_fnic[1]`% of Indigenous communities were within 25 km of a regulatory or low-cost PurpleAir PM<sub>2.5</sub> monitor in `r format(date_range[2], "%B of %Y")`.
 
 In the west, `r dplyr::filter(reg_summ, Region == "West")$p_total[1]`% of the *total population* was within 25 km of a PA or FEM PM<sub>2.5</sub> monitor (`r dplyr::filter(p_summ, pt == "BC")$p_total[1]`% for BC, `r dplyr::filter(p_summ, pt == "AB")$p_total[1]`% for AB, `r dplyr::filter(p_summ, pt == "SK")$p_total[1]`% for SK and `r dplyr::filter(p_summ, pt == "MB")$p_total[1]`% for MB). For the central provinces, `r dplyr::filter(reg_summ, Region == "Central")$p_total[1]`% of the population (`r dplyr::filter(p_summ, pt == "ON")$p_total[1]`% for ON and `r dplyr::filter(p_summ, pt == "QC")$p_total[1]`% for QC) was within 25 km of a PM<sub>2.5</sub> monitor. In the east, `r dplyr::filter(reg_summ, Region == "East")$p_total[1]`% of the population (`r dplyr::filter(p_summ, pt == "NS")$p_total[1]`% for NS, `r dplyr::filter(p_summ, pt == "NB")$p_total[1]`% for NB, `r dplyr::filter(p_summ, pt == "NL")$p_total[1]`% for NL and `r dplyr::filter(p_summ, pt == "PE")$p_total[1]`% for PE) was within 25 km of a PM<sub>2.5</sub> monitor. For the territories, `r dplyr::filter(reg_summ, Region == "North")$p_total[1]`% of the population (`r dplyr::filter(p_summ, pt == "YK")$p_total[1]`% for YT, `r dplyr::filter(p_summ, pt == "NT")$p_total[1]`% for NT and `r dplyr::filter(p_summ, pt == "NU")$p_total[1]`% for NU) was within 25 km of a PM<sub>2.5</sub> monitor.
 
@@ -568,9 +567,9 @@ coverage_table
 legend_title = "Daily Mean<br>PM<sub>2.5</sub> (μg m<sup>-3</sup>)"
 
 plot_text = "Interactive map summarizing the daily mean concentrations from both FEM and PA monitors by forecast zone for the month. You can use the control menu in the top right to step through the days in the month. If you hover over a forecast zone a summary popup will appear for that zone for the displayed day."
-plot_title = paste0("Animated Map of Daily Forecast Zone Mean PM<sub>2.5</sub> for ",format(max_date,"%B %Y"))
+plot_title = paste0("Animated Map of Daily Forecast Zone Mean PM<sub>2.5</sub> for ",format(date_range[2],"%B %Y"))
 plot_path = paste0(report_dir, "plots/fcstzone_mean_map_daily_", 
-                    format(max_date,"%Y-%m"),".html")
+                    output_date_fmt,".html")
 
 
 # To add slider controls see jsfiddle.net/qs6dL200
@@ -582,13 +581,13 @@ mapview::mapshot(map, plot_path,libdir="./libs",selfcontained= FALSE)
 # Monthly Zone Summaries ----------------------------------------------------
 
 plot2_text = "Interactive map summarizing the monthly mean concentrations from both FEM and PA monitors by forecast zone. On the left the mean values are presented, and max values are presented on the right. If you hover over a forecast zone a summary popup will appear for that zone."
-plot2_title = paste0("Map of Forecast Zone Mean [left] and Max [right] for ",format(max_date,"%B %Y"))
+plot2_title = paste0("Map of Forecast Zone Mean [left] and Max [right] for ",format(date_range[2],"%B %Y"))
 plot2_path = paste0(report_dir, "plots/fcstzone_mean_map_", 
-                    format(max_date,"%Y-%m"),".html")
+                    output_date_fmt,".html")
 
 legend_titles = list()
 legend_titles$pm25 = legend_title |>
-    stringr::str_replace("Daily", format(max_date,"%b."))
+    stringr::str_replace("Daily", format(date_range[2],"%b."))
 legend_titles$pm25_max = legend_titles$pm25 |> 
   stringr::str_replace("Mean", "Max")
 
@@ -646,13 +645,13 @@ wd = worst_day_df |>
 <details>
 <summary>Click for an automated text summary.</summary>
 
-There was <strong>`r aqhi_p_counts$FEM[4]` FEM monitors</strong> and <strong>`r aqhi_p_counts$PA[4]` PA monitors</strong> in Canada with a mean PM<sub>2.5</sub> concentration for `r format(max_date, "%B %Y")` <strong>exceeding 100 &mu;g m<sup>-3</sup></strong>
+There was <strong>`r aqhi_p_counts$FEM[4]` FEM monitors</strong> and <strong>`r aqhi_p_counts$PA[4]` PA monitors</strong> in Canada with a mean PM<sub>2.5</sub> concentration for `r format(date_range[2], "%B %Y")` <strong>exceeding 100 &mu;g m<sup>-3</sup></strong>
 
 `r paste0(ifelse(nrow(very_high_fem_by_prov), "* ",""), format_count_summary(very_high_fem_by_prov,"FEM","exceeding 100"))`
 
 `r paste0(ifelse(nrow(very_high_pa_by_prov), "* ",""), format_count_summary(very_high_pa_by_prov,"PA","exceeding 100"))`
 
-There was <strong>`r aqhi_p_counts$FEM[3]` FEM monitors</strong> and <strong>`r aqhi_p_counts$PA[3]` PA monitors</strong> in Canada with a mean PM<sub>2.5</sub> concentration for `r format(max_date, "%B %Y")` <strong>between 60 and 100 &mu;g m<sup>-3</sup></strong>
+There was <strong>`r aqhi_p_counts$FEM[3]` FEM monitors</strong> and <strong>`r aqhi_p_counts$PA[3]` PA monitors</strong> in Canada with a mean PM<sub>2.5</sub> concentration for `r format(date_range[2], "%B %Y")` <strong>between 60 and 100 &mu;g m<sup>-3</sup></strong>
 
 `r paste0(ifelse(nrow(high_fem_by_prov), "* ",""),format_count_summary(high_fem_by_prov,"FEM","between 60 and 100"))`
 
@@ -700,7 +699,7 @@ plot_paths = report_dir |>
          monitor_groups |> 
            stringr::str_to_lower() |> 
            stringr::str_replace_all(" ","_"),
-         '_', format(max_date,"%Y-%m"), ".png") |> 
+         '_', output_date_fmt, ".png") |> 
   setNames(monitor_groups) |> as.list()
 
 # Make and save plots
@@ -714,7 +713,7 @@ plot_paths = report_dir |>
   # Make plots
   ggs = lapply(names(pd), \(stat){
     pd[[stat]] |>
-      make_grid_plot(xlab = paste("Day of", format(max_date, "%B")),
+      make_grid_plot(xlab = paste("Day of", format(date_range[2], "%B")),
                      stat = stringr::str_to_title(stat), 
                      caption = ifelse(stat == names(pd)[2], plot_captions[[m]], ""))
   })
@@ -798,7 +797,7 @@ grid_data = make_grid_data(obs, median, type = "monthly", fcst_zones)
 # Make paths to plot files
 plot_paths = paste0(report_dir, "plots/zone_median_daily_grid_", 
                     unlist(prov_order), 
-                    '_', format(max_date,"%Y-%m"),".png") |> 
+                    '_', output_date_fmt,".png") |> 
   setNames(unlist(prov_order)) |> as.list()
 
 # Make and save plots
@@ -808,7 +807,7 @@ plots = lapply(unlist(prov_order), \(p) {
     subset(as.character(z) == p) |>
     dplyr::arrange(y) 
   pd |>
-    make_grid_plot(xlab = paste("Day of", format(max_date, "%B")), 
+    make_grid_plot(xlab = paste("Day of", format(date_range[2], "%B")), 
                    ylab = paste(p,"Forecast Zone"),
                    stat = "Median", 
                    small_text = TRUE,
@@ -937,7 +936,7 @@ pd = obs_summary |>
 plot_paths = paste0(report_dir, "plots/site_mean_boxplots_", 
                     monitor_groups |> 
                       stringr::str_to_lower() |> stringr::str_replace_all(" ","_"), 
-                    '_', format(max_date,"%Y-%m"),".html") |> 
+                    '_', output_date_fmt,".html") |> 
   setNames(monitor_groups) |> as.list()
 # MAke and save plots
 .tmp = lapply(monitor_groups, \(m){
@@ -986,9 +985,9 @@ vals = list(
 <details>
 <summary>Click for an automated text summary.</summary>
 
-`r vals[[1]]$M` (a `r vals[[1]]$T` monitor located `r vals[[1]]$D` km from `r vals[[1]]$C`) in `r vals[[1]]$P` had the highest observed hourly PM<sub>2.5</sub> concentration in Canada from the FEM network for `r format(max_date,"%B %Y")` (`r vals[[1]]$PM` &mu;g m<sup>-3</sup>). During this period, `r vals[[2]]$M` (a `r vals[[2]]$T` monitor located `r vals[[2]]$D` km from `r vals[[2]]$C`) in `r vals[[2]]$P` had the highest 1-month mean in Canada from the FEM network (`r round(vals[[2]]$PM,1)`&mu;g m<sup>-3</sup>).
+`r vals[[1]]$M` (a `r vals[[1]]$T` monitor located `r vals[[1]]$D` km from `r vals[[1]]$C`) in `r vals[[1]]$P` had the highest observed hourly PM<sub>2.5</sub> concentration in Canada from the FEM network for `r format(date_range[2],"%B %Y")` (`r vals[[1]]$PM` &mu;g m<sup>-3</sup>). During this period, `r vals[[2]]$M` (a `r vals[[2]]$T` monitor located `r vals[[2]]$D` km from `r vals[[2]]$C`) in `r vals[[2]]$P` had the highest 1-month mean in Canada from the FEM network (`r round(vals[[2]]$PM,1)`&mu;g m<sup>-3</sup>).
 
-`r vals[[3]]$M` (a `r vals[[3]]$T` monitor located `r vals[[3]]$D` km from `r vals[[3]]$C`) in `r vals[[3]]$P` had the highest observed hourly PM<sub>2.5</sub> concentration in Canada from the PA network for `r format(max_date,"%B %Y")` (`r vals[[3]]$PM` &mu;g m<sup>-3</sup>). During this period, `r vals[[4]]$M` (a `r vals[[4]]$T` monitor located `r vals[[4]]$D` km from `r vals[[4]]$C`) in `r vals[[4]]$P` had the highest 1-month mean in Canada from the PA network (`r round(vals[[4]]$PM,1)`&mu;g m<sup>-3</sup>).
+`r vals[[3]]$M` (a `r vals[[3]]$T` monitor located `r vals[[3]]$D` km from `r vals[[3]]$C`) in `r vals[[3]]$P` had the highest observed hourly PM<sub>2.5</sub> concentration in Canada from the PA network for `r format(date_range[2],"%B %Y")` (`r vals[[3]]$PM` &mu;g m<sup>-3</sup>). During this period, `r vals[[4]]$M` (a `r vals[[4]]$T` monitor located `r vals[[4]]$D` km from `r vals[[4]]$C`) in `r vals[[4]]$P` had the highest 1-month mean in Canada from the PA network (`r round(vals[[4]]$PM,1)`&mu;g m<sup>-3</sup>).
   
 </details>
 
@@ -1047,7 +1046,7 @@ pd = obs_summary2 |>
 # Make paths to files for saving plots
 plot_paths = paste0(report_dir, "plots/communities_veryHigh_hours_", 
                     monitor_groups |> stringr::str_to_lower() |> stringr::str_replace_all(" ","_"), 
-                    '_', format(max_date,"%Y-%m"),".html") |> 
+                    '_', output_date_fmt,".html") |> 
   setNames(monitor_groups) |> as.list()
 # MAke and save plots
 .tmp = lapply(monitor_groups, \(m){
@@ -1096,7 +1095,7 @@ vals = list(
 <details>
 <summary>Click for an automated text summary.</summary>
 
-`r vals[[1]]$C` (a community in `r vals[[1]]$P` with `r vals[[1]]$NFEM` FEM and `r vals[[1]]$NPA` PA monitors within at least `r vals[[1]]$D` km) had the highest observed hourly PM<sub>2.5</sub> concentration in Canada for `r format(max_date, "%B %Y")` (`r vals[[1]]$PM2` &mu;g m<sup>-3</sup>). During this period, `r vals[[2]]$C` (a community in `r vals[[2]]$P` with `r vals[[2]]$NFEM` FEM and `r vals[[2]]$NPA` PA monitors within at least `r vals[[2]]$D` km) had the highest 1-month mean in Canada (`r round(vals[[2]]$PM1,1)` &mu;g m<sup>-3</sup>).
+`r vals[[1]]$C` (a community in `r vals[[1]]$P` with `r vals[[1]]$NFEM` FEM and `r vals[[1]]$NPA` PA monitors within at least `r vals[[1]]$D` km) had the highest observed hourly PM<sub>2.5</sub> concentration in Canada for `r format(date_range[2], "%B %Y")` (`r vals[[1]]$PM2` &mu;g m<sup>-3</sup>). During this period, `r vals[[2]]$C` (a community in `r vals[[2]]$P` with `r vals[[2]]$NFEM` FEM and `r vals[[2]]$NPA` PA monitors within at least `r vals[[2]]$D` km) had the highest 1-month mean in Canada (`r round(vals[[2]]$PM1,1)` &mu;g m<sup>-3</sup>).
 
 `r vals[[3]]$C` (a community in `r vals[[3]]$P` with `r vals[[3]]$NFEM` FEM and `r vals[[3]]$NPA` PA monitors within at least `r vals[[3]]$D` km)  had `r vals[[3]]$H1` hours where at least one monitor exceeded 100 &mu;g m<sup>-3</sup> and `r vals[[3]]$H2` hours where at least one monitor exceeded 60 &mu;g m<sup>-3</sup>.
   
@@ -1323,7 +1322,7 @@ dl = dat1 |>
   dplyr::mutate("Day(s) of Month w/ 12+ hours Above 100 μg/m3" = paste0("'",`Day(s) of Month w/ 12+ hours Above 100 μg/m3`)) |>
    download_this(
     output_name = "fcst_zone_pm25_summaries_" |> 
-      paste0(max(obs$date) |> format("%Y-%m")),
+      paste0(output_date_fmt),
     output_extension = ".csv",sep = ",",
     button_label = "Download data as csv",
     button_type = "default",
