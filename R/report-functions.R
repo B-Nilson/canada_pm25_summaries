@@ -1,3 +1,17 @@
+make_plot_captions <- function(
+  date_range,
+  date_format = "%b %d, %Y %H:%M UTC",
+  networks = c("FEM", "PA")
+) {
+  date_range <- sort(date_range) |> format(date_format)
+  caption_range <- paste(date_range, collapse = " to ")
+
+  "Obs. from Canadian %s monitors from %s" |>
+    sprintf(networks, caption_range) |>
+    setNames(networks) |>
+    as.list()
+}
+
 pop_coverage_barchart <- function(pd, pop_type = "total", leg_rows = 1) {
   prov_order <- list(
     West = c(
