@@ -18,7 +18,9 @@ date_range = get_report_start_end(report_dir, "monthly", run_future_month)
 
 output_date_fmt <- format(date_range[2],"%Y-%m")
 
-hours_to_summarise = seq(date_range[1], date_range[2], "1 hours")
+hours_to_summarise <- date_range |> 
+  handyr::as_interval() |> 
+  seq(by = "1 hours")
 
 caption_range = paste(date_range[1]|> format("%b %d, %Y %H:%M UTC"), "to",
                       date_range[2]|> format("%b %d %H:%M UTC"))
