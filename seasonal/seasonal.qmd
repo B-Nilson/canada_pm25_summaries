@@ -10,6 +10,7 @@ source("R/report-functions.R")
 source("R/report-constants.R")
 
 date_range <- report_dir |> 
+  file.path("seasonal") |>
   get_report_start_end(
     type = "seasonal", 
     months_in_seasons = months_in_seasons,

@@ -12,6 +12,7 @@ source("R/report-constants.R")
 run_future_month = FALSE # If true, will run the next month, not the current month. WONT BE COMPLETE DATA
 
 date_range <- report_dir |> 
+  file.path("monthly") |> 
   get_report_start_end(type = "monthly", run_future = run_future_month)
 
 output_date_fmt <- date_range[2] |> format("%Y-%m")

@@ -11,6 +11,7 @@ source("R/report-constants.R")
 
 # Handle report start/end time
 date_range <- report_dir |> 
+  file.path("daily") |> 
   get_report_start_end(type = "daily", run_future = FALSE)
 
 hours_to_summarise <- date_range |> 
