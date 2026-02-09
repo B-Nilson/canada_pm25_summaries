@@ -9,14 +9,12 @@ $(window).on('load', () => on_page_load("#analysis-of-past-month-of-pm2\\.5-obse
 source("R/report-functions.R")
 source("R/report-constants.R")
 
-# run_location = "server"
 run_future_month = FALSE # If true, will run the next month, not the current month. WONT BE COMPLETE DATA
 
-# Inputs ------------------------------------------------------------------
+date_range <- report_dir |> 
+  get_report_start_end(type = "monthly", run_future = run_future_month)
 
-date_range = get_report_start_end(report_dir, "monthly", run_future_month)
-
-output_date_fmt <- format(date_range[2],"%Y-%m")
+output_date_fmt <- date_range[2] |> format("%Y-%m")
 
 hours_to_summarise <- date_range |> 
   handyr::as_interval() |> 

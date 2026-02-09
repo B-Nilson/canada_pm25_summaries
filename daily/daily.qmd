@@ -10,7 +10,8 @@ source("R/report-functions.R")
 source("R/report-constants.R")
 
 # Handle report start/end time
-date_range = get_report_start_end(report_dir, "daily", run_future = FALSE)
+date_range <- report_dir |> 
+  get_report_start_end(type = "daily", run_future = FALSE)
 
 hours_to_summarise <- date_range |> 
   handyr::as_interval() |> 
