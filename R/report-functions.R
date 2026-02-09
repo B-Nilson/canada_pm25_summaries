@@ -259,7 +259,7 @@ get_season_end <- function(
   )
 ) {
   is_winter <- season |> stringr::str_detect("Winter")
-  season_end_months <- months_in_seasons |> lapply(dplyr::last)
+  season_end_months <- months_in_seasons |> lapply(dplyr::last) |> lapply(as.character)
   season |>
     stringr::str_replace("Winter", season_end_months$Winter) |>
     stringr::str_replace("Summer", season_end_months$Summer) |>
