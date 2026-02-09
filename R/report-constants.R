@@ -163,3 +163,20 @@ months_in_seasons = list(
   "Summer" = 5:10,
   "Winter" = c(11:12, 1:4)
 )
+
+# Forecast Zones ---
+
+fcst_zones <- canadata::forecast_zones |>
+  dplyr::select(prov_terrs, fcst_zone = name_en, fcst_zone_fr = name_fr)
+
+fcst_zones_clean <- fcst_zones |>
+  handyr::sf_as_df() |>
+  dplyr::select(prov_terr = prov_terrs, fcst_zone) |>
+  tidyr::separate_longer_delim(cols = prov_terr, delim = ",") |>
+  dplyr::mutate(
+    prov_terr = prov_terr |>
+      factor(levels(canadata::provinces_and_territories$abbreviation))
+  )
+
+prov_terr_zone_counts <- fcst_zones_clean |>
+  dplyr::summarise(n_zones = dplyr::n(), .by = prov_terr)

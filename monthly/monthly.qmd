@@ -38,7 +38,7 @@ if(!file.exists(rds_copy)){
   obs = readRDS(rds_copy)
 }
 
-.tmp = make_summaries(obs, type = "monthly")
+.tmp = make_summaries(obs, type = "monthly", fcst_zones = fcst_zones)
 for (i in seq_along(.tmp)) assign(names(.tmp)[i], .tmp[[i]])
 
 ```
@@ -788,7 +788,6 @@ plot_paths[['PA Only']] |>
 #### Region Level {.tabset}
 
 ```{r grids_fcst, include= FALSE}
-fcst_zones = get_fcst_zones(rds_path = paths$polys$fcst_zones$rds)
 
 # Make data for fcst_zone grid plots
 grid_data = make_grid_data(obs, median, type = "monthly", fcst_zones)
@@ -818,51 +817,6 @@ plots = lapply(unlist(prov_order), \(p) {
 plot_texts = paste0(
   "Daily median PM<sub>2.5</sub> concentrations for all monitors (FEM and PA) within each forecast zone for ",unlist(prov_order),". A white cell indicates there was no data for that day from any monitor within that zone. Zones are grouped into those with and those without data and are sorted alphabetically."
 )  |> setNames(unlist(prov_order)) |> as.list()
-
-### NOT SURE IF THIS CODE IS USED ANYMORE
-  
-# fcst_zone_totals = fcst_zones |> 
-#   data.frame() |>
-#   dplyr::bind_rows(fcst_zones@data |> subset(PROVINCE_C |> stringr::str_detect(","))) |>
-#   dplyr::mutate(PROVINCE_C = ifelse(duplicated(NAME), 
-#                              (PROVINCE_C |> stringr::str_split(",", simplify = TRUE))[,2],
-#                              (PROVINCE_C |> stringr::str_split(",", simplify = TRUE))[,1])) |>
-#   dplyr::group_by(PROVINCE_C) |>
-#   dplyr::summarise(total_zones = n()) |>
-#   dplyr::rename(prov = PROVINCE_C) |>
-#   dplyr::mutate(prov=ifelse(prov == "YT","YK",prov))
-# 
-# pd2 = obs |>
-#   dplyr::group_by(y = fcst_zone, x= lubridate::day(date)|>factor(unique(lubridate::day(date))), z = prov_terr, monitor)|>
-#   dplyr::summarise(fill = quantile(pm25,0.5,na.rm=TRUE) |> aqhi_p()) |>
-#   dplyr::full_join(expand.grid(y = obs$fcst_zone |> unique(), 
-#                         x = day_order |>factor(day_order)) |>
-#               dplyr::left_join(subset(obs, !duplicated(fcst_zone)) |>
-#                           dplyr::select(y = fcst_zone, z = prov_terr), by = "y"), by = c('y','x','z')) |>
-#   dplyr::group_by(monitor, z,y) |>
-#   dplyr::summarise(n = n()) |>
-#   dplyr::group_by(monitor, prov = z) |>
-#   dplyr::summarise(n_fem_only = n()) |> subset(monitor == "FEM")
-# 
-# p = pd |>
-#   subset(!all_missing & y != "Not inside a zone")  |>
-#   dplyr::group_by(prov = z) |>
-#   dplyr::summarise(n_covered = n()/24)|>
-#   dplyr::full_join(data.frame(prov = names(prov_pretty)), by = "prov")  |>
-#   dplyr::left_join(fcst_zone_totals, by = "prov") |>
-#   dplyr::left_join(pd2, by = "prov") |>
-#   dplyr::mutate(p = round(n_covered / total_zones * 100) |> paste0("%"),
-#          p_fem = round(n_fem_only / total_zones * 100) |> paste0("%"),
-#          n_covered = ifelse(is.na(n_covered),0,n_covered)) |>
-#   dplyr::select(-monitor)
-# 
-# make_text = function(p, province){
-#   tmp = p |> subset(prov == province)
-#   tmp$p = ifelse(is.na(tmp$n_fem_only),"0%", tmp$p)
-#   tmp$p_fem = ifelse(is.na(tmp$n_fem_only),"0%", tmp$p_fem)
-#   
-#   paste(htmltools::tags$strong(tmp$p),"of the",htmltools::tags$strong(tmp$total_zones), "forecast zones in", province, "have a FEM or PA reporting data this month. Without PA monitors", htmltools::tags$strong(tmp$p_fem), "of the forecast zones have data.")
-# }
 
 # Make summary data for automated text for this section
 .tmp = grid_data |>
@@ -1284,9 +1238,10 @@ dat1 = obs_summary |>
       as.numeric() |> sort() |>
       shorten_number_list()
   ) |>
-  dplyr::left_join(fcst_zones |> 
-              dplyr::select(fcst_zone, zone_prov = prov_terr), 
-            by = "fcst_zone") |>
+  dplyr::left_join(
+    fcst_zones |> dplyr::select(fcst_zone, zone_prov = prov_terrs), 
+    by = "fcst_zone"
+  ) |>
   dplyr::mutate(zone_prov = zone_prov |> stringr::str_replace("YT","YK")) |>
   dplyr::mutate(fcst_zone = iconv(fcst_zone, to = "ASCII//TRANSLIT"),
          n_monitors = paste0(n_monitors, " (",n_fem," FEM, ",n_pa," PA)"),

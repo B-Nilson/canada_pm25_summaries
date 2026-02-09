@@ -666,7 +666,8 @@ get_active_fire_data <- function() {
 make_summaries <- function(
   obs,
   type = c("daily", "monthly", "seasonal")[1],
-  municipality_csv = NULL
+  municipality_csv = NULL,
+  fcst_zones
 ) {
   obs_summary <- obs |>
     # Mark days where multiple hours exceeded 100 ug/m3
@@ -729,8 +730,6 @@ make_summaries <- function(
 
   obs_current <- obs |>
     dplyr::filter(date == max(date))
-
-  fcst_zones <- get_fcst_zones(rds_path = paths$polys$fcst_zones$rds)
 
   zone_summaries <- obs_summary |>
     dplyr::ungroup() |>

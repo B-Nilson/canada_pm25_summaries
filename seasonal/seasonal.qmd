@@ -35,8 +35,6 @@ plot_captions <- date_range |>
 
 ```{r loadData, cache=cache }
 
-fcst_zones <- canadata::forecast_zones
-
 season_rds =  paste0(report_dir, "data/", report_season,"_obs.rds")
 
 if(!file.exists(season_rds)){
@@ -51,7 +49,7 @@ if(!file.exists(season_rds)){
   obs = readRDS(season_rds)
 }
 
-# .tmp = make_summaries(obs, type = "daily")
+# .tmp = make_summaries(obs, type = "seasonal", fcst_zones = fcst_zones)
 # for (i in seq_along(.tmp)) assign(names(.tmp)[i], .tmp[[i]])
 
 ```
@@ -414,7 +412,7 @@ seasonal_zone_summaries = obs |>
   ) |>
   dplyr::ungroup() |>
   dplyr::filter(!is.na(fcst_zone)) |>
-  dplyr::full_join(fcst_zones |> dplyr::select(fcst_zone = NAME), by = "fcst_zone") |>
+  dplyr::full_join(fcst_zones |> dplyr::select(fcst_zone), by = "fcst_zone") |> # TODO: what if duplicate fcst zone name between provinces?
   dplyr::mutate(
     n = handyr::swap(n, what = NA, with = 0), 
     n_fem = handyr::swap(n_fem, what = NA, with = 0), 
@@ -706,18 +704,6 @@ table
 # Define dimensions for output figures
 fig_dims = list(h = 8, w = 11, u = 'in')
 
-fcst_zones_clean = fcst_zones |>
-  data.frame() |>
-  dplyr::select(-geometry, -fcst_zones_fr) 
-
-fcst_zones_clean = fcst_zones_clean |>
-  dplyr::mutate(prov_terr = stringr::str_replace_all(prov_terr, ",.*", "")) |>
-  dplyr::bind_rows(
-    fcst_zones_clean |> 
-      dplyr::filter(stringr::str_detect(prov_terr, ",")) |>
-      dplyr::mutate(prov_terr = stringr::str_replace_all(prov_terr, ".*,", ""))
-  )
-
 test_data = obs  |>
   dplyr::group_by(date, prov_terr, fcst_zone) |>
   dplyr::summarise(pm25 = mean(pm25, na.rm = TRUE))  |>
@@ -730,10 +716,7 @@ pd$max = test_data |>
               factor(levels(aqhip))) |>
   dplyr::group_by(prov_terr, date, aqhip) |>
   dplyr::summarise(n = n()) |>
-  dplyr::full_join(fcst_zones_clean |> 
-              dplyr::group_by(prov_terr = unlist(prov_pretty[prov_terr])) |>
-              dplyr::summarise(n_zones = n()), 
-            by = "prov_terr") |>
+  dplyr::full_join(prov_terr_zone_counts, by = "prov_terr") |>
   dplyr::ungroup() |>
   dplyr::mutate(n = ifelse(is.na(aqhip), 0, n),
          p = n / (n_zones),
@@ -744,10 +727,7 @@ pd$median = test_data |>
       factor(levels(aqhip))) |>
   dplyr::group_by(prov_terr, date, aqhip) |>
   dplyr::summarise(n = n()) |>
-  dplyr::full_join(fcst_zones_clean |> 
-              dplyr::group_by(prov_terr = unlist(prov_pretty[prov_terr])) |>
-              dplyr::summarise(n_zones = n()), 
-            by = "prov_terr") |>
+  dplyr::full_join(prov_terr_zone_counts, by = "prov_terr") |>
   dplyr::ungroup() |>
   dplyr::mutate(n = ifelse(is.na(aqhip), 0, n),
          p = n / (n_zones),
@@ -987,14 +967,6 @@ table
 ```{r }
 # Define dimensions for output figures
 fig_dims = list(h = NA, w = 11, u = 'in') # height depends on # of events
-
-fcst_zones_clean = fcst_zones |>
-  dplyr::mutate(prov_terr = stringr::str_replace_all(prov_terr, ",.*", "")) |>
-  dplyr::bind_rows(
-    fcst_zones_clean |> 
-      dplyr::filter(stringr::str_detect(prov_terr, ",")) |>
-      dplyr::mutate(prov_terr = stringr::str_replace_all(prov_terr, ".*,", ""))
-  )
 
 meta = obs |>
   dplyr::group_by(monitor)|>
