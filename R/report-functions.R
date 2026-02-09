@@ -197,160 +197,257 @@ join_list_sentence <- function(l, oxford = FALSE) {
   return(out)
 }
 
+get_last_report_date <- function(
+  report_dir,
+  type,
+  months_in_seasons = list(
+    "Summer" = 5:10,
+    "Winter" = c(11:12, 1:4)
+  ),
+  index_exists = FALSE
+) {
+  report_patterns <- list(
+    daily = "[a,b]\\.html$",
+    monthly = "\\d\\.html$",
+    seasonal = "Summer\\.html|Winter\\.html"
+  )
+
+  season_end_month <- months_in_seasons |>
+    lapply(\(months) dplyr::last(months) |> as.character())
+
+  last_report_name <- report_dir |>
+    list.files(pattern = report_patterns[[type]], recursive = TRUE) |>
+    sort() |>
+    dplyr::last() |>
+    stringr::str_remove("\\.html")
+
+  if (index_exists) {
+    if (is.na(last_report_name)) {
+      last_report_name <- lubridate::now(tzone = "UTC") |>
+        get_previous_report_name(
+          type = type,
+          months_in_seasons = months_in_seasons
+        )
+    }
+  }
+  if (is.na(last_report_name)) {
+    return(NULL)
+  }
+
+  is_winter <- last_report_name |>
+    stringr::str_detect("Winter")
+
+  dplyr::case_when(
+    type == "daily" ~ last_report_name |>
+      stringr::str_replace("-b$", " 23") |>
+      stringr::str_replace("-a$", " 11") |>
+      lubridate::ymd_h(),
+    type == "monthly" ~ last_report_name |>
+      lubridate::ym() |>
+      lubridate::ceiling_date("1 months") -
+      lubridate::hours(1),
+    type == "seasonal" ~ last_report_name |>
+      get_season_end(months_in_seasons = months_in_seasons)
+  )
+}
+
+get_season_end <- function(
+  season,
+  months_in_seasons = list(
+    "Summer" = 5:10,
+    "Winter" = c(11:12, 1:4)
+  )
+) {
+  is_winter <- season |> stringr::str_detect("Winter")
+  season_end_months <- months_in_seasons |> lapply(dplyr::last)
+  season |>
+    stringr::str_replace("Winter", season_end_months$Winter) |>
+    stringr::str_replace("Summer", season_end_months$Summer) |>
+    lubridate::ym() |>
+    lubridate::as_datetime(tz = "UTC") |>
+    lubridate::ceiling_date("1 months") -
+    lubridate::hours(1) -
+    lubridate::years(ifelse(is_winter, 1, 0))
+}
+
 get_report_start_end <- function(
   report_dir,
   type = c("daily", "monthly", "seasonal")[1],
   run_future = FALSE,
-  months_in_seasons = NULL
+  months_in_seasons = list(
+    "Summer" = 5:10,
+    "Winter" = c(11:12, 1:4)
+  )
 ) {
-  index_exists <- file.exists(paste0(report_dir, "index.html"))
+  index_exists <- file.exists(file.path(report_dir, "index.html"))
+  now <- lubridate::now(tzone = "UTC")
+  last_report_date <- report_dir |>
+    get_last_report_date(
+      type = type,
+      months_in_seasons = months_in_seasons,
+      index_exists = index_exists
+    )
 
   if (type == "daily") {
-    last_report_date <- "../../deployments/reports/daily" |>
-      list.files(pattern = "[a,b]\\.html$") |>
-      sort() |>
-      dplyr::last() |>
-      stringr::str_remove("\\.html") |>
-      stringr::str_replace("-b$", " 23") |>
-      stringr::str_replace("-a$", " 11") |>
-      lubridate::ymd_h()
-
-    index_exists <- file.exists("../../deployments/reports/daily/index.html")
-
-    max_date <- Sys.time() |>
-      lubridate::with_tz("UTC") |>
-      lubridate::floor_date("12 hours")
-    max_date <- max_date - lubridate::hours(1)
-
-    if (!is.na(last_report_date)) {
-      if (max_date > (last_report_date + lubridate::hours(12))) {
-        cache <- FALSE
-        max_date <- last_report_date +
-          lubridate::hours(ifelse(index_exists, 24, 12))
-      }
+    max_date <- now |> lubridate::floor_date("12 hours") - lubridate::hours(1)
+    if (!is.null(last_report_date)) {
+      max_date <- pmin(
+        last_report_date + lubridate::hours(12),
+        max_date
+      )
     }
     min_date <- max_date - lubridate::hours(23)
   } else if (type == "monthly") {
-    last_report_date <- list.files(
-      "../../deployments/reports/monthly",
-      pattern = "\\d\\.html$"
-    ) |>
-      sort() |>
-      dplyr::last() |>
-      stringr::str_remove("\\.html") |>
-      lubridate::ym() |>
-      lubridate::ceiling_date("1 months")
-    last_report_date <- last_report_date - lubridate::hours(1)
+    max_date <- now |> lubridate::floor_date("1 month") - lubridate::hours(1)
 
-    next_report_date <- (last_report_date + lubridate::hours(2)) |>
-      lubridate::ceiling_date("1 months")
-    next_report_date <- next_report_date - lubridate::hours(1)
-
-    index_exists <- file.exists("../deployments/reports/monthly/index.html")
-
-    if (index_exists) {
-      next_report_date <- (next_report_date + lubridate::hours(2)) |>
-        lubridate::ceiling_date("1 months")
-      next_report_date <- next_report_date - lubridate::hours(1)
-    }
-
-    max_date <- Sys.time() |>
-      lubridate::with_tz("UTC") |>
-      lubridate::floor_date("1 month")
-    max_date <- max_date - lubridate::hours(1)
-
-    if (!is.na(last_report_date)) {
-      if (max_date > next_report_date) {
-        cache <- FALSE
-        max_date <- next_report_date
-      }
-    }
     if (run_future) {
       max_date <- (max_date + lubridate::hours(2)) |>
-        lubridate::ceiling_date("1 months")
-      max_date <- max_date - lubridate::hours(1)
+        lubridate::ceiling_date("1 months") -
+        lubridate::hours(1)
     }
-
-    min_date <- (max_date - lubridate::days(32)) |>
-      lubridate::ceiling_date("1 months")
-  } else if (type == "seasonal") {
-    last_report <- list.files(
-      report_dir,
-      pattern = "Summer\\.html|Winter\\.html"
-    ) |>
-      sort() |>
-      dplyr::last()
-    if (is.na(last_report)) {
-      last_report <- get_season(
-        Sys.time() - lubridate::days(30 * 6),
-        months_in_seasons
+    if (!is.null(last_report_date)) {
+      max_date <- pmin(
+        (last_report_date + lubridate::hours(2)) |>
+          lubridate::ceiling_date("1 months") -
+          lubridate::hours(1),
+        max_date
       )
     }
-    last_report_date <- last_report |>
-      stringr::str_remove("\\.html") |>
-      stringr::str_replace(
-        "Winter",
-        dplyr::last(months_in_seasons$Winter) |> as.character()
-      ) |>
-      stringr::str_replace(
-        "Summer",
-        dplyr::last(months_in_seasons$Summer) |> as.character()
-      ) |>
-      lubridate::ym() |>
-      lubridate::ceiling_date("1 months")
-    last_report_date <- last_report_date - lubridate::hours(1)
-    if (stringr::str_detect(last_report, "Winter")) {
-      last_report_date <- last_report_date + lubridate::years(1)
+
+    min_date <- max_date |> lubridate::floor_date("1 months")
+  } else if (type == "seasonal") {
+    max_date <- (now - lubridate::days(ifelse(run_future, 0, 30 * 6))) |>
+      get_season(months_in_season = months_in_seasons) |>
+      get_season_end(months_in_seasons = months_in_seasons)
+
+    if (!is.null(last_report_date)) {
+      max_date <- pmin(
+        (last_report_date + lubridate::days(30 * 6)) |>
+          get_season(months_in_seasons = months_in_seasons) |>
+          get_season_end(months_in_seasons = months_in_seasons),
+        max_date
+      )
     }
 
-    if (lubridate::month(last_report_date) %in% months_in_seasons$Winter) {
-      next_report_date <- lubridate::ym(paste(
-        lubridate::year(last_report_date),
-        dplyr::last(months_in_seasons$Summer)
-      )) |>
-        lubridate::ceiling_date("1 months")
-      next_report_date <- next_report_date - lubridate::hours(1)
-    } else {
-      next_report_date <- lubridate::ym(paste(
-        lubridate::year(last_report_date) + 1,
-        dplyr::last(months_in_seasons$Winter)
-      )) |>
-        lubridate::ceiling_date("1 months")
-      next_report_date <- next_report_date - lubridate::hours(1)
-    }
-
-    if (index_exists) {
-      next_report_date <- last_report_date + lubridate::years(1)
-    }
-
-    max_date <- Sys.time() |>
-      lubridate::with_tz("UTC") |>
-      lubridate::floor_date("1 hour")
-
-    if (!is.na(last_report_date)) {
-      if (max_date > next_report_date) {
-        cache <- FALSE
-        max_date <- next_report_date
-      }
-    }
     is_winter <- lubridate::month(max_date) %in% months_in_seasons$Winter
-    if (is_winter) {
-      min_date <- lubridate::ymd_h(paste(
-        lubridate::year(max_date) - 1,
-        first(months_in_seasons$Winter),
-        "1 0"
-      ))
-    } else {
-      min_date <- lubridate::ymd_h(paste(
-        lubridate::year(max_date),
-        first(months_in_seasons$Summer),
-        "1 0"
-      ))
-    }
+    season_name <- ifelse(is_winter, "Winter", "Summer")
+    min_date <- (lubridate::year(max_date) - ifelse(is_winter, 1, 0)) |>
+      paste(dplyr::first(months_in_seasons[[season_name]])) |>
+      lubridate::ym() |>
+      lubridate::as_datetime(tz = "UTC")
   } else {
     stop("Report type not supported")
   }
   return(c(min_date, max_date))
+}
+
+
+get_report_name <- function(
+  max_date,
+  type,
+  months_in_seasons = list(
+    "Summer" = 5:10,
+    "Winter" = c(11:12, 1:4)
+  )
+) {
+  date_fmt <- dplyr::case_when(
+    type == "daily" ~ "%Y-%m-%d %H",
+    type %in% c("monthly", "seasonal") ~ "%Y-%m"
+  )
+  report_name <- max_date |> format(date_fmt)
+
+  if (type == "daily") {
+    report_name <- report_name |>
+      stringr::str_replace(" 11$", "-a") |>
+      stringr::str_replace(" 23$", "-b")
+  } else if (type == "seasonal") {
+    report_name <- max_date |>
+      get_season(months_in_seasons = months_in_seasons)
+  }
+
+  return(report_name)
+}
+
+get_previous_report_name <- function(
+  current_report_date,
+  type,
+  months_in_seasons = list(
+    "Summer" = 5:10,
+    "Winter" = c(11:12, 1:4)
+  )
+) {
+  if (type == "daily") {
+    period <- lubridate::hours(12)
+    drpdwn_date_fmt <- "%Y %b %d (%p)"
+  } else if (type == "monthly") {
+    period <- lubridate::days(32)
+    drpdwn_date_fmt <- "%B %Y"
+  } else if (type == "seasonal") {
+    period <- lubridate::days(183)
+  } else {
+    stop("Other types not supported!")
+  }
+  (current_report_date - period) |>
+    get_report_name(type = type, months_in_seasons = months_in_seasons)
+}
+
+parse_report_name <- function(report_name, type) {
+  if (type != "seasonal") {
+    drpdwn_date_fmt <- type |>
+      dplyr::recode_values(
+        from = c("daily", "monthly"),
+        to = c("%Y %b %d (%p)", "%B %Y")
+      )
+
+    existing_reports_parsed <- existing_reports |>
+      stringr::str_remove("\\.html") |>
+      stringr::str_replace("-a$", " 00") |>
+      stringr::str_replace("-b$", " 12") |>
+      lubridate::parse_date_time(date_fmt) -
+      lubridate::hours(ifelse(type == "daily", 1, 0))
+    existing_reports_parsed <- existing_reports_parsed |>
+      format(drpdwn_date_fmt)
+  } else {
+    existing_reports_parsed <- existing_reports |>
+      stringr::str_replace("-", " ") |>
+      stringr::str_remove("\\.html")
+  }
+}
+
+make_old_reports_dropdown <- function(
+  report_paths,
+  report_names,
+  button_label = "Select previous reports",
+  dropdown_label = "Select a Report"
+) {
+  dropdown_entries <- '<a class="dropdown-item" href="%s">%s</a>' |>
+    sprintf(
+      paste0("./", report_paths),
+      report_names
+    ) |>
+    paste(collapse = "\n    ")
+
+  menu_style <- "max-height:210px; overflow-y:auto;"
+
+  '
+<div class="dropdown">
+  <button class="btn dropdown-toggle" type="button" \
+    style="font-weight:bold;" id="dropdownMenuButton" \
+    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      %s
+  </button>
+  <h6 class="dropdown-header">%s</h6>
+  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="%s">
+    %s
+  </div>
+</div>' |>
+    sprintf(
+      button_label,
+      dropdown_label,
+      menu_style,
+      dropdown_entries
+    ) |>
+    htmltools::HTML()
 }
 
 handle_old_reports <- function(
@@ -359,114 +456,46 @@ handle_old_reports <- function(
   max_date,
   type = c("daily", "monthly", "seasonal")[1]
 ) {
-  all_reports <- list.files(report_dir, pattern = report_pattern) |>
+  index_exists <- file.exists(paste0(report_dir, "index.html"))
+  existing_reports <- report_dir |>
+    list.files(pattern = report_pattern) |>
     sort(decreasing = TRUE)
-
-  if (type == "daily") {
-    period <- lubridate::hours(12)
-    date_fmt <- "%Y-%m-%d %H"
-    drpdwn_date_fmt <- "%Y %b %d (%p)"
-  } else if (type == "monthly") {
-    period <- lubridate::days(32)
-    date_fmt <- "%Y-%m"
-    drpdwn_date_fmt <- "%B %Y"
-  } else if (type == "seasonal") {
-    period <- lubridate::days(183)
-    date_fmt <- "%Y-%m"
-  } else {
-    stop("Other types not supported!")
+  if (length(existing_reports) > 0) {
+    names(existing_reports) <- existing_reports |> stringr::str_split_1("\\.")
   }
 
-  ## Move  index.html to YYYY-MM.html if not done so already
-  if (file.exists(paste0(report_dir, "index.html"))) {
-    previous_report <- (max_date - period) |>
-      format(date_fmt)
-
-    if (type == "daily") {
-      previous_report <- previous_report |>
-        stringr::str_replace(" 11$", "-a") |>
-        stringr::str_replace(" 23$", "-b")
-    }
-
-    if (type == "seasonal") {
-      previous_report <- previous_report |>
-        stringr::str_replace("-05$", "-Winter") |>
-        stringr::str_replace("-10$", "-Summer")
-      if (stringr::str_detect(previous_report, "Winter")) {
-        previous_report <- previous_report |>
-          stringr::str_replace(
-            "\\d{4}",
-            as.character(
-              as.numeric(stringr::str_extract(previous_report, "\\d{4}")) - 1
-            )
-          )
-      }
-    }
-
-    if (length(all_reports)) {
-      names(all_reports) <- stringr::str_split(
-        all_reports,
-        "\\.",
-        simplify = TRUE
-      )[, 1]
-
-      if (!previous_report %in% names(all_reports)) {
-        file.copy(
-          paste0(report_dir, "index.html"),
-          paste0(report_dir, previous_report, ".html")
-        )
-      }
-    } else {
-      file.copy(
-        paste0(report_dir, "index.html"),
-        paste0(report_dir, previous_report, ".html")
+  # Rename index.html if not done so already
+  if (index_exists) {
+    previous_report <- max_date |>
+      get_previous_report_name(
+        type = type,
+        months_in_seasons = months_in_seasons
       )
+
+    index_path <- paste0(report_dir, "index.html")
+    new_path <- paste0(report_dir, previous_report, ".html")
+    need_to_rename <- (length(existing_reports) &
+      !previous_report %in% names(existing_reports)) |
+      length(existing_reports) == 0
+    if (need_to_rename) {
+      index_path |> file.copy(new_path)
+      existing_reports <- existing_reports |> c(previous_report)
+    } else {
+      "Either no historic reports, or the report for %s already exists - not renaming index.html." |>
+        sprintf(previous_report) |>
+        warning()
     }
   }
 
-  all_reports <- list.files(report_dir, pattern = report_pattern) |>
-    sort(decreasing = TRUE)
+  existing_reports_parsed <- existing_reports |>
+    parse_report_name(type = type)
 
-  if (type != "seasonal") {
-    all_reports_parsed <- all_reports |>
-      stringr::str_remove("\\.html") |>
-      stringr::str_replace("-a$", " 00") |>
-      stringr::str_replace("-b$", " 12") |>
-      lubridate::parse_date_time(date_fmt)
-    if (type == "daily") {
-      all_reports_parsed <- all_reports_parsed - lubridate::hours(1)
-    }
-    all_reports_parsed <- all_reports_parsed |>
-      format(drpdwn_date_fmt)
-  } else {
-    all_reports_parsed <- all_reports |>
-      stringr::str_replace("-", " ") |>
-      stringr::str_remove("\\.html")
-  }
-
-  paste0(
-    '
-  <div class="dropdown">
-    <button class="btn dropdown-toggle" type="button" \
-    style="font-weight:bold;" id="dropdownMenuButton" \
-    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-  Select previous reports here
-    </button>
-    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="max-height:210px; overflow-y:auto;">
-      <h6 class="dropdown-header">Select a Report</h6>',
-    paste0(
-      '<a class="dropdown-item" href="',
-      paste0("./", all_reports),
-      '">',
-      all_reports_parsed,
-      '</a>'
-    ) |>
-      paste(collapse = "\n    "),
-    '
-    </div>
-  </div>'
-  ) |>
-    htmltools::HTML()
+  paste("./historic/", existing_reports) |>
+    make_old_reports_dropdown(
+      report_names = existing_reports_parsed,
+      button_label = "Select previous reports",
+      dropdown_label = "Select a Report"
+    )
 }
 
 # Data Wrangling ------------
