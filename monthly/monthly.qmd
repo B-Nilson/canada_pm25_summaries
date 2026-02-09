@@ -29,8 +29,8 @@ plot_captions <- date_range |>
 # Load data from rds from last run if exists, if not, pull from database and create RDS
 rds_copy = file.path(report_dir, "data", format(date_range[1], "%Y_%m.rds"))
 if(!file.exists(rds_copy)){
-  obs = load_report_data(date_range[1], date_range[2], max_pm25_allowed) |>
-    dplyr::mutate(prov_terr = factor(prov_terr, prov_pretty, names(prov_pretty)))
+  obs <- date_range |> 
+    load_report_data(max_pm25_allowed = max_pm25_allowed)
   saveRDS(obs, rds_copy)
 }else{
   obs = readRDS(rds_copy)

@@ -24,8 +24,8 @@ plot_captions <- date_range |>
 
 ```{r loadData, cache=cache }
 
-obs = load_report_data(date_range[1], date_range[2], max_pm25_allowed) |>
-  dplyr::mutate(prov_terr = factor(prov_terr, prov_pretty, names(prov_pretty)))
+obs <- date_range |> 
+  load_report_data(max_pm25_allowed = max_pm25_allowed)
 
 .tmp = make_summaries(obs, type = "daily", fcst_zones = fcst_zones)
 for (i in seq_along(.tmp)) {
