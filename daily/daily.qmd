@@ -14,9 +14,7 @@ date_range <- report_dir |>
   file.path("daily") |> 
   get_report_start_end(type = "daily", run_future = FALSE)
 
-hours_to_summarise <- date_range |> 
-  handyr::as_interval() |> 
-  seq(by = "1 hours")
+hours_to_summarise <- date_range |> make_hourly_seq()
 
 plot_captions <- date_range |> 
   make_plot_captions(networks = names(monitor_groups))

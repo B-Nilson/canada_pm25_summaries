@@ -1,3 +1,9 @@
+make_hourly_seq <- function(date_range) {
+  date_range |>
+    handyr::as_interval() |>
+    seq(by = "1 hours")
+}
+
 make_plot_captions <- function(
   date_range,
   date_format = "%b %d, %Y %H:%M UTC",
