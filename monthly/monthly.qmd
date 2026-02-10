@@ -556,7 +556,7 @@ legend_titles$pm25 = legend_title |>
 legend_titles$pm25_max = legend_titles$pm25 |> 
   stringr::str_replace("Mean", "Max")
 
-map = make_sync_map(summaries$monthly_by_zone), 
+map = make_sync_map(summaries$monthly_by_zone, 
                     cols = c("pm25", "pm25_max"), 
                     legend_titles)
 
