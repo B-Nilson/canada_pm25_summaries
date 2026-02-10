@@ -61,6 +61,9 @@ make_old_reports_dropdown <- function(
   button_label = "Select previous reports",
   dropdown_label = "Select a Report"
 ) {
+  if (length(report_paths) == 0) {
+    return("<p>No previous reports available at this time.</p>")
+  }
   dropdown_entries <- '<a class="dropdown-item" href="%s">%s</a>' |>
     sprintf(report_paths, report_names) |>
     paste(collapse = "\n    ")
