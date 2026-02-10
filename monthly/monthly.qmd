@@ -10,59 +10,67 @@ source("R/report-functions.R")
 source("R/report-constants.R")
 report_dir <- report_dir |> file.path("monthly")
 
-date_range <- report_dir |> 
+date_range <- report_dir |>
   get_report_start_end(type = "monthly", run_future = run_current_month)
-
-output_date_fmt <- date_range[2] |> format("%Y-%m")
 
 hours_to_summarise <- date_range |> make_hourly_seq()
 
-plot_captions <- date_range |> 
+output_date_fmt <- date_range[2] |> format("%Y-%m")
+
+plot_timestamp <- date_range[2] |>
+  format("%Y-%m")
+
+plot_captions <- date_range |>
   make_plot_captions(networks = names(monitor_groups))
 
 ```
 
 ```{r load_data}
 
-obs <- date_range |> 
+obs <- date_range |>
   load_report_data(
     meta_cols = meta_cols,
     cache_path = file.path(report_dir, "index_obs.rds") # used when db not available
   )
 
 summaries <- obs |>
-  make_summaries(type = "monthly", fcst_zones = fcst_zones, meta_cols = meta_cols)
+  make_summaries(
+    type = "monthly",
+    fcst_zones = fcst_zones,
+    meta_cols = meta_cols
+  )
 
 ```
 
 ```{r getNetworkCoverage}
 
-
 pop_rds = "../resources/spatial/canada_gridded_pop_census_2016.rds"
-# If pop rds doesnt exist 
-if(!file.exists(pop_rds)){
-  neg_to_zero = \(x) ifelse(x<0,0,x)
+# If pop rds doesnt exist
+if (!file.exists(pop_rds)) {
+  neg_to_zero = \(x) ifelse(x < 0, 0, x)
   # Load gridded pop. data
-  pop_shp = file.path("../resources/spatial/griddedPopulationCanada10km_2016_shp",
-                      "griddedPopulationCanada10km_2016.shp")
+  pop_shp = file.path(
+    "../resources/spatial/griddedPopulationCanada10km_2016_shp",
+    "griddedPopulationCanada10km_2016.shp"
+  )
   pop_gridded = read_sf(pop_shp) |>
     # Choose desired columns (+geometry)
     dplyr::select(total = TOT_POP2A, urban = UR_POP2A, rural = RU_POP2A) |>
     # For some reason total not always urban + rural
     # This combines urban and rural as well as any extra pop in the total column
-    dplyr::mutate(total = urban + rural + neg_to_zero(total - urban - rural) ) |>
+    dplyr::mutate(total = urban + rural + neg_to_zero(total - urban - rural)) |>
     # Drop 0 pop cells
-    dplyr::filter(total > 0)|>
+    dplyr::filter(total > 0) |>
     st_transform(crs = "WGS84")
-  
+
   # Flag by prov/terr
   pt = readRDS("../resources/spatial/aqmap_selection_zones.rds")[-14] |>
     dplyr::select(prov_terr = name)
   pop_gridded = st_join(pop_gridded, pt, left = TRUE, largest = TRUE)
-  
-  # Save RDS 
+
+  # Save RDS
   saveRDS(pop_gridded, pop_rds)
-}else{
+} else {
   # Otherwise, just use the rds
   pop_gridded = readRDS(pop_rds)
 }
@@ -77,11 +85,17 @@ pop_gridded_coverage = pop_gridded |>
   dplyr::mutate(
     cellID = 1:n(),
     has_nearby_fem = dplyr::filter(locs, monitor == "FEM") |>
-      slice(st_nearest_feature(pop_centers, dplyr::filter(locs, monitor == "FEM"))) |>
+      slice(st_nearest_feature(
+        pop_centers,
+        dplyr::filter(locs, monitor == "FEM")
+      )) |>
       st_distance(x = pop_centers, by_element = TRUE),
-    has_nearby_fem = as.numeric(has_nearby_fem) < 25000, 
+    has_nearby_fem = as.numeric(has_nearby_fem) < 25000,
     has_nearby_pa = dplyr::filter(locs, monitor == "PA") |>
-      slice(st_nearest_feature(pop_centers, dplyr::filter(locs, monitor == "PA"))) |>
+      slice(st_nearest_feature(
+        pop_centers,
+        dplyr::filter(locs, monitor == "PA")
+      )) |>
       st_distance(x = pop_centers, by_element = TRUE),
     has_nearby_pa = as.numeric(has_nearby_pa) < 25000,
     has_nearby_monitor = has_nearby_fem | has_nearby_pa
@@ -90,12 +104,21 @@ pop_gridded_coverage = pop_gridded |>
 # Summarise PA / FEM / PA+FEM coverage by prov/terr
 pop_coverage = pop_gridded_coverage |>
   # Flag province region
-  flag_region() 
+  flag_region()
 pop_coverage = pop_coverage |>
-  dplyr::bind_rows(dplyr::mutate(pop_coverage, region = "Canada", prov_terr = "Canada")) |>
-  dplyr::mutate(region = factor(region, c("West", "Central", "East", "North", "Canada")),
-         prov_terr = factor(prov_terr, c(unlist(prov_pretty), "Canada"), 
-                              c(names(prov_pretty), "CAN"))) |>
+  dplyr::bind_rows(dplyr::mutate(
+    pop_coverage,
+    region = "Canada",
+    prov_terr = "Canada"
+  )) |>
+  dplyr::mutate(
+    region = factor(region, c("West", "Central", "East", "North", "Canada")),
+    prov_terr = factor(
+      prov_terr,
+      c(unlist(prov_pretty), "Canada"),
+      c(names(prov_pretty), "CAN")
+    )
+  ) |>
   data.frame() |> # drop spatial column for time saving
   # Mark cells as having nearby FEM, PA, or both
   # dplyr::group_by(cellID) |>
@@ -103,7 +126,10 @@ pop_coverage = pop_coverage |>
   #        has_nearby_pa = any(has_nearby_monitor[network == "PA Only"])) |>
   # Get pop covered/uncovered in each prov/terr by each network
   dplyr::group_by(region, prov_terr, has_nearby_fem, has_nearby_pa) |>
-  dplyr::summarise(dplyr::across(c(total, urban, rural), \(x) sum(x, na.rm = TRUE)), .groups = "drop") |>
+  dplyr::summarise(
+    dplyr::across(c(total, urban, rural), \(x) sum(x, na.rm = TRUE)),
+    .groups = "drop"
+  ) |>
   # Better network description
   dplyr::mutate(
     network = dplyr::case_when(
@@ -111,10 +137,15 @@ pop_coverage = pop_coverage |>
       has_nearby_fem ~ "FEM Only",
       has_nearby_pa ~ "PA Only",
       TRUE ~ "No Monitor"
-    ) |> factor(c("FEM Only", "FEM and PA", "PA Only", "No Monitor"))
+    ) |>
+      factor(c("FEM Only", "FEM and PA", "PA Only", "No Monitor"))
   ) |>
   dplyr::select(-has_nearby_pa, -has_nearby_fem) |>
-  tidyr::pivot_longer(c(total, urban, rural), names_to = "pop_type", values_to = "pop") |>
+  tidyr::pivot_longer(
+    c(total, urban, rural),
+    names_to = "pop_type",
+    values_to = "pop"
+  ) |>
   # dplyr::group_by(region) |>
   # tidyr::complete(prov_terr, network, pop_type) |>
   dplyr::mutate(pop = ifelse(is.na(pop), 0, pop)) |>
@@ -122,7 +153,7 @@ pop_coverage = pop_coverage |>
   dplyr::group_by(region, prov_terr, pop_type) |>
   dplyr::mutate(
     total_pop = sum(pop, na.rm = TRUE),
-    p_pop = round(pop / total_pop,3)
+    p_pop = round(pop / total_pop, 3)
   )
 
 ## FNIC coverage (First Nations and Inuit Communities == FNIC)
@@ -135,11 +166,17 @@ fnic_locs_coverage = fnic_locs |>
   dplyr::mutate(
     cellID = 1:n(),
     has_nearby_fem = dplyr::filter(locs, monitor == "FEM") |>
-      slice(st_nearest_feature(fnic_locs, dplyr::filter(locs, monitor == "FEM"))) |>
+      slice(st_nearest_feature(
+        fnic_locs,
+        dplyr::filter(locs, monitor == "FEM")
+      )) |>
       st_distance(x = fnic_locs, by_element = TRUE),
-    has_nearby_fem = as.numeric(has_nearby_fem) < 25000, 
+    has_nearby_fem = as.numeric(has_nearby_fem) < 25000,
     has_nearby_pa = dplyr::filter(locs, monitor == "PA") |>
-      slice(st_nearest_feature(fnic_locs, dplyr::filter(locs, monitor == "PA"))) |>
+      slice(st_nearest_feature(
+        fnic_locs,
+        dplyr::filter(locs, monitor == "PA")
+      )) |>
       st_distance(x = fnic_locs, by_element = TRUE),
     has_nearby_pa = as.numeric(has_nearby_pa) < 25000,
     has_nearby_monitor = has_nearby_fem | has_nearby_pa
@@ -148,15 +185,24 @@ fnic_locs_coverage = fnic_locs |>
 data.table::fwrite(fnic_locs_coverage, "../../outputs/fnic_coverage.csv")
 
 fnic_coverage = fnic_locs_coverage |>
-  dplyr::bind_rows(dplyr::mutate(fnic_locs_coverage, region = "Canada", prov_terr = "Canada")) |>
-  dplyr::mutate(region = factor(region, c("West", "Central", "East", "North", "Canada")),
-         prov_terr = factor(prov_terr, c(unlist(prov_pretty), "Canada"), 
-                              c(names(prov_pretty), "CAN"))) |>
+  dplyr::bind_rows(dplyr::mutate(
+    fnic_locs_coverage,
+    region = "Canada",
+    prov_terr = "Canada"
+  )) |>
+  dplyr::mutate(
+    region = factor(region, c("West", "Central", "East", "North", "Canada")),
+    prov_terr = factor(
+      prov_terr,
+      c(unlist(prov_pretty), "Canada"),
+      c(names(prov_pretty), "CAN")
+    )
+  ) |>
   data.frame() |> # drop spatial column for time saving
   # Mark cells as having nearby FEM, PA, or both
   # dplyr::group_by(cellID) |>
   # dplyr::mutate(has_nearby_fem = any(has_nearby_monitor[network == "FEM Only"]),
-         # has_nearby_pa = any(has_nearby_monitor[network == "PA Only"])) |>
+  # has_nearby_pa = any(has_nearby_monitor[network == "PA Only"])) |>
   # Get fnic covered/uncovered in each prov/terr by each network
   dplyr::group_by(region, prov_terr, has_nearby_fem, has_nearby_pa) |>
   dplyr::summarise(pop = sum(rep(1, n(), na.rm = TRUE)), .groups = "drop") |>
@@ -167,7 +213,8 @@ fnic_coverage = fnic_locs_coverage |>
       has_nearby_fem ~ "FEM Only",
       has_nearby_pa ~ "PA Only",
       TRUE ~ "No Monitor"
-    ) |> factor(c("FEM Only", "FEM and PA", "PA Only", "No Monitor"))
+    ) |>
+      factor(c("FEM Only", "FEM and PA", "PA Only", "No Monitor"))
   ) |>
   dplyr::select(-has_nearby_pa, -has_nearby_fem) |>
   dplyr::mutate(pop_type = "fnic") |>
@@ -178,7 +225,7 @@ fnic_coverage = fnic_locs_coverage |>
   dplyr::group_by(region, prov_terr, pop_type) |>
   dplyr::mutate(
     total_pop = sum(pop, na.rm = TRUE),
-    p_pop = round(pop / total_pop,3)
+    p_pop = round(pop / total_pop, 3)
   )
 
 coverage = dplyr::bind_rows(pop_coverage, fnic_coverage)
@@ -190,7 +237,7 @@ coverage = dplyr::bind_rows(pop_coverage, fnic_coverage)
 old_report_dropdown <- report_dir |>
   handle_old_reports(
     report_pattern = "\\d\\.html$",
-    max_date = date_range[2], 
+    max_date = date_range[2],
     type = "monthly"
   )
 
@@ -257,13 +304,13 @@ donuts <- summaries$overall |>
   )
 
 # Define plot summary text (figure titles essentially)
-plot_text_template <- "Distribution of monthly mean concentrations at %s PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a monthly mean within that concentration range." |> 
-  sprintf(monitor_groups) |> 
-  as.list() |> 
+plot_text_template <- "Distribution of monthly mean concentrations at %s PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a monthly mean within that concentration range." |>
+  sprintf(monitor_groups) |>
+  as.list() |>
   setNames(monitor_groups)
 plot_text = list(
   mean = plot_text_template,
-  max = plot_text_template |> stringr::str_replace_all(" mean "," max ")
+  max = plot_text_template |> stringr::str_replace_all(" mean ", " max ")
 )
 
 # Make summary data for autmated text for this section
@@ -345,30 +392,42 @@ donuts$paths$max_pa_only |>
 fig_dims = list(h = 7, w = 9, u = 'in')
 
 c_types = c("urban", "rural", "total", "fnic")
-coverage_barcharts = lapply(c_types, 
-                            \(p) coverage |>
-                              dplyr::filter(pop_type == p) |>
-                              pop_coverage_barchart(p)) |>
+coverage_barcharts = lapply(c_types, \(p) {
+  coverage |>
+    dplyr::filter(pop_type == p) |>
+    pop_coverage_barchart(p)
+}) |>
   setNames(c_types)
 
-plot_paths =  paste0(report_dir,
-    "plots/coverage_", c_types, 
-    "_", output_date_fmt, ".png"
-  ) |> 
+plot_paths = paste0(
+  report_dir,
+  "plots/coverage_",
+  c_types,
+  "_",
+  output_date_fmt,
+  ".png"
+) |>
   as.list() |>
   setNames(c_types)
 
-for(ct in names(plot_paths)){
-  ggsave(coverage_barcharts[[ct]],
-    filename = plot_paths[[ct]], dpi = 300, 
-         units = fig_dims$u, height = fig_dims$h, width = fig_dims$w)
+for (ct in names(plot_paths)) {
+  ggsave(
+    coverage_barcharts[[ct]],
+    filename = plot_paths[[ct]],
+    dpi = 300,
+    units = fig_dims$u,
+    height = fig_dims$h,
+    width = fig_dims$w
+  )
 }
 plot_text = paste(
   "Estimated percentage of Canadian %c within 25 km of a",
   "regulatory (FEM) and/or low-cost PurpleAir (PA) PM<sub>2.5</sub> monitor",
-  "during the month of", format(date_range[2], "%B, %Y."),
+  "during the month of",
+  format(date_range[2], "%B, %Y."),
   "The patterned section shows overlapping coverage of the two networks (i.e. %c covered by both networks).",
-  "Data for %c sourced from %s.")
+  "Data for %c sourced from %s."
+)
 
 # Make coverage table
 td = coverage |>
@@ -376,39 +435,62 @@ td = coverage |>
   dplyr::mutate(p_pop = paste0(p_pop * 100, "%")) |>
   tidyr::pivot_wider(names_from = pop_type, values_from = c(pop, p_pop)) |>
   dplyr::arrange(region, prov_terr, network) |>
-  dplyr::mutate(dplyr::across(c(pop_fnic, pop_rural, pop_urban, pop_total), \(p) format(ifelse(is.na(p),0,p), big.mark = ","))) |>
-  dplyr::select(Region = region, `Prov./Terr.` = prov_terr, "Within 25km of" = network, 
-         pop_fnic, p_pop_fnic, 
-         pop_rural, p_pop_rural, 
-         pop_urban, p_pop_urban, 
-         pop_total, p_pop_total)
-coverage_table = reactable(data = td,
-                   pagination= FALSE,
-            columns = list(
-              pop_fnic = colDef("Count"),
-              p_pop_fnic = colDef("Percentage"),
-              pop_total = colDef("Count"),
-              p_pop_total = colDef("Percentage"),
-              pop_rural = colDef("Count"),
-              p_pop_rural = colDef("Percentage"),
-              pop_urban = colDef("Count"),
-              p_pop_urban = colDef("Percentage")
-            ),
-            columnGroups = list(
-              colGroup(name = "FN & Inuit Communities", 
-                       columns = c("pop_fnic", "p_pop_fnic")),
-              colGroup(name = "Total Pop. (2016)", 
-                       columns = c("pop_total", "p_pop_total")),
-              colGroup(name = "Urban Pop. (2016)", 
-                       columns = c("pop_urban", "p_pop_urban")),
-              colGroup(name = "Rural Pop. (2016)", 
-                       columns = c("pop_rural", "p_pop_rural")))
+  dplyr::mutate(dplyr::across(
+    c(pop_fnic, pop_rural, pop_urban, pop_total),
+    \(p) format(ifelse(is.na(p), 0, p), big.mark = ",")
+  )) |>
+  dplyr::select(
+    Region = region,
+    `Prov./Terr.` = prov_terr,
+    "Within 25km of" = network,
+    pop_fnic,
+    p_pop_fnic,
+    pop_rural,
+    p_pop_rural,
+    pop_urban,
+    p_pop_urban,
+    pop_total,
+    p_pop_total
+  )
+coverage_table = reactable(
+  data = td,
+  pagination = FALSE,
+  columns = list(
+    pop_fnic = colDef("Count"),
+    p_pop_fnic = colDef("Percentage"),
+    pop_total = colDef("Count"),
+    p_pop_total = colDef("Percentage"),
+    pop_rural = colDef("Count"),
+    p_pop_rural = colDef("Percentage"),
+    pop_urban = colDef("Count"),
+    p_pop_urban = colDef("Percentage")
+  ),
+  columnGroups = list(
+    colGroup(
+      name = "FN & Inuit Communities",
+      columns = c("pop_fnic", "p_pop_fnic")
+    ),
+    colGroup(
+      name = "Total Pop. (2016)",
+      columns = c("pop_total", "p_pop_total")
+    ),
+    colGroup(
+      name = "Urban Pop. (2016)",
+      columns = c("pop_urban", "p_pop_urban")
+    ),
+    colGroup(
+      name = "Rural Pop. (2016)",
+      columns = c("pop_rural", "p_pop_rural")
     )
+  )
+)
 coverage_dl = td |>
-   download_this(
-    output_name = "network_coverage_" |> 
+  download_this(
+    output_name = "network_coverage_" |>
       paste0(max(obs$date) |> format("%Y-%B")),
-    output_extension = ".csv",sep = ",", dec = ".",
+    output_extension = ".csv",
+    sep = ",",
+    dec = ".",
     button_label = "Download data as csv",
     button_type = "default",
     has_icon = TRUE,
@@ -417,41 +499,43 @@ coverage_dl = td |>
   )
 
 p_summ = td |>
-  dplyr::group_by(pt = `Prov./Terr.`)|>
+  dplyr::group_by(pt = `Prov./Terr.`) |>
   dplyr::mutate(
-    pop_fnic = as.numeric(stringr::str_remove_all(pop_fnic,",")),
-    pop_rural = as.numeric(stringr::str_remove_all(pop_rural,",")),
-    pop_urban = as.numeric(stringr::str_remove_all(pop_urban,",")),
-    pop_total = as.numeric(stringr::str_remove_all(pop_total,",")),
-    total_fnic = sum(pop_fnic, na.rm=TRUE),
-    total_rural = sum(pop_rural, na.rm=TRUE),
-    total_urban = sum(pop_urban, na.rm=TRUE),
-    total_total = sum(pop_total, na.rm=TRUE)
+    pop_fnic = as.numeric(stringr::str_remove_all(pop_fnic, ",")),
+    pop_rural = as.numeric(stringr::str_remove_all(pop_rural, ",")),
+    pop_urban = as.numeric(stringr::str_remove_all(pop_urban, ",")),
+    pop_total = as.numeric(stringr::str_remove_all(pop_total, ",")),
+    total_fnic = sum(pop_fnic, na.rm = TRUE),
+    total_rural = sum(pop_rural, na.rm = TRUE),
+    total_urban = sum(pop_urban, na.rm = TRUE),
+    total_total = sum(pop_total, na.rm = TRUE)
   ) |>
   dplyr::filter(`Within 25km of` != "No Monitor") |>
   dplyr::summarise(
-    p_fnic = round(sum(pop_fnic / total_fnic, na.rm=TRUE) *100,1),
-    p_urban = round(sum(pop_rural / total_rural, na.rm=TRUE) *100,1),
-    p_rural = round(sum(pop_urban / total_urban, na.rm=TRUE) *100,1),
-    p_total = round(sum(pop_total / total_total, na.rm=TRUE) *100,1))
+    p_fnic = round(sum(pop_fnic / total_fnic, na.rm = TRUE) * 100, 1),
+    p_urban = round(sum(pop_rural / total_rural, na.rm = TRUE) * 100, 1),
+    p_rural = round(sum(pop_urban / total_urban, na.rm = TRUE) * 100, 1),
+    p_total = round(sum(pop_total / total_total, na.rm = TRUE) * 100, 1)
+  )
 reg_summ = td |>
   dplyr::group_by(Region) |>
   dplyr::mutate(
-    pop_fnic = as.numeric(stringr::str_remove_all(pop_fnic,",")),
-    pop_rural = as.numeric(stringr::str_remove_all(pop_rural,",")),
-    pop_urban = as.numeric(stringr::str_remove_all(pop_urban,",")),
-    pop_total = as.numeric(stringr::str_remove_all(pop_total,",")),
-    total_fnic = sum(pop_fnic, na.rm=TRUE),
-    total_rural = sum(pop_rural, na.rm=TRUE),
-    total_urban = sum(pop_urban, na.rm=TRUE),
-    total_total = sum(pop_total, na.rm=TRUE)
+    pop_fnic = as.numeric(stringr::str_remove_all(pop_fnic, ",")),
+    pop_rural = as.numeric(stringr::str_remove_all(pop_rural, ",")),
+    pop_urban = as.numeric(stringr::str_remove_all(pop_urban, ",")),
+    pop_total = as.numeric(stringr::str_remove_all(pop_total, ",")),
+    total_fnic = sum(pop_fnic, na.rm = TRUE),
+    total_rural = sum(pop_rural, na.rm = TRUE),
+    total_urban = sum(pop_urban, na.rm = TRUE),
+    total_total = sum(pop_total, na.rm = TRUE)
   ) |>
   dplyr::filter(`Within 25km of` != "No Monitor") |>
   dplyr::summarise(
-    p_fnic = round(sum(pop_fnic / total_fnic, na.rm=TRUE) *100,1),
-    p_urban = round(sum(pop_rural / total_rural, na.rm=TRUE) *100,1),
-    p_rural = round(sum(pop_urban / total_urban, na.rm=TRUE) *100,1),
-    p_total = round(sum(pop_total / total_total, na.rm=TRUE) *100,1))
+    p_fnic = round(sum(pop_fnic / total_fnic, na.rm = TRUE) * 100, 1),
+    p_urban = round(sum(pop_rural / total_rural, na.rm = TRUE) * 100, 1),
+    p_rural = round(sum(pop_urban / total_urban, na.rm = TRUE) * 100, 1),
+    p_total = round(sum(pop_total / total_total, na.rm = TRUE) * 100, 1)
+  )
 
 
 ```
@@ -483,37 +567,61 @@ In the west, `r dplyr::filter(reg_summ, Region == "West")$p_rural[1]`% of the *r
 #### Total Population
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$total |> 
-  stringr::str_replace(report_dir_esc,"./") |>
-  plot_card(plot_text |> stringr::str_replace_all("%c","total population") |> 
-              stringr::str_replace_all("%s","the gridded 2016 census: https://open.canada.ca/data/en/dataset/c6c48391-fd2f-4d8a-93c8-eb74f58a859b"))
+plot_paths$total |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(
+    plot_text |>
+      stringr::str_replace_all("%c", "total population") |>
+      stringr::str_replace_all(
+        "%s",
+        "the gridded 2016 census: https://open.canada.ca/data/en/dataset/c6c48391-fd2f-4d8a-93c8-eb74f58a859b"
+      )
+  )
 ```
 
 #### First Nations and Inuit Communities
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$fnic |> 
-  stringr::str_replace(report_dir_esc,"./") |>
-  plot_card(plot_text |> stringr::str_replace_all("%c","First Nation and Inuit communities") |> 
-              stringr::str_replace_all("%s","https://open.canada.ca/data/en/dataset/b6567c5c-8339-4055-99fa-63f92114d9e4 and https://open.canada.ca/data/en/dataset/2bcf34b5-4e9a-431b-9e43-1eace6c873bd"))
+plot_paths$fnic |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(
+    plot_text |>
+      stringr::str_replace_all("%c", "First Nation and Inuit communities") |>
+      stringr::str_replace_all(
+        "%s",
+        "https://open.canada.ca/data/en/dataset/b6567c5c-8339-4055-99fa-63f92114d9e4 and https://open.canada.ca/data/en/dataset/2bcf34b5-4e9a-431b-9e43-1eace6c873bd"
+      )
+  )
 ```
 
 #### Urban Population
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$urban |> 
-  stringr::str_replace(report_dir_esc,"./") |> 
-  plot_card(plot_text |> stringr::str_replace_all("%c","urban population") |> 
-              stringr::str_replace_all("%s","the gridded 2016 census: https://open.canada.ca/data/en/dataset/c6c48391-fd2f-4d8a-93c8-eb74f58a859b"))
+plot_paths$urban |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(
+    plot_text |>
+      stringr::str_replace_all("%c", "urban population") |>
+      stringr::str_replace_all(
+        "%s",
+        "the gridded 2016 census: https://open.canada.ca/data/en/dataset/c6c48391-fd2f-4d8a-93c8-eb74f58a859b"
+      )
+  )
 ```
 
 #### Rural Population
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$rural |> 
-  stringr::str_replace(report_dir_esc,"./") |> 
-  plot_card(plot_text |> stringr::str_replace_all("%c","rural population") |> 
-              stringr::str_replace_all("%s","the gridded 2016 census: https://open.canada.ca/data/en/dataset/c6c48391-fd2f-4d8a-93c8-eb74f58a859b"))
+plot_paths$rural |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(
+    plot_text |>
+      stringr::str_replace_all("%c", "rural population") |>
+      stringr::str_replace_all(
+        "%s",
+        "the gridded 2016 census: https://open.canada.ca/data/en/dataset/c6c48391-fd2f-4d8a-93c8-eb74f58a859b"
+      )
+  )
 ```
 
 #### Coverage Table
@@ -532,76 +640,112 @@ coverage_table
 legend_title = "Daily Mean<br>PM<sub>2.5</sub> (μg m<sup>-3</sup>)"
 
 plot_text = "Interactive map summarizing the daily mean concentrations from both FEM and PA monitors by forecast zone for the month. You can use the control menu in the top right to step through the days in the month. If you hover over a forecast zone a summary popup will appear for that zone for the displayed day."
-plot_title = paste0("Animated Map of Daily Forecast Zone Mean PM<sub>2.5</sub> for ",format(date_range[2],"%B %Y"))
-plot_path = paste0(report_dir, "plots/fcstzone_mean_map_daily_", 
-                    output_date_fmt,".html")
+plot_title = paste0(
+  "Animated Map of Daily Forecast Zone Mean PM<sub>2.5</sub> for ",
+  format(date_range[2], "%B %Y")
+)
+plot_path = paste0(
+  report_dir,
+  "plots/fcstzone_mean_map_daily_",
+  output_date_fmt,
+  ".html"
+)
 
 
 # To add slider controls see jsfiddle.net/qs6dL200
-map = make_anim_map(summaries$daily_by_zone, legend_title,
-                    height = 600)
+map = make_anim_map(summaries$daily_by_zone, legend_title, height = 600)
 
-mapview::mapshot(map, plot_path,libdir="./libs",selfcontained= FALSE)
+mapview::mapshot(map, plot_path, libdir = "./libs", selfcontained = FALSE)
 
 # Monthly Zone Summaries ----------------------------------------------------
 
 plot2_text = "Interactive map summarizing the monthly mean concentrations from both FEM and PA monitors by forecast zone. On the left the mean values are presented, and max values are presented on the right. If you hover over a forecast zone a summary popup will appear for that zone."
-plot2_title = paste0("Map of Forecast Zone Mean [left] and Max [right] for ",format(date_range[2],"%B %Y"))
-plot2_path = paste0(report_dir, "plots/fcstzone_mean_map_", 
-                    output_date_fmt,".html")
+plot2_title = paste0(
+  "Map of Forecast Zone Mean [left] and Max [right] for ",
+  format(date_range[2], "%B %Y")
+)
+plot2_path = paste0(
+  report_dir,
+  "plots/fcstzone_mean_map_",
+  output_date_fmt,
+  ".html"
+)
 
 legend_titles = list()
 legend_titles$pm25 = legend_title |>
-    stringr::str_replace("Daily", format(date_range[2],"%b."))
-legend_titles$pm25_max = legend_titles$pm25 |> 
+  stringr::str_replace("Daily", format(date_range[2], "%b."))
+legend_titles$pm25_max = legend_titles$pm25 |>
   stringr::str_replace("Mean", "Max")
 
-map = make_sync_map(summaries$monthly_by_zone, 
-                    cols = c("pm25", "pm25_max"), 
-                    legend_titles)
+map = make_sync_map(
+  summaries$monthly_by_zone,
+  cols = c("pm25", "pm25_max"),
+  legend_titles
+)
 
 
-htmltools::save_html(map, plot2_path, libdir="./libs")
+htmltools::save_html(map, plot2_path, libdir = "./libs")
 
 # Make summary data for autmated text for this section
 aqhi_p_counts_by_prov = summaries$overall |>
-  dplyr::group_by(aqhi_p_24hr = aqhi_p(pm25_mean, by_risk = TRUE, include_ugm3_range = TRUE),
-           prov_terr, monitor) |>
+  dplyr::group_by(
+    aqhi_p_24hr = aqhi_p(pm25_mean, by_risk = TRUE, include_ugm3_range = TRUE),
+    prov_terr,
+    monitor
+  ) |>
   dplyr::summarise(n_monitors = n(), .groups = "drop") |>
-  tidyr::pivot_wider(1:2, names_from = "monitor", values_from = "n_monitors") 
+  tidyr::pivot_wider(1:2, names_from = "monitor", values_from = "n_monitors")
 aqhi_p_counts_by_prov = aqhi_p_counts_by_prov |>
-  dplyr::full_join(expand.grid(aqhi_p_24hr = levels(aqhi_p_counts_by_prov$aqhi_p_24hr), 
-                        prov_terr = names(prov_pretty)), 
-            by = c("aqhi_p_24hr", "prov_terr")) |>
-  dplyr::mutate(dplyr::across(c("FEM","PA"), \(x) handyr::swap(x, what = NA, with = 0))) |>
+  dplyr::full_join(
+    expand.grid(
+      aqhi_p_24hr = levels(aqhi_p_counts_by_prov$aqhi_p_24hr),
+      prov_terr = names(prov_pretty)
+    ),
+    by = c("aqhi_p_24hr", "prov_terr")
+  ) |>
+  dplyr::mutate(dplyr::across(c("FEM", "PA"), \(x) {
+    handyr::swap(x, what = NA, with = 0)
+  })) |>
   dplyr::arrange(as.numeric(aqhi_p_24hr))
 
 aqhi_p_counts = aqhi_p_counts_by_prov |>
   dplyr::select(-prov_terr) |>
   dplyr::group_by(aqhi_p_24hr) |>
-  dplyr::summarise(dplyr::across(dplyr::everything(), sum)) 
+  dplyr::summarise(dplyr::across(dplyr::everything(), sum))
 
-very_high_fem_by_prov = aqhi_p_counts_by_prov |> 
+very_high_fem_by_prov = aqhi_p_counts_by_prov |>
   subset(FEM != 0 & aqhi_p_24hr == "Very High [100+]") |>
   dplyr::arrange(desc(FEM))
-high_fem_by_prov = aqhi_p_counts_by_prov |> 
+high_fem_by_prov = aqhi_p_counts_by_prov |>
   subset(FEM != 0 & aqhi_p_24hr == "High [60-100)") |>
   dplyr::arrange(desc(PA))
-very_high_pa_by_prov = aqhi_p_counts_by_prov |> 
+very_high_pa_by_prov = aqhi_p_counts_by_prov |>
   subset(PA != 0 & aqhi_p_24hr == "Very High [100+]") |>
   dplyr::arrange(desc(FEM))
-high_pa_by_prov = aqhi_p_counts_by_prov |> 
+high_pa_by_prov = aqhi_p_counts_by_prov |>
   subset(PA != 0 & aqhi_p_24hr == "High [60-100)") |>
   dplyr::arrange(desc(PA))
 
 wd = summaries$worst_day |>
-  dplyr::select(p=`Prov./Terr.`,w=`Worst Day`,m=`Mean of Site Means`) |>
+  dplyr::select(p = `Prov./Terr.`, w = `Worst Day`, m = `Mean of Site Means`) |>
   dplyr::arrange(p) |>
   dplyr::group_by(w) |>
-  dplyr::summarise(m = join_list_sentence(m) |> 
-              paste0(ifelse(length(p)>1,", respectively","")),
-            p = join_list_sentence(p) ) |>
-  dplyr::mutate(t = paste0("- ",p,": ",w," - 24-hour mean PM<sub>2.5</sub>: ", m," &mu;g m<sup>-3</sup>"))
+  dplyr::summarise(
+    m = join_list_sentence(m) |>
+      paste0(ifelse(length(p) > 1, ", respectively", "")),
+    p = join_list_sentence(p)
+  ) |>
+  dplyr::mutate(
+    t = paste0(
+      "- ",
+      p,
+      ": ",
+      w,
+      " - 24-hour mean PM<sub>2.5</sub>: ",
+      m,
+      " &mu;g m<sup>-3</sup>"
+    )
+  )
 ```
 
 ::: card
@@ -636,17 +780,17 @@ The worst overall day for each province/territory:
 #### Daily
 
 ```{r include=TRUE, results = 'asis'}
-plot_path |> 
-  stringr::str_replace(report_dir_esc,"./") |> 
-  plot_card(plot_text, iframe=TRUE, plot_title)
+plot_path |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(plot_text, iframe = TRUE, plot_title)
 ```
 
 #### Monthly
 
 ```{r include=TRUE, results = 'asis'}
-plot2_path |> 
-  stringr::str_replace(report_dir_esc, "./")|> 
-  plot_card(plot2_text, iframe=TRUE, plot2_title, iframe_height = 625)
+plot2_path |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(plot2_text, iframe = TRUE, plot2_title, iframe_height = 625)
 ```
 
 ### <big><strong>Where and when did PM<sub>2.5</sub> events occur?</strong></big> {.tabset}
@@ -660,47 +804,60 @@ grid_data = list(
 
 # Make paths to plot files
 plot_paths = report_dir |>
-  paste0("plots/prov_median-peak_daily_grid_", 
-         monitor_groups |> 
-           stringr::str_to_lower() |> 
-           stringr::str_replace_all(" ","_"),
-         '_', output_date_fmt, ".png") |> 
-  setNames(monitor_groups) |> as.list()
+  paste0(
+    "plots/prov_median-peak_daily_grid_",
+    monitor_groups |>
+      stringr::str_to_lower() |>
+      stringr::str_replace_all(" ", "_"),
+    '_',
+    output_date_fmt,
+    ".png"
+  ) |>
+  setNames(monitor_groups) |>
+  as.list()
 
 # Make and save plots
-.tmp = names(monitor_groups) |> lapply(\(m){
-  pth = plot_paths[[monitor_groups[names(monitor_groups)==m]]]
-  pd = grid_data
-  if(m != monitor_groups[3]){
-    pd$median = subset(pd$median, monitor == m)
-    pd$maximum = subset(pd$max, monitor == m)
-  }
-  # Make plots
-  ggs = lapply(names(pd), \(stat){
-    pd[[stat]] |>
-      make_grid_plot(xlab = paste("Day of", format(date_range[2], "%B")),
-                     stat = stringr::str_to_title(stat), 
-                     caption = ifelse(stat == names(pd)[2], plot_captions[[m]], ""))
-  })
-  # Combine and save plots
-  (ggs[[1]] + ggs[[2]]) |> 
-    ggsave(filename = pth, height = 4, width = 13, units='in', dpi=300)
-}) |> setNames(monitor_groups)
+.tmp = names(monitor_groups) |>
+  lapply(\(m) {
+    pth = plot_paths[[monitor_groups[names(monitor_groups) == m]]]
+    pd = grid_data
+    if (m != monitor_groups[3]) {
+      pd$median = subset(pd$median, monitor == m)
+      pd$maximum = subset(pd$max, monitor == m)
+    }
+    # Make plots
+    ggs = lapply(names(pd), \(stat) {
+      pd[[stat]] |>
+        make_grid_plot(
+          xlab = paste("Day of", format(date_range[2], "%B")),
+          stat = stringr::str_to_title(stat),
+          caption = ifelse(stat == names(pd)[2], plot_captions[[m]], "")
+        )
+    })
+    # Combine and save plots
+    (ggs[[1]] + ggs[[2]]) |>
+      ggsave(filename = pth, height = 4, width = 13, units = 'in', dpi = 300)
+  }) |>
+  setNames(monitor_groups)
 
 # Define plot summary text (figure titles essentially)
 plot_texts = paste0(
-  "Median [Left] and maximum [Right] daily PM<sub>2.5</sub> concentrations for all ",names(monitor_groups)," monitoring sites in each province/territory. The median is useful for identifying large scale impacts across the province/territory, while the maximum can be used to identify impacts in at least one area of the province/territory."
-)  |> setNames(monitor_groups) |> as.list()
+  "Median [Left] and maximum [Right] daily PM<sub>2.5</sub> concentrations for all ",
+  names(monitor_groups),
+  " monitoring sites in each province/territory. The median is useful for identifying large scale impacts across the province/territory, while the maximum can be used to identify impacts in at least one area of the province/territory."
+) |>
+  setNames(monitor_groups) |>
+  as.list()
 
 # Make summary data for autmated text for this section
 p = grid_data$median |>
   dplyr::group_by(y) |>
-  dplyr::summarise(n = sum(as.numeric(fill)>3,na.rm=TRUE)) |>
+  dplyr::summarise(n = sum(as.numeric(fill) > 3, na.rm = TRUE)) |>
   subset(n >= 3) |>
   dplyr::arrange(desc(n))
 p2 = grid_data$maximum |>
   dplyr::group_by(y) |>
-  dplyr::summarise(n = sum(as.numeric(fill)>3,na.rm=TRUE)) |>
+  dplyr::summarise(n = sum(as.numeric(fill) > 3, na.rm = TRUE)) |>
   subset(n >= 3) |>
   dplyr::arrange(desc(n))
 
@@ -730,24 +887,24 @@ p2 = grid_data$maximum |>
 ##### FEM and PA
 
 ```{r grids_both, include=TRUE, results = 'asis'}
-plot_paths[['FEM and PA']] |> 
-  stringr::str_replace(report_dir_esc, "./")|> 
+plot_paths[['FEM and PA']] |>
+  stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_texts[['FEM and PA']])
 ```
 
 ##### FEM Only
 
 ```{r grids_fem, include=TRUE, results = 'asis'}
-plot_paths[['FEM Only']] |> 
-  stringr::str_replace(report_dir_esc, "./")|> 
+plot_paths[['FEM Only']] |>
+  stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_texts[['FEM Only']])
 ```
 
 ##### PA Only
 
 ```{r grids_pa, include=TRUE, results = 'asis'}
-plot_paths[['PA Only']] |> 
-  stringr::str_replace(report_dir_esc, "./")|> 
+plot_paths[['PA Only']] |>
+  stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_texts[['PA Only']])
 ```
 
@@ -759,30 +916,43 @@ plot_paths[['PA Only']] |>
 grid_data = make_grid_data(obs, median, type = "monthly", fcst_zones)
 
 # Make paths to plot files
-plot_paths = paste0(report_dir, "plots/zone_median_daily_grid_", 
-                    unlist(prov_order), 
-                    '_', output_date_fmt,".png") |> 
-  setNames(unlist(prov_order)) |> as.list()
+plot_paths = paste0(
+  report_dir,
+  "plots/zone_median_daily_grid_",
+  unlist(prov_order),
+  '_',
+  output_date_fmt,
+  ".png"
+) |>
+  setNames(unlist(prov_order)) |>
+  as.list()
 
 # Make and save plots
 plots = lapply(unlist(prov_order), \(p) {
   pth = plot_paths[[p]]
   pd = grid_data |>
     subset(as.character(z) == p) |>
-    dplyr::arrange(y) 
+    dplyr::arrange(y)
   pd |>
-    make_grid_plot(xlab = paste("Day of", format(date_range[2], "%B")), 
-                   ylab = paste(p,"Forecast Zone"),
-                   stat = "Median", 
-                   small_text = TRUE,
-                   caption = plot_captions$`FEM and PA`) |> 
-    ggsave(filename = pth, height = 7, width = 12, units='in', dpi=300)
-}) |> setNames(unlist(prov_order))
+    make_grid_plot(
+      xlab = paste("Day of", format(date_range[2], "%B")),
+      ylab = paste(p, "Forecast Zone"),
+      stat = "Median",
+      small_text = TRUE,
+      caption = plot_captions$`FEM and PA`
+    ) |>
+    ggsave(filename = pth, height = 7, width = 12, units = 'in', dpi = 300)
+}) |>
+  setNames(unlist(prov_order))
 
 # Define plot summary text (figure titles essentially)
 plot_texts = paste0(
-  "Daily median PM<sub>2.5</sub> concentrations for all monitors (FEM and PA) within each forecast zone for ",unlist(prov_order),". A white cell indicates there was no data for that day from any monitor within that zone. Zones are grouped into those with and those without data and are sorted alphabetically."
-)  |> setNames(unlist(prov_order)) |> as.list()
+  "Daily median PM<sub>2.5</sub> concentrations for all monitors (FEM and PA) within each forecast zone for ",
+  unlist(prov_order),
+  ". A white cell indicates there was no data for that day from any monitor within that zone. Zones are grouped into those with and those without data and are sorted alphabetically."
+) |>
+  setNames(unlist(prov_order)) |>
+  as.list()
 
 # Make summary data for automated text for this section
 .tmp = grid_data |>
@@ -790,16 +960,22 @@ plot_texts = paste0(
   dplyr::group_by(z, y) |>
   dplyr::summarise(n = sum(as.numeric(fill) > 3)) |>
   subset(n >= 3) |>
-  dplyr::arrange(factor(z,unlist(prov_order)),desc(n))
+  dplyr::arrange(factor(z, unlist(prov_order)), desc(n))
 
-if(nrow(.tmp)==0){
-  text=""
-}else{
-  text = sapply(unique(.tmp$z), \(p){
-    t = .tmp |> subset(z==p)
-    paste0("- ",p,": ", t$y |>
-      join_list_sentence(oxford=TRUE))
-  }) |> paste(collapse = "\n\n")  
+if (nrow(.tmp) == 0) {
+  text = ""
+} else {
+  text = sapply(unique(.tmp$z), \(p) {
+    t = .tmp |> subset(z == p)
+    paste0(
+      "- ",
+      p,
+      ": ",
+      t$y |>
+        join_list_sentence(oxford = TRUE)
+    )
+  }) |>
+    paste(collapse = "\n\n")
 }
 
 
@@ -824,12 +1000,15 @@ The following forecast regions experienced elevated PM<sub>2.5</sub> concentrati
 
 ```{r include = TRUE, results="asis"}
 
-for(p in names(prov_pretty)){
+for (p in names(prov_pretty)) {
   pp = prov_pretty[[p]]
-  cat("##### ",pp,"\n")
-  cat(plot_paths[[p]] |> 
-        stringr::str_replace(report_dir_esc, "./")|> 
-        plot_card(plot_texts[[p]]), "\n")
+  cat("##### ", pp, "\n")
+  cat(
+    plot_paths[[p]] |>
+      stringr::str_replace(report_dir_esc, "./") |>
+      plot_card(plot_texts[[p]]),
+    "\n"
+  )
 }
 
 ```
@@ -840,60 +1019,119 @@ for(p in names(prov_pretty)){
 
 # Get data for site mean boxplots
 pd = summaries$overall |>
-  dplyr::mutate(monitor2 = ifelse(monitor == "FEM", "FEM Only",
-                           ifelse(monitor == "PA","PA Only",
-                                  "FEM and PA"))) |>
-  dplyr::bind_rows(summaries$overall |> dplyr::mutate(monitor2 = "FEM and PA")) |>
+  dplyr::mutate(
+    monitor2 = ifelse(
+      monitor == "FEM",
+      "FEM Only",
+      ifelse(monitor == "PA", "PA Only", "FEM and PA")
+    )
+  ) |>
+  dplyr::bind_rows(
+    summaries$overall |> dplyr::mutate(monitor2 = "FEM and PA")
+  ) |>
   dplyr::mutate(aqhi_p_mean = aqhi_p(pm25_mean)) |>
-  dplyr::full_join(expand.grid(prov_terr = unlist(prov_order), 
-                        monitor2 = monitor_groups,
-                        date_max = unique(summaries$overall$date_max))) |>
+  dplyr::full_join(expand.grid(
+    prov_terr = unlist(prov_order),
+    monitor2 = monitor_groups,
+    date_max = unique(summaries$overall$date_max)
+  )) |>
   dplyr::mutate(date = date_max) |>
-  dplyr::mutate(pretty_prov = prov_terr |> 
-           factor(names(prov_pretty),prov_pretty))
+  dplyr::mutate(
+    pretty_prov = prov_terr |>
+      factor(names(prov_pretty), prov_pretty)
+  )
 # Make paths to files for saving plots
-plot_paths = paste0(report_dir, "plots/site_mean_boxplots_", 
-                    monitor_groups |> 
-                      stringr::str_to_lower() |> stringr::str_replace_all(" ","_"), 
-                    '_', output_date_fmt,".html") |> 
-  setNames(monitor_groups) |> as.list()
+plot_paths = paste0(
+  report_dir,
+  "plots/site_mean_boxplots_",
+  monitor_groups |>
+    stringr::str_to_lower() |>
+    stringr::str_replace_all(" ", "_"),
+  '_',
+  output_date_fmt,
+  ".html"
+) |>
+  setNames(monitor_groups) |>
+  as.list()
 # MAke and save plots
-.tmp = lapply(monitor_groups, \(m){
+.tmp = lapply(monitor_groups, \(m) {
   plot = pd |>
     subset(monitor2 == m) |>
     make_site_boxplots(m) |>
-    htmlwidgets::saveWidget(plot_paths[[m]],
-                            libdir="./libs", 
-                            selfcontained = FALSE) 
-}) |> setNames(c("FEM Only","PA Only","FEM and PA"))
+    htmlwidgets::saveWidget(
+      plot_paths[[m]],
+      libdir = "./libs",
+      selfcontained = FALSE
+    )
+}) |>
+  setNames(c("FEM Only", "PA Only", "FEM and PA"))
 # Define text for below plots (figure title essentially)
 plot_texts = paste0(
-  "Each boxplot summarises the distribution of monthly monitoring site (",monitor_groups,") mean PM<sub>2.5</sub> concentrations for that province/territory. Blue points for individual sites are displayed for any monitors higher than that regions 75th percentile. Hover over the blue points (if present) to see details about that specific site; hover over the boxplot (away from the points) to see the min/median/max and 25th/75th percentiles for that province. See the menu in the top right of the plot for more."
-) |> as.list() |> setNames(monitor_groups)
+  "Each boxplot summarises the distribution of monthly monitoring site (",
+  monitor_groups,
+  ") mean PM<sub>2.5</sub> concentrations for that province/territory. Blue points for individual sites are displayed for any monitors higher than that regions 75th percentile. Hover over the blue points (if present) to see details about that specific site; hover over the boxplot (away from the points) to see the min/median/max and 25th/75th percentiles for that province. See the menu in the top right of the plot for more."
+) |>
+  as.list() |>
+  setNames(monitor_groups)
 
 # Make summary for automated text
 vals = list(
   # Worst FEM site by MAX
-  pd |> subset(monitor == "FEM") |>
-    dplyr::arrange(desc(pm25_max)) |> head(1) |> dplyr::ungroup() |>
-    dplyr::select(M=name,T=monitor, D=nc_dist_km_mean,
-           C=nearest_community,P=pretty_prov, PM=pm25_max),
+  pd |>
+    subset(monitor == "FEM") |>
+    dplyr::arrange(desc(pm25_max)) |>
+    head(1) |>
+    dplyr::ungroup() |>
+    dplyr::select(
+      M = name,
+      T = monitor,
+      D = nc_dist_km_mean,
+      C = nearest_community,
+      P = pretty_prov,
+      PM = pm25_max
+    ),
   # Worst FEM site by MEAN
-  pd |> subset(monitor == "FEM") |>
-    dplyr::arrange(desc(pm25_mean)) |> head(1) |> dplyr::ungroup() |>
-    dplyr::select(M=name,T=monitor, D=nc_dist_km_mean,
-           C=nearest_community,P=pretty_prov, PM=pm25_mean),
+  pd |>
+    subset(monitor == "FEM") |>
+    dplyr::arrange(desc(pm25_mean)) |>
+    head(1) |>
+    dplyr::ungroup() |>
+    dplyr::select(
+      M = name,
+      T = monitor,
+      D = nc_dist_km_mean,
+      C = nearest_community,
+      P = pretty_prov,
+      PM = pm25_mean
+    ),
   # Worst PA site by MAX
-  pd |> subset(monitor == "PA") |>
-    dplyr::arrange(desc(pm25_max)) |> head(1) |> dplyr::ungroup() |>
-    dplyr::select(M=name,T=monitor, D=nc_dist_km_mean,
-           C=nearest_community,P=pretty_prov, PM=pm25_max),
+  pd |>
+    subset(monitor == "PA") |>
+    dplyr::arrange(desc(pm25_max)) |>
+    head(1) |>
+    dplyr::ungroup() |>
+    dplyr::select(
+      M = name,
+      T = monitor,
+      D = nc_dist_km_mean,
+      C = nearest_community,
+      P = pretty_prov,
+      PM = pm25_max
+    ),
   # Worst PA site by MEAN
-  pd |> subset(monitor == "PA") |>
-    dplyr::arrange(desc(pm25_mean)) |> head(1) |> dplyr::ungroup() |>
-    dplyr::select(M=name,T=monitor, D=nc_dist_km_mean,
-           C=nearest_community,P=pretty_prov, PM=pm25_mean)
-  
+  pd |>
+    subset(monitor == "PA") |>
+    dplyr::arrange(desc(pm25_mean)) |>
+    head(1) |>
+    dplyr::ungroup() |>
+    dplyr::select(
+      M = name,
+      T = monitor,
+      D = nc_dist_km_mean,
+      C = nearest_community,
+      P = pretty_prov,
+      PM = pm25_mean
+    )
 )
 
 ```
@@ -918,25 +1156,25 @@ vals = list(
 #### FEM and PA
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths[["FEM and PA"]] |> 
-  stringr::str_replace(report_dir_esc, "./")|> 
-  plot_card(plot_texts[["FEM and PA"]], iframe=TRUE)
+plot_paths[["FEM and PA"]] |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(plot_texts[["FEM and PA"]], iframe = TRUE)
 ```
 
 #### FEM Only
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths[["FEM Only"]] |> 
-  stringr::str_replace(report_dir_esc, "./")|> 
-  plot_card(plot_texts[["FEM Only"]], iframe=TRUE)
+plot_paths[["FEM Only"]] |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(plot_texts[["FEM Only"]], iframe = TRUE)
 ```
 
 #### PA Only
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths[["PA Only"]] |> 
-  stringr::str_replace(report_dir_esc, "./")|> 
-  plot_card(plot_texts[["PA Only"]], iframe=TRUE)
+plot_paths[["PA Only"]] |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(plot_texts[["PA Only"]], iframe = TRUE)
 ```
 
 ### <big><strong>Which communities [with data] had very high PM<sub>2.5</sub>?</strong></big> {.tabset}
@@ -945,67 +1183,102 @@ plot_paths[["PA Only"]] |>
 
 # Get data for site mean boxplots
 pd = summaries$overall |>
-  dplyr::mutate(monitor2 = ifelse(monitor == "FEM", "FEM Only",
-                           ifelse(monitor == "PA","PA Only","FEM and PA"))) |>
-  dplyr::bind_rows(summaries$overall |> dplyr::mutate(monitor2 = "FEM and PA") |>
-              dplyr::group_by(prov_terr, fcst_zone, 
-           nearest_community, monitor2) |>
-             dplyr::summarise(n_hours_above_30=max(n_hours_above_30,na.rm=TRUE),
-                       n_hours_above_60=max(n_hours_above_60,na.rm=TRUE),
-                       n_hours_above_100=max(n_hours_above_100,na.rm=TRUE),
-                       pm25_mean=mean(pm25_mean,na.rm=TRUE),
-                       pm25_max=max(pm25_max,na.rm=TRUE),
-                       n_sites = sum(n_sites,  na.rm=TRUE)
-                       )) |>
+  dplyr::mutate(
+    monitor2 = ifelse(
+      monitor == "FEM",
+      "FEM Only",
+      ifelse(monitor == "PA", "PA Only", "FEM and PA")
+    )
+  ) |>
+  dplyr::bind_rows(
+    summaries$overall |>
+      dplyr::mutate(monitor2 = "FEM and PA") |>
+      dplyr::group_by(prov_terr, fcst_zone, nearest_community, monitor2) |>
+      dplyr::summarise(
+        n_hours_above_30 = max(n_hours_above_30, na.rm = TRUE),
+        n_hours_above_60 = max(n_hours_above_60, na.rm = TRUE),
+        n_hours_above_100 = max(n_hours_above_100, na.rm = TRUE),
+        pm25_mean = mean(pm25_mean, na.rm = TRUE),
+        pm25_max = max(pm25_max, na.rm = TRUE),
+        n_sites = sum(n_sites, na.rm = TRUE)
+      )
+  ) |>
   dplyr::mutate(aqhi_p_mean = aqhi_p(pm25_mean)) |>
-  dplyr::full_join(expand.grid(prov_terr = unlist(prov_order), 
-                        monitor2 = monitor_groups,
-                        date_max = unique(summaries$overall$date_max))) |>
+  dplyr::full_join(expand.grid(
+    prov_terr = unlist(prov_order),
+    monitor2 = monitor_groups,
+    date_max = unique(summaries$overall$date_max)
+  )) |>
   dplyr::mutate(date = date_max)
 # Make paths to files for saving plots
-plot_paths = paste0(report_dir, "plots/communities_veryHigh_hours_", 
-                    monitor_groups |> stringr::str_to_lower() |> stringr::str_replace_all(" ","_"), 
-                    '_', output_date_fmt,".html") |> 
-  setNames(monitor_groups) |> as.list()
+plot_paths = paste0(
+  report_dir,
+  "plots/communities_veryHigh_hours_",
+  monitor_groups |>
+    stringr::str_to_lower() |>
+    stringr::str_replace_all(" ", "_"),
+  '_',
+  output_date_fmt,
+  ".html"
+) |>
+  setNames(monitor_groups) |>
+  as.list()
 # MAke and save plots
-.tmp = lapply(monitor_groups, \(m){
+.tmp = lapply(monitor_groups, \(m) {
   pd |>
     subset(monitor2 == m) |>
     make_community_boxplots(m) |>
-    htmlwidgets::saveWidget(plot_paths[[m]],
-                            libdir="./libs", 
-                            selfcontained = FALSE)
-}) |> setNames(monitor_groups)
+    htmlwidgets::saveWidget(
+      plot_paths[[m]],
+      libdir = "./libs",
+      selfcontained = FALSE
+    )
+}) |>
+  setNames(monitor_groups)
 # Define text for below plots (figure title essentially)
 plot_texts = paste0(
-  "Each boxplot summarises the distribution of 1-month community counts of hours with PM<sub>2.5</sub> concentrations above 100 &mu;g m<sup>-3</sup> for at least one monitoring site (",monitor_groups,") in that community for each province/territory. Blue points for individual communities are displayed for any communities with counts higher than that regions 75th percentile. Hover over the blue points (if present) to see details about that specific community; hover over the boxplot (away from the points) to see the min/median/max and 25th/75th percentiles for that province/territory. See the menu in the top right for more."
-) |> as.list() |> setNames(monitor_groups)
+  "Each boxplot summarises the distribution of 1-month community counts of hours with PM<sub>2.5</sub> concentrations above 100 &mu;g m<sup>-3</sup> for at least one monitoring site (",
+  monitor_groups,
+  ") in that community for each province/territory. Blue points for individual communities are displayed for any communities with counts higher than that regions 75th percentile. Hover over the blue points (if present) to see details about that specific community; hover over the boxplot (away from the points) to see the min/median/max and 25th/75th percentiles for that province/territory. See the menu in the top right for more."
+) |>
+  as.list() |>
+  setNames(monitor_groups)
 
 # Make summary for automated text
 vals = summaries$community |>
   dplyr::ungroup() |>
-  dplyr::select(P=prov_terr, 
-         C = nearest_community,
-         N=n_monitors, D = max_dist,
-         PM1 = pm25_24hr_mean, PM2 = pm25_24hr_max,
-         H1=n_hours_above_100_max,H2=n_hours_above_60_max) |>
-    dplyr::mutate(NFEM = N |> stringr::str_extract("FEM: \\d*") |> stringr::str_remove("FEM: ") |>
-             handyr::swap(NA, with = "0"),
-           NPA = N |> stringr::str_extract("PA: \\d*") |> stringr::str_remove("PA: ") |>
-             handyr::swap(NA, with = "0")) 
+  dplyr::select(
+    P = prov_terr,
+    C = nearest_community,
+    N = n_monitors,
+    D = max_dist,
+    PM1 = pm25_24hr_mean,
+    PM2 = pm25_24hr_max,
+    H1 = n_hours_above_100_max,
+    H2 = n_hours_above_60_max
+  ) |>
+  dplyr::mutate(
+    NFEM = N |>
+      stringr::str_extract("FEM: \\d*") |>
+      stringr::str_remove("FEM: ") |>
+      handyr::swap(NA, with = "0"),
+    NPA = N |>
+      stringr::str_extract("PA: \\d*") |>
+      stringr::str_remove("PA: ") |>
+      handyr::swap(NA, with = "0")
+  )
 
 vals = list(
-    vals |>
-      dplyr::arrange(desc(PM2)) |>
-      head(1) ,
-    vals |>
-      dplyr::arrange(desc(PM1)) |>
-      head(1),
-    vals |>
-      dplyr::arrange(desc(H1),
-              desc(H2)) |>
-      head(1)
-  )
+  vals |>
+    dplyr::arrange(desc(PM2)) |>
+    head(1),
+  vals |>
+    dplyr::arrange(desc(PM1)) |>
+    head(1),
+  vals |>
+    dplyr::arrange(desc(H1), desc(H2)) |>
+    head(1)
+)
 ```
 
 ::: card
@@ -1028,25 +1301,25 @@ vals = list(
 #### FEM and PA
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths[["FEM and PA"]] |> 
-  stringr::str_replace(report_dir_esc, "./")|> 
-  plot_card(plot_texts[["FEM and PA"]], iframe=TRUE)
+plot_paths[["FEM and PA"]] |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(plot_texts[["FEM and PA"]], iframe = TRUE)
 ```
 
 #### FEM Only
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths[["FEM Only"]] |> 
-  stringr::str_replace(report_dir_esc, "./")|> 
-  plot_card(plot_texts[["FEM Only"]], iframe=TRUE)
+plot_paths[["FEM Only"]] |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(plot_texts[["FEM Only"]], iframe = TRUE)
 ```
 
 #### PA Only
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths[["PA Only"]] |> 
-  stringr::str_replace(report_dir_esc, "./")|> 
-  plot_card(plot_texts[["PA Only"]], iframe=TRUE)
+plot_paths[["PA Only"]] |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(plot_texts[["PA Only"]], iframe = TRUE)
 ```
 
 ### <big><strong>What was the worst day this month?</strong></big>{.tabset}
@@ -1054,74 +1327,106 @@ plot_paths[["PA Only"]] |>
 ```{r worst_day_tables}
 # Make download link and table for province level
 dl = summaries$worst_day |>
-  setNames(names(summaries$worst_day) |> stringr::str_replace_all("\n"," ")) |>
-   download_this(
-    output_name = "worst_days_by_provterr_" |> 
+  setNames(names(summaries$worst_day) |> stringr::str_replace_all("\n", " ")) |>
+  download_this(
+    output_name = "worst_days_by_provterr_" |>
       paste0(max(obs$date) |> format("%Y-%B")),
-    output_extension = ".csv",sep = ",", dec = ".",
+    output_extension = ".csv",
+    sep = ",",
+    dec = ".",
     button_label = "Download data as csv",
     button_type = "default",
     has_icon = TRUE,
     csv2 = FALSE,
     icon = "fa fa-save"
   )
-table =  reactable(data = summaries$worst_day,
-                   pagination= FALSE,
-            defaultSorted = "Mean of Site Means",
-            defaultSortOrder = "desc",
-            columnGroups = list(
-              colGroup(name = "PM2.5 Concentration (ug/m3)", 
-                       columns = c("Min of Site Means", 
-                                   "Mean of Site Means",
-                                   "Max of Site Means")))
+table = reactable(
+  data = summaries$worst_day,
+  pagination = FALSE,
+  defaultSorted = "Mean of Site Means",
+  defaultSortOrder = "desc",
+  columnGroups = list(
+    colGroup(
+      name = "PM2.5 Concentration (ug/m3)",
+      columns = c(
+        "Min of Site Means",
+        "Mean of Site Means",
+        "Max of Site Means"
+      )
     )
+  )
+)
 
 # Make download link and table for fcst zone level
 pd = summaries$daily |>
   dplyr::group_by(nearest_community, date) |>
-  dplyr::mutate(n_communities_ge_100 = as.numeric(pm25>=100)) |>
+  dplyr::mutate(n_communities_ge_100 = as.numeric(pm25 >= 100)) |>
   dplyr::group_by(prov_terr, fcst_zone, date) |>
   dplyr::summarise(
     n_sites = n(),
-    n_communities_ge_100 = nearest_community[n_communities_ge_100 == 1] |> 
-      unique() |> length(),
-    n_sites_above_100 = sum(pm25>=100,na.rm=TRUE),
-    mean_pm25 = round(mean(pm25, na.rm=TRUE),1), 
-    min_pm25 = min(pm25, na.rm=TRUE), 
-    max_pm25 = max(pm25, na.rm=TRUE)
+    n_communities_ge_100 = nearest_community[n_communities_ge_100 == 1] |>
+      unique() |>
+      length(),
+    n_sites_above_100 = sum(pm25 >= 100, na.rm = TRUE),
+    mean_pm25 = round(mean(pm25, na.rm = TRUE), 1),
+    min_pm25 = min(pm25, na.rm = TRUE),
+    max_pm25 = max(pm25, na.rm = TRUE)
   ) |>
-  dplyr::arrange(prov_terr, fcst_zone, desc(n_sites_above_100), 
-          desc(n_sites_above_100), desc(mean_pm25)) |>
+  dplyr::arrange(
+    prov_terr,
+    fcst_zone,
+    desc(n_sites_above_100),
+    desc(n_sites_above_100),
+    desc(mean_pm25)
+  ) |>
   dplyr::filter(!duplicated(`fcst_zone`)) |>
   dplyr::rename(worst_day = date) |>
-  dplyr::mutate(n_ge_100 = paste0(n_sites_above_100," / ", n_sites, " (",
-                           round(n_sites_above_100/n_sites*100,1),"%)"),
-         worst_day = format(worst_day,"%B %d (%a)")) |>
-  dplyr::select("Prov./Terr." = prov_terr,
-         "Forecast Zone" = fcst_zone,
-         "Worst Day" = worst_day, 
-         "Sites w/ Daily Mean Above 100 ug/m3" = n_ge_100, 
-         "Min of Sites" = min_pm25, 
-         "Mean of Sites" = mean_pm25,
-         "Max of Sites" = max_pm25)
+  dplyr::mutate(
+    n_ge_100 = paste0(
+      n_sites_above_100,
+      " / ",
+      n_sites,
+      " (",
+      round(n_sites_above_100 / n_sites * 100, 1),
+      "%)"
+    ),
+    worst_day = format(worst_day, "%B %d (%a)")
+  ) |>
+  dplyr::select(
+    "Prov./Terr." = prov_terr,
+    "Forecast Zone" = fcst_zone,
+    "Worst Day" = worst_day,
+    "Sites w/ Daily Mean Above 100 ug/m3" = n_ge_100,
+    "Min of Sites" = min_pm25,
+    "Mean of Sites" = mean_pm25,
+    "Max of Sites" = max_pm25
+  )
 dl2 = pd |>
-   download_this(
-    output_name = "worst_days_by_fcast_zone_" |> 
+  download_this(
+    output_name = "worst_days_by_fcast_zone_" |>
       paste0(max(obs$date) |> format("%Y-%B")),
-    output_extension = ".csv",sep = ",", dec = ".",
+    output_extension = ".csv",
+    sep = ",",
+    dec = ".",
     button_label = "Download data as csv",
     button_type = "default",
     has_icon = TRUE,
     csv2 = FALSE,
     icon = "fa fa-save"
   )
-table2 = reactable(data = pd, groupBy = c("Prov./Terr."),
-                    defaultSorted = "Mean of Sites",
-                    defaultSortOrder = "desc",
-                    pagination= FALSE,
-                    columnGroups = list(
-                      colGroup(name = "Daily Site Mean PM2.5 Concentration (ug/m3)", columns = c("Min of Sites", "Mean of Sites","Max of Sites")))
-           )
+table2 = reactable(
+  data = pd,
+  groupBy = c("Prov./Terr."),
+  defaultSorted = "Mean of Sites",
+  defaultSortOrder = "desc",
+  pagination = FALSE,
+  columnGroups = list(
+    colGroup(
+      name = "Daily Site Mean PM2.5 Concentration (ug/m3)",
+      columns = c("Min of Sites", "Mean of Sites", "Max of Sites")
+    )
+  )
+)
 ```
 
 ::: card
@@ -1188,62 +1493,82 @@ The "worst day" for PM<sub>2.5</sub> concentrations **for each forecast zone**. 
 dat1 = summaries$overall |>
   dplyr::group_by(prov_terr, fcst_zone) |>
   dplyr::summarise(
-    pm25_mean_month = mean(pm25_mean, na.rm=TRUE) |>round(1),
-    pm25_max_month  = max(pm25_max, na.rm=TRUE),
-    n_hours_above_60  = max(n_hours_above_60, na.rm=TRUE),
-    n_hours_above_100  = max(n_hours_above_100, na.rm=TRUE),
-    n_fem = sum(monitor=="FEM"),
-    n_pa = sum(monitor=="PA"),
+    pm25_mean_month = mean(pm25_mean, na.rm = TRUE) |> round(1),
+    pm25_max_month = max(pm25_max, na.rm = TRUE),
+    n_hours_above_60 = max(n_hours_above_60, na.rm = TRUE),
+    n_hours_above_100 = max(n_hours_above_100, na.rm = TRUE),
+    n_fem = sum(monitor == "FEM"),
+    n_pa = sum(monitor == "PA"),
     n_monitors = n(),
     n_communities_w_data = length(unique(nearest_community)),
-    n_communities_w_data_mean_ge_100 = nearest_community[pm25_mean>=100] |> unique() |> length(),
-    n_communities_w_data_max_ge_100 = nearest_community[pm25_max>=100] |> unique() |> length(),
-    days_w_over_100 = days_w_over_100_max |> 
-      stringr::str_split(",", simplify = TRUE) |> 
-      as.vector() |> unique() |> 
-      as.numeric() |> sort() |>
+    n_communities_w_data_mean_ge_100 = nearest_community[pm25_mean >= 100] |>
+      unique() |>
+      length(),
+    n_communities_w_data_max_ge_100 = nearest_community[pm25_max >= 100] |>
+      unique() |>
+      length(),
+    days_w_over_100 = days_w_over_100_max |>
+      stringr::str_split(",", simplify = TRUE) |>
+      as.vector() |>
+      unique() |>
+      as.numeric() |>
+      sort() |>
       shorten_number_list()
   ) |>
   dplyr::left_join(
-    fcst_zones |> dplyr::select(fcst_zone, zone_prov = prov_terrs), 
+    fcst_zones |> dplyr::select(fcst_zone, zone_prov = prov_terrs),
     by = "fcst_zone"
   ) |>
-  dplyr::mutate(zone_prov = zone_prov |> stringr::str_replace("YT","YK")) |>
-  dplyr::mutate(fcst_zone = iconv(fcst_zone, to = "ASCII//TRANSLIT"),
-         n_monitors = paste0(n_monitors, " (",n_fem," FEM, ",n_pa," PA)"),
-         n_communities_w_data_mean_ge_100 = paste(
-           n_communities_w_data_mean_ge_100, "/",n_communities_w_data),
-         n_communities_w_data_max_ge_100 = paste(
-           n_communities_w_data_max_ge_100, "/",n_communities_w_data)) |>
+  dplyr::mutate(zone_prov = zone_prov |> stringr::str_replace("YT", "YK")) |>
+  dplyr::mutate(
+    fcst_zone = iconv(fcst_zone, to = "ASCII//TRANSLIT"),
+    n_monitors = paste0(n_monitors, " (", n_fem, " FEM, ", n_pa, " PA)"),
+    n_communities_w_data_mean_ge_100 = paste(
+      n_communities_w_data_mean_ge_100,
+      "/",
+      n_communities_w_data
+    ),
+    n_communities_w_data_max_ge_100 = paste(
+      n_communities_w_data_max_ge_100,
+      "/",
+      n_communities_w_data
+    )
+  ) |>
   dplyr::arrange(desc(n_hours_above_60)) |>
   dplyr::rename(
-    "Prov./Terr." = `zone_prov`, 
+    "Prov./Terr." = `zone_prov`,
     "Forecast Zone" = fcst_zone,
     "# of Monitors" = n_monitors,
     "1-Month Mean (μg/m3)" = pm25_mean_month,
     "1-Month Max (μg/m3)" = pm25_max_month,
     "# of Communities\nw/ Mean > 100 μg/m3" = n_communities_w_data_mean_ge_100,
     "# of Communities\nw/ Max > 100 μg/m3" = n_communities_w_data_max_ge_100,
-    "# Hours above 60 μg/m3"= n_hours_above_60,
-    "# Hours above 100 μg/m3"= n_hours_above_100,
+    "# Hours above 60 μg/m3" = n_hours_above_60,
+    "# Hours above 100 μg/m3" = n_hours_above_100,
     "Day(s) of Month w/\n12+ hours Above 100 μg/m3" = days_w_over_100
   ) |>
-  as.data.frame()|>
-  dplyr::select(14,2,9,3:4,5:6,13)
+  as.data.frame() |>
+  dplyr::select(14, 2, 9, 3:4, 5:6, 13)
 
-table =  reactable(
-    data=dat1,
-    defaultSorted = c("# Hours above 60 μg/m3","# Hours above 100 μg/m3"),
-    defaultSortOrder = "desc",
-    defaultPageSize = 15#, 
-  )
+table = reactable(
+  data = dat1,
+  defaultSorted = c("# Hours above 60 μg/m3", "# Hours above 100 μg/m3"),
+  defaultSortOrder = "desc",
+  defaultPageSize = 15 #,
+)
 dl = dat1 |>
-  setNames(names(dat1) |> stringr::str_replace_all("\n"," ")) |>
-  dplyr::mutate("Day(s) of Month w/ 12+ hours Above 100 μg/m3" = paste0("'",`Day(s) of Month w/ 12+ hours Above 100 μg/m3`)) |>
-   download_this(
-    output_name = "fcst_zone_pm25_summaries_" |> 
+  setNames(names(dat1) |> stringr::str_replace_all("\n", " ")) |>
+  dplyr::mutate(
+    "Day(s) of Month w/ 12+ hours Above 100 μg/m3" = paste0(
+      "'",
+      `Day(s) of Month w/ 12+ hours Above 100 μg/m3`
+    )
+  ) |>
+  download_this(
+    output_name = "fcst_zone_pm25_summaries_" |>
       paste0(output_date_fmt),
-    output_extension = ".csv",sep = ",",
+    output_extension = ".csv",
+    sep = ",",
     button_label = "Download data as csv",
     button_type = "default",
     has_icon = TRUE,

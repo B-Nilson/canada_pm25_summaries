@@ -10,49 +10,49 @@ source("R/report-functions.R")
 source("R/report-constants.R")
 report_dir <- report_dir |> file.path("seasonal")
 
-date_range <- report_dir |> 
+date_range <- report_dir |>
   get_report_start_end(
-    type = "seasonal", 
+    type = "seasonal",
     months_in_seasons = months_in_seasons,
     run_future = run_current_season
   )
-            
-summary_months <- date_range |> 
-  handyr::as_interval() |> 
+
+hours_to_summarise <- date_range |> make_hourly_seq()
+
+summary_months <- date_range |>
+  handyr::as_interval() |>
   seq(by = "1 months")
 
 report_season <- date_range[2] |>
   get_season(months_in_seasons = months_in_seasons)
 
-hours_to_summarise <- date_range |> make_hourly_seq()
-
-plot_captions <- date_range |> 
+plot_captions <- date_range |>
   make_plot_captions(networks = names(monitor_groups))
 
 ```
 
 ```{r load_data }
 
-obs <- date_range |> 
+obs <- date_range |>
   load_report_data(
     meta_cols = meta_cols,
     cache_path = file.path(report_dir, "index_obs.rds") # used when db not available
   )
 
-# summaries <- obs |> 
+# summaries <- obs |>
 #   make_summaries(type = "seasonal", fcst_zones = fcst_zones, meta_cols = meta_cols)
 
-events = get_pm_events(obs, c("prov_terr","fcst_zone")) 
+events <- get_pm_events(obs, c("prov_terr", "fcst_zone"))
 
 ```
 
 
 ```{r handleOldReports, include= FALSE, echo= FALSE}
 
-old_report_dropdown <- report_dir |> 
+old_report_dropdown <- report_dir |>
   handle_old_reports(
     report_pattern = "[Summer,Winter]\\.html$",
-    max_date = date_range[2], 
+    max_date = date_range[2],
     type = "seasonal"
   )
 
@@ -109,41 +109,87 @@ fig_dims = list(h = 7, w = 11, u = 'in')
 
 # Timeseries of monitor counts by province
 daily_monitor_counts = obs |>
-  dplyr::group_by(date = lubridate::floor_date(date, 'days'), prov_terr, is_aqsu, monitor) |>
+  dplyr::group_by(
+    date = lubridate::floor_date(date, 'days'),
+    prov_terr,
+    is_aqsu,
+    monitor
+  ) |>
   dplyr::summarise(n = length(unique(site_id[!is.na(pm25)]))) |>
   dplyr::mutate(
     monitor2 = paste0(
-      ifelse(monitor == "FEM", "NAPS ",
-             c("Non-ECCC ", "ECCC AQSU ")[is_aqsu+1]),
+      ifelse(
+        monitor == "FEM",
+        "NAPS ",
+        c("Non-ECCC ", "ECCC AQSU ")[is_aqsu + 1]
+      ),
       monitor
     ) |>
       factor(c("ECCC AQSU PA", "Non-ECCC PA", "NAPS FEM"))
   ) |>
   dplyr::ungroup()
-  
+
 gg = daily_monitor_counts |>
   ggplot2::ggplot(aes(x = date, y = n, fill = monitor2, group = monitor2)) +
   ggplot2::facet_wrap("prov_terr", scales = "free", nrow = 3) +
-  ggplot2::geom_bar(stat="identity", width = as.numeric(lubridate::hours(36)), alpha = 1,  linewidth = 0) +
+  ggplot2::geom_bar(
+    stat = "identity",
+    width = as.numeric(lubridate::hours(36)),
+    alpha = 1,
+    linewidth = 0
+  ) +
   ggpubr::theme_pubr(border = TRUE) +
-  ggplot2::scale_x_datetime(date_breaks = 'month',
-                   date_labels = "%b.", expand = ggplot2::expansion(0)) +
-  ggplot2::scale_y_continuous(limits = c(0, NA), expand = ggplot2::expansion(c(0, 0.04)), 
-                     breaks = \(x) seq(min(x), (max(x) + 1) * 1.1) |> 
-                       pretty() |> floor() |> unique()) +
-  ggplot2::scale_fill_manual(values = c("#36827f", "#856084", "#c1cad6")) + 
-  ggplot2::labs(x = ggplot2::element_blank(), y = bquote("Number of PM"[2.5]*" Monitors w/ Valid Data"),
-       fill = bquote("PM"[2.5]*" Monitor"),
-       caption = plot_captions$`FEM and PA`) +
-  ggplot2::theme(axis.text.x = ggplot2::element_text(hjust = -0.1), 
-        axis.text = ggplot2::element_text(size = 8),
-        legend.position = c(0.8, 0.15), legend.direction = "horizontal",
-        panel.spacing.y=ggplot2::unit(0, "lines"))+
-  ggplot2::guides(fill = ggplot2::guide_legend(title.position="top", title.hjust = 0,nrow = 2, byrow = TRUE))
+  ggplot2::scale_x_datetime(
+    date_breaks = 'month',
+    date_labels = "%b.",
+    expand = ggplot2::expansion(0)
+  ) +
+  ggplot2::scale_y_continuous(
+    limits = c(0, NA),
+    expand = ggplot2::expansion(c(0, 0.04)),
+    breaks = \(x) {
+      seq(min(x), (max(x) + 1) * 1.1) |>
+        pretty() |>
+        floor() |>
+        unique()
+    }
+  ) +
+  ggplot2::scale_fill_manual(values = c("#36827f", "#856084", "#c1cad6")) +
+  ggplot2::labs(
+    x = ggplot2::element_blank(),
+    y = bquote("Number of PM"[2.5] * " Monitors w/ Valid Data"),
+    fill = bquote("PM"[2.5] * " Monitor"),
+    caption = plot_captions$`FEM and PA`
+  ) +
+  ggplot2::theme(
+    axis.text.x = ggplot2::element_text(hjust = -0.1),
+    axis.text = ggplot2::element_text(size = 8),
+    legend.position = c(0.8, 0.15),
+    legend.direction = "horizontal",
+    panel.spacing.y = ggplot2::unit(0, "lines")
+  ) +
+  ggplot2::guides(
+    fill = ggplot2::guide_legend(
+      title.position = "top",
+      title.hjust = 0,
+      nrow = 2,
+      byrow = TRUE
+    )
+  )
 
-plot_path = paste0("../../deployments/reports/seasonal/plots/",report_season,"_monitor_counts.png")
-ggsave(gg, filename = plot_path,
-       width = fig_dims$w, height = fig_dims$h, units = fig_dims$u, dpi = 300)
+plot_path = paste0(
+  "../../deployments/reports/seasonal/plots/",
+  report_season,
+  "_monitor_counts.png"
+)
+ggsave(
+  gg,
+  filename = plot_path,
+  width = fig_dims$w,
+  height = fig_dims$h,
+  units = fig_dims$u,
+  dpi = 300
+)
 
 # Define plot summary text (figure titles essentially)
 plot_text = 'Daily counts of active fine particulate matter (PM<sub>2.5</sub>) monitors in each Canadian province/territory. 
@@ -156,7 +202,7 @@ Note: Sudden drops in monitors counts may be the result of our automated quality
 # pd = obs |>
 #   dplyr::group_by(date = lubridate::floor_date(date, 'days'), prov_terr, flagged = flag != "None", monitor) |>
 #   dplyr::summarise(n = length(unique(site_id[!is.na(pm25)])))
-#   
+#
 # gg = pd |>
 #   ggplot2::ggplot(aes(x = date, y = n, fill = flagged)) +
 #   ggplot2::facet_wrap("prov_terr", scales = "free", nrow = 3) +
@@ -164,35 +210,37 @@ Note: Sudden drops in monitors counts may be the result of our automated quality
 #   ggpubr::theme_pubr(border = TRUE) +
 #   ggplot2::scale_x_datetime(date_breaks = 'month',
 #                    date_labels = "%b.", expand = expansion(0)) +
-#   ggplot2::scale_y_continuous(limits = c(0, NA), expand = expansion(c(0, 0.04)), 
-#                      breaks = \(x) seq(min(x), (max(x) + 1) * 1.1) |> 
+#   ggplot2::scale_y_continuous(limits = c(0, NA), expand = expansion(c(0, 0.04)),
+#                      breaks = \(x) seq(min(x), (max(x) + 1) * 1.1) |>
 #                        pretty() |> floor() |> unique()) +
-#   ggplot2::scale_fill_manual(values = c("#36827f", "#856084", "#c1cad6")) + 
+#   ggplot2::scale_fill_manual(values = c("#36827f", "#856084", "#c1cad6")) +
 #   ggplot2::labs(x = ggplot2::element_blank(), y = bquote("Number of PM"[2.5]*" Monitors w/ Valid Data"),
 #        fill = bquote("PM"[2.5]*" Monitor")) +
-#   ggplot2::theme(axis.text.x = ggplot2::element_text(hjust = -0.1), 
+#   ggplot2::theme(axis.text.x = ggplot2::element_text(hjust = -0.1),
 #         axis.text = ggplot2::element_text(size = 8),
 #         legend.position = c(0.8, 0.15), legend.direction = "horizontal",
 #         panel.spacing.y=ggplot2::unit(0, "lines"))+
 #   ggplot2::guides(fill = ggplot2::guide_legend(title.position="top", title.hjust = 0,nrow = 2, byrow = TRUE))
-# 
+#
 # plot_path = "../reports/seasonal/plots/2023-summer_monitor_counts.png"
 # ggplot2::ggsave(gg, filename = plot_path,
 #        width = fig_dims$w, height = fig_dims$h, units = fig_dims$u, dpi = 300)
-# 
+#
 # # Define plot summary text (figure titles essentially)
-# plot_text = 'Daily counts of active fine particulate matter (PM<sub>2.5</sub>) monitors in each Canadian province/territory. 
-# 
+# plot_text = 'Daily counts of active fine particulate matter (PM<sub>2.5</sub>) monitors in each Canadian province/territory.
+#
 # The National Air Pollution Service (NAPS) Federal Equivelant Method (FEM) monitors are the gold standard for hourly observations. The PurpleAir (PA) low cost monitors are not as accurate, but are cheaper/easier to install allowing for a larger network. These PA monitors are recorded as either owned by Environment and Climate Change Canada\'s Air Quality Science Units (ECCC AQSU) or by anyone else ("Non-ECCC").
-# 
+#
 # Note: Sudden drops in monitors counts may be the result of our automated quality control and/or gaps in our database.'
 
 # Make summary data for autmated text for this section
 
 # Table of monitor counts, data completeness, and flagging rate
 with_tooltip <- function(value, tooltip, ...) {
-  div(style = "text-decoration: underline; text-decoration-style: dotted; cursor: help",
-      tippy(value, tooltip, ...))
+  div(
+    style = "text-decoration: underline; text-decoration-style: dotted; cursor: help",
+    tippy(value, tooltip, ...)
+  )
 }
 
 # totals = obs |>
@@ -202,37 +250,61 @@ with_tooltip <- function(value, tooltip, ...) {
 #   dplyr::summarise(total_completeness = sum(has_data_this_hour) / length(hours_to_summarise))
 table_data = obs |>
   dplyr::group_by(prov_terr, monitor, site_id) |>
-  dplyr::summarise(completeness = sum(!is.na(pm25)) / length(hours_to_summarise),
-            flaggedness = sum(flag[a_flag != 2 | b_flag != 2] != "None") / 
-              length(hours_to_summarise)) |>
+  dplyr::summarise(
+    completeness = sum(!is.na(pm25)) / length(hours_to_summarise),
+    flaggedness = sum(flag[a_flag != 2 | b_flag != 2] != "None") /
+      length(hours_to_summarise)
+  ) |>
   dplyr::group_by(`Prov./Terr.` = prov_terr) |>
   dplyr::summarise(
     FEM = sum(monitor == "FEM"),
     PA = sum(monitor == "PA"),
-    `Mean Completeness (%)` = (mean(completeness, na.rm = TRUE) |> round(3))*100,
-    `Mean Flag Rate (%)` = (mean(flaggedness, na.rm = TRUE) |> round(3))*100
+    `Mean Completeness (%)` = (mean(completeness, na.rm = TRUE) |> round(3)) *
+      100,
+    `Mean Flag Rate (%)` = (mean(flaggedness, na.rm = TRUE) |> round(3)) * 100
   )
 
-table = reactable(data = table_data, defaultPageSize = 13,
-            columns = list(
-              `Mean Completeness (%)` = colDef(
-                header = with_tooltip("Mean Completeness (%)", "Average % of hours w/ valid data for all sites in the province/territory.")),
-              `Mean Flag Rate (%)` = colDef(
-                header = with_tooltip("Mean Flag Rate (%)", "Average % of hours flagged as invalid for all sites in the province/territory.")),
-              FEM = colDef(
-                header = with_tooltip("FEM", "NAPS Regulatory 'Federal Equivelant Method' monitors (gold standard for observations).")),
-              PA = colDef(
-                header = with_tooltip("PA", "PurpleAir low-cost PM<sub>2.5</sub> monitors."))
-            ),
-            columnGroups = list(
-              colGroup(name = "", columns = c("Prov./Terr.")),
-              colGroup(name = "Monitor Counts", columns = c("FEM", "PA")),
-              colGroup(name = "Data Availability", columns = c("Mean Completeness (%)", 
-                                                               "Mean Flag Rate (%)"))
-            )
+table = reactable(
+  data = table_data,
+  defaultPageSize = 13,
+  columns = list(
+    `Mean Completeness (%)` = colDef(
+      header = with_tooltip(
+        "Mean Completeness (%)",
+        "Average % of hours w/ valid data for all sites in the province/territory."
+      )
+    ),
+    `Mean Flag Rate (%)` = colDef(
+      header = with_tooltip(
+        "Mean Flag Rate (%)",
+        "Average % of hours flagged as invalid for all sites in the province/territory."
+      )
+    ),
+    FEM = colDef(
+      header = with_tooltip(
+        "FEM",
+        "NAPS Regulatory 'Federal Equivelant Method' monitors (gold standard for observations)."
+      )
+    ),
+    PA = colDef(
+      header = with_tooltip(
+        "PA",
+        "PurpleAir low-cost PM<sub>2.5</sub> monitors."
+      )
+    )
+  ),
+  columnGroups = list(
+    colGroup(name = "", columns = c("Prov./Terr.")),
+    colGroup(name = "Monitor Counts", columns = c("FEM", "PA")),
+    colGroup(
+      name = "Data Availability",
+      columns = c("Mean Completeness (%)", "Mean Flag Rate (%)")
+    )
   )
+)
 
-```
+``
+`
 ```{r}
 
 tmp = daily_monitor_counts |>
@@ -243,7 +315,9 @@ tmp = daily_monitor_counts |>
               rel_change = change / max(n))
 text = list(
   most = table_data |> dplyr::mutate(t = FEM+PA) |> 
-    dplyr::arrange(desc(t)) |> dplyr::pull(`Prov./Terr.`) |>
+    dplyr::arrange(desc(t)) |> dplyr::pull(`
+Prov. / Terr.
+`) |>
     head(3),
   change = tmp |>
     list(
@@ -442,7 +516,11 @@ gg = daily_zone_means |>
   labs(y = bquote("Daily Mean PM"[2.5]~"("*mu*"g m"^-3*")"), 
        x = element_blank(),
        colour = element_blank(),
-       caption = plot_captions$`FEM and PA`)
+       caption = plot_captions$`
+FEM
+and
+PA
+`)
 
 plot_paths$ts = paste0("../../deployments/reports/seasonal/plots/",report_season,
                        "_daily_zone_means.png")
@@ -452,7 +530,11 @@ ggsave(gg, filename = plot_paths$ts,
 # Define plot summary text (figure titles essentially)
 plot_texts$ts = 'Daily mean PM<sub>2.5</sub> concentrations (&mu;g m<sup>-3</sup>) by Canadian forecast zone for each province/territory. The black line indicates the daily mean of the forcast zone averages.
 
-Note: Not all forecast zones have observation data. See `When/where did event occur?` for a daily record of forecast zones with data by province/territory'
+Note: Not all forecast zones have observation data. See `
+When / where
+did
+event
+occur?` for a daily record of forecast zones with data by province/territory'
 
 # Make summary data for autmated text for this section
 
@@ -500,25 +582,53 @@ table_data = obs |>
 
 table = reactable(data = table_data, defaultPageSize = 13,
             columns = list(
-              `Mean` = colDef(
+              `
+Mean
+` = colDef(
                 header = with_tooltip("Mean", "Average of the forecast zone seasonal mean PM2.5 concentrations within each province/territory")),
-              `Max` = colDef(
+              `
+Max
+` = colDef(
                 header = with_tooltip("Max", "Maximum of the forecast zone seasonal mean PM2.5 concentrations within each province/territory")),
-              `98th Percentile` = colDef(
+              `
+98
+th
+Percentile
+` = colDef(
                 header = with_tooltip("98th Percentile", "98th Percentile of the forecast zone seasonal mean PM2.5 concentrations within each province/territory")),
-              `Mean Hours >= 60` = colDef(
+              `
+Mean
+Hours >= 60
+` = colDef(
                 header = with_tooltip("Mean Hours >= 60", "Average of the forecast zone seasonal counts of hourly PM2.5 concentrations of 60 ug/mm3 or greater (High - Very High risk) within each province/territory")),
-              `Mean Hours >= 100` = colDef(
+              `
+Mean
+Hours >= 100
+` = colDef(
                 header = with_tooltip("Mean Hours >= 100", "Average of the forecast zone seasonal counts of hourly PM2.5 concentrations of 100 ug/mm3 or greater (Very High risk) within each province/territory")),
-              `Count` = colDef(
+              `
+Count
+` = colDef(
                 header = with_tooltip("Count", "Total number of elevated PM2.5 events detected within the province/territory")),
-              `Mean Count` = colDef(
+              `
+Mean
+Count
+` = colDef(
                 header = with_tooltip("Mean Count", "Average of the number of elevated PM2.5 events detected within each forecast zone in the province/territory")),
-              `Zones w/ Events` = colDef(
+              `
+Zones
+w / Events
+` = colDef(
                 header = with_tooltip("Zones w/ Events", "Count of the number of forecast zones with at least one elevated PM2.5 event")),
-              `Mean Duration (days)` = colDef(
+              `
+Mean
+Duration(days)
+` = colDef(
                 header = with_tooltip("Mean Duration (days)", "Average duration of elevated PM2.5 events this season in the province/territory")),
-              `Max Duration (days)` = colDef(
+              `
+Max
+Duration(days)
+` = colDef(
                 header = with_tooltip("Max Duration (days)", "Maximum duration of elevated PM2.5 events this season in the province/territory"))
             ),
             columnGroups = list(
@@ -532,31 +642,37 @@ table = reactable(data = table_data, defaultPageSize = 13,
             )
   )
 
-```
+`
+``
 ```{r}
 
 text = list(
   mean_counts = seasonal_zone_summaries |>
     dplyr::filter(n > 0) |>
-    dplyr::summarise(low = sum(zone_mean_pm25 > 10),
-              mod = sum(zone_mean_pm25 > 30),
-              high = sum(zone_mean_pm25 > 60),
-              vhigh = sum(zone_mean_pm25 > 100)),
+    dplyr::summarise(
+      low = sum(zone_mean_pm25 > 10),
+      mod = sum(zone_mean_pm25 > 30),
+      high = sum(zone_mean_pm25 > 60),
+      vhigh = sum(zone_mean_pm25 > 100)
+    ),
   max_counts = seasonal_zone_summaries |>
     dplyr::filter(n > 0) |>
-    dplyr::summarise(mod = sum(zone_max_pm25 > 30),
-              high = sum(zone_max_pm25 > 60),
-              vhigh = sum(zone_max_pm25 > 100)),
+    dplyr::summarise(
+      mod = sum(zone_max_pm25 > 30),
+      high = sum(zone_max_pm25 > 60),
+      vhigh = sum(zone_max_pm25 > 100)
+    ),
   daily = daily_zone_means |>
     dplyr::group_by(prov_terr) |>
-    dplyr::summarise(mean = round(mean(mean_zone_mean),1),
-              max = round(mean(max_zone_mean),1)) |>
+    dplyr::summarise(
+      mean = round(mean(mean_zone_mean), 1),
+      max = round(mean(max_zone_mean), 1)
+    ) |>
     dplyr::arrange(desc(mean)),
   least = daily_zone_means |>
     dplyr::group_by(prov_terr) |>
-    dplyr::summarise(max = round(max(mean_zone_mean),1)) |>
+    dplyr::summarise(max = round(max(mean_zone_mean), 1)) |>
     dplyr::arrange(max)
-    
 )
 
 text$daily2 = text$daily |> dplyr::arrange(desc(max))
@@ -589,18 +705,18 @@ The worst impacts this season occurred in `r text$daily2$prov_terr[1]`, `r text$
 #### Seasonal Zone Mean
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$mean_map |> 
-  stringr::str_replace(report_dir_esc, "./")|> 
-  plot_card(plot_texts$mean_map, iframe=TRUE, iframe_height = 625)
+plot_paths$mean_map |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(plot_texts$mean_map, iframe = TRUE, iframe_height = 625)
 ```
 
 |
 #### Seasonal Zone Max
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$max_map |> 
-  stringr::str_replace(report_dir_esc, "./")|> 
-  plot_card(plot_texts$max_map, iframe=TRUE, iframe_height = 625)
+plot_paths$max_map |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(plot_texts$max_map, iframe = TRUE, iframe_height = 625)
 ```
 
 |
@@ -608,7 +724,7 @@ plot_paths$max_map |>
 #### Daily Zone Mean
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$ts |> 
+plot_paths$ts |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_texts$ts)
 ```
@@ -627,77 +743,137 @@ table
 # Define dimensions for output figures
 fig_dims = list(h = 8, w = 11, u = 'in')
 
-test_data = obs  |>
+test_data = obs |>
   dplyr::group_by(date, prov_terr, fcst_zone) |>
-  dplyr::summarise(pm25 = mean(pm25, na.rm = TRUE))  |>
-  dplyr::mutate(aqhip = aqhi_p(pm25, use_risk = TRUE, include_ugm3_range = TRUE))|>
-  dplyr::group_by(prov_terr, fcst_zone, date = lubridate::floor_date(date, "days")) 
+  dplyr::summarise(pm25 = mean(pm25, na.rm = TRUE)) |>
+  dplyr::mutate(
+    aqhip = aqhi_p(pm25, use_risk = TRUE, include_ugm3_range = TRUE)
+  ) |>
+  dplyr::group_by(
+    prov_terr,
+    fcst_zone,
+    date = lubridate::floor_date(date, "days")
+  )
 
-pd=list()
+pd = list()
 pd$max = test_data |>
-  dplyr::summarise(aqhip = levels(aqhip)[max(as.numeric(aqhip), na.rm = TRUE)] |>
-              factor(levels(aqhip))) |>
+  dplyr::summarise(
+    aqhip = levels(aqhip)[max(as.numeric(aqhip), na.rm = TRUE)] |>
+      factor(levels(aqhip))
+  ) |>
   dplyr::group_by(prov_terr, date, aqhip) |>
   dplyr::summarise(n = n()) |>
   dplyr::full_join(prov_terr_zone_counts, by = "prov_terr") |>
   dplyr::ungroup() |>
-  dplyr::mutate(n = ifelse(is.na(aqhip), 0, n),
-         p = n / (n_zones),
-         aqhip = ifelse(is.na(aqhip), "No Data.", as.character(aqhip)) |> factor(c(levels(aqhip), "No Data.")))
+  dplyr::mutate(
+    n = ifelse(is.na(aqhip), 0, n),
+    p = n / (n_zones),
+    aqhip = ifelse(is.na(aqhip), "No Data.", as.character(aqhip)) |>
+      factor(c(levels(aqhip), "No Data."))
+  )
 pd$median = test_data |>
   dplyr::summarise(
     aqhip = levels(aqhip)[ceiling(median(as.numeric(aqhip), na.rm = TRUE))] |>
-      factor(levels(aqhip))) |>
+      factor(levels(aqhip))
+  ) |>
   dplyr::group_by(prov_terr, date, aqhip) |>
   dplyr::summarise(n = n()) |>
   dplyr::full_join(prov_terr_zone_counts, by = "prov_terr") |>
   dplyr::ungroup() |>
-  dplyr::mutate(n = ifelse(is.na(aqhip), 0, n),
-         p = n / (n_zones),
-         aqhip = ifelse(is.na(aqhip), "No Data.", as.character(aqhip)) |> factor(c(levels(aqhip), "No Data.")))
+  dplyr::mutate(
+    n = ifelse(is.na(aqhip), 0, n),
+    p = n / (n_zones),
+    aqhip = ifelse(is.na(aqhip), "No Data.", as.character(aqhip)) |>
+      factor(c(levels(aqhip), "No Data."))
+  )
 
-plot_paths = paste0("../../deployments/reports/seasonal/plots/", 
-                    report_season, "_", stringr::str_to_title(names(pd)), "_fcstzone_aqhip.png") |>
+plot_paths = paste0(
+  "../../deployments/reports/seasonal/plots/",
+  report_season,
+  "_",
+  stringr::str_to_title(names(pd)),
+  "_fcstzone_aqhip.png"
+) |>
   as.list() |>
   setNames(names(pd))
 
-for(stat in names(pd)){
+for (stat in names(pd)) {
   # total = pd[[stat]] |>
   #   dplyr::group_by(prov_terr, date) |>
   #   dplyr::summarise(p = sum(p, na.rm =TRUE)) |>
   #   dplyr::mutate(aqhip = NA)
-  gg=pd[[stat]] |>
+  gg = pd[[stat]] |>
     dplyr::mutate(prov_terr = factor(prov_terr, prov_pretty)) |>
     ggplot() +
-    facet_wrap("prov_terr", ncol = 3, scales = "free_x")+
-    geom_col(width =1*3600*24, just = 0,
-             aes(colour = aqhip, x = date, y = p, fill = aqhip)) +
+    facet_wrap("prov_terr", ncol = 3, scales = "free_x") +
+    geom_col(
+      width = 1 * 3600 * 24,
+      just = 0,
+      aes(colour = aqhip, x = date, y = p, fill = aqhip)
+    ) +
     # geom_area(data = total, colour = 'black', aes(x = date, y = p), fill = NA) +
-    geom_hline(yintercept = c(0.25,0.5,0.75), linetype = "dashed", colour = "black")+
+    geom_hline(
+      yintercept = c(0.25, 0.5, 0.75),
+      linetype = "dashed",
+      colour = "black"
+    ) +
     geom_vline(
-      xintercept = summary_months, colour = 'black'
-    ) + 
-    scale_y_continuous(labels = scales::percent_format(),
-                       expand = expansion(0))+
-    scale_x_datetime(expand = expansion(0), breaks = summary_months, date_labels = "%b.")+
-    scale_fill_manual(values = c(leg_ugm3$colours[c(1,4,7,11)], "#E8ECED")) +
-    scale_colour_manual(values = c(leg_ugm3$colours[c(1,4,7,11)], "#E8ECED")) +
+      xintercept = summary_months,
+      colour = 'black'
+    ) +
+    scale_y_continuous(
+      labels = scales::percent_format(),
+      expand = expansion(0)
+    ) +
+    scale_x_datetime(
+      expand = expansion(0),
+      breaks = summary_months,
+      date_labels = "%b."
+    ) +
+    scale_fill_manual(values = c(leg_ugm3$colours[c(1, 4, 7, 11)], "#E8ECED")) +
+    scale_colour_manual(
+      values = c(leg_ugm3$colours[c(1, 4, 7, 11)], "#E8ECED")
+    ) +
     ggpubr::theme_pubr(border = TRUE) +
-    labs(y = "Daily % of Forecast Zones",
-       caption = plot_captions$`FEM and PA`,
-         x = element_blank(), fill = paste("Daily", stringr::str_to_title(stat), "Forecast Zone AQHI+ Category")) +
-    theme(legend.position = c(0.65, 0.085), legend.direction = "horizontal",
-          axis.text.x = element_text(hjust = -0.2), panel.background = element_rect(fill = "#E8ECED", colour = NA),
-          axis.text = element_text(size = 8),
-          panel.spacing.x=unit(0, "lines"),panel.spacing.y=unit(0, "lines"),
-          strip.text = element_text(size = 8)) +
-    coord_cartesian(ylim = c(0, 1))+
-    guides(fill = guide_legend(title.position="top", title.hjust = 0, override.aes = list(colour = "black", linewidth = 0.25)),
-           colour = "none")
-  
+    labs(
+      y = "Daily % of Forecast Zones",
+      caption = plot_captions$`FEM and PA`,
+      x = element_blank(),
+      fill = paste(
+        "Daily",
+        stringr::str_to_title(stat),
+        "Forecast Zone AQHI+ Category"
+      )
+    ) +
+    theme(
+      legend.position = c(0.65, 0.085),
+      legend.direction = "horizontal",
+      axis.text.x = element_text(hjust = -0.2),
+      panel.background = element_rect(fill = "#E8ECED", colour = NA),
+      axis.text = element_text(size = 8),
+      panel.spacing.x = unit(0, "lines"),
+      panel.spacing.y = unit(0, "lines"),
+      strip.text = element_text(size = 8)
+    ) +
+    coord_cartesian(ylim = c(0, 1)) +
+    guides(
+      fill = guide_legend(
+        title.position = "top",
+        title.hjust = 0,
+        override.aes = list(colour = "black", linewidth = 0.25)
+      ),
+      colour = "none"
+    )
+
   fp = plot_paths[[stat]]
-  ggsave(gg, filename = fp,
-         width = fig_dims$w, height = fig_dims$h, units = fig_dims$u, dpi = 300)
+  ggsave(
+    gg,
+    filename = fp,
+    width = fig_dims$w,
+    height = fig_dims$h,
+    units = fig_dims$u,
+    dpi = 300
+  )
 }
 # Define plot summary text (figure titles essentially)
 plot_texts = list(
@@ -713,8 +889,10 @@ See `Events Table` for a break down of events within each forecast zone.'
 
 # Table of monitor counts, data completeness, and flagging rate
 with_tooltip <- function(value, tooltip, ...) {
-  div(style = "text-decoration: underline; text-decoration-style: dotted; cursor: help",
-      tippy(value, tooltip, ...))
+  div(
+    style = "text-decoration: underline; text-decoration-style: dotted; cursor: help",
+    tippy(value, tooltip, ...)
+  )
 }
 
 # Table of events
@@ -724,8 +902,9 @@ table_data = events |>
   dplyr::group_by(prov_terr) |>
   dplyr::mutate(event_rank_prov = rank(-event_magnitude)) |>
   dplyr::mutate(
-         duration = as.numeric(duration),
-         mean_pm25_duration = round(mean_pm25*duration,1)) |>
+    duration = as.numeric(duration),
+    mean_pm25_duration = round(mean_pm25 * duration, 1)
+  ) |>
   dplyr::select(
     "Prov./Terr." = prov_terr,
     "Forecast Zone" = fcst_zone,
@@ -741,26 +920,46 @@ table_data = events |>
     "Max." = max_pm25,
     "Mean" = mean_pm25,
     "Mean * Duration" = mean_pm25_duration
-  )  
-
-table = reactable(data = table_data, defaultPageSize = 10,
-            columns = list(
-              Start = colDef(format = colFormat(date = TRUE, locales = "en-CA"),
-                             cell = \(value, index) { format(value, "%b. %d")}),
-              End = colDef(format = colFormat(date = TRUE, locales = "en-CA"),
-                             cell = \(value, index) { format(value, "%b. %d")})
-              ),
-            columnGroups = list(
-              colGroup(name = "Location", columns = c("Prov./Terr.", "Forecast Zone")),
-              colGroup(name = "Event Timeline", columns = c("Start", "End", "Duration (days)"#, 
-                                                                 # "Rank (Zone)", "Rank (Prov/Terr)"
-                                                                 )),
-              colGroup(name = "PM2.5 Monitors", columns = c("# of FEMs", "# of PAs")),
-              colGroup(name = "PM2.5 Concentration (ug/m3)", columns = c("Min.", "Max.", "Mean", "Mean * Duration"))
-            )
   )
 
-```
+table = reactable(
+  data = table_data,
+  defaultPageSize = 10,
+  columns = list(
+    Start = colDef(
+      format = colFormat(date = TRUE, locales = "en-CA"),
+      cell = \(value, index) {
+        format(value, "%b. %d")
+      }
+    ),
+    End = colDef(
+      format = colFormat(date = TRUE, locales = "en-CA"),
+      cell = \(value, index) {
+        format(value, "%b. %d")
+      }
+    )
+  ),
+  columnGroups = list(
+    colGroup(name = "Location", columns = c("Prov./Terr.", "Forecast Zone")),
+    colGroup(
+      name = "Event Timeline",
+      columns = c(
+        "Start",
+        "End",
+        "Duration (days)" #,
+        # "Rank (Zone)", "Rank (Prov/Terr)"
+      )
+    ),
+    colGroup(name = "PM2.5 Monitors", columns = c("# of FEMs", "# of PAs")),
+    colGroup(
+      name = "PM2.5 Concentration (ug/m3)",
+      columns = c("Min.", "Max.", "Mean", "Mean * Duration")
+    )
+  )
+)
+
+``
+`
 ```{r}
 months = unique(format(hours_to_summarise, "%B"))
 m_data = lapply(months, \(m){
@@ -780,13 +979,19 @@ texts = lapply(months, \(month){
   e_data = table_data |>
     dplyr::filter( format(Start, "%B") %in% month |  format(End, "%B") %in% month)
   e_prov_counts = e_data |>
-    dplyr::group_by(`Prov./Terr.`) |>
+    dplyr::group_by(`
+Prov. / Terr.
+`) |>
     dplyr::summarise(n = n()) |>
     dplyr::arrange(desc(n)) |>
     head(3)
   e_prov_max_dur = e_data |>
-    dplyr::group_by(`Prov./Terr.`) |>
-    dplyr::summarise(dur = max(`Duration (days)`)) |>
+    dplyr::group_by(`
+Prov. / Terr.
+`) |>
+    dplyr::summarise(dur = max(`
+Duration(days)
+`)) |>
     dplyr::arrange(desc(dur)) |>
     head(3)
   
@@ -801,7 +1006,15 @@ texts = lapply(months, \(month){
     dplyr::arrange(desc(aqhip), desc(p))
   
   m_summary = paste0(
-    "In ", month, " there was ",nrow(e_data)," detected events in Canada where the daily max PM<sub>2.5</sub> concentration in a forecast zone exceeded 30 &mu;g m<sup>-3</sup> for more than 1 day in a row. The most events this month occurred in ", paste(e_prov_counts$`Prov./Terr.`[1:2], collapse = ", ") |> paste("and", e_prov_counts$`Prov./Terr.`[3])," (",paste(min(e_prov_counts$n), "-", max(e_prov_counts$n))," events). The longest events this month occurred in ",paste(e_prov_max_dur$`Prov./Terr.`[1:2], collapse = ", ") |> paste("and", e_prov_max_dur$`Prov./Terr.`[3]), " (max ",paste(min(e_prov_max_dur$dur), "-", max(e_prov_max_dur$dur))," days long). "
+    "In ", month, " there was ",nrow(e_data)," detected events in Canada where the daily max PM<sub>2.5</sub> concentration in a forecast zone exceeded 30 &mu;g m<sup>-3</sup> for more than 1 day in a row. The most events this month occurred in ", paste(e_prov_counts$`
+Prov. / Terr.
+`[1:2], collapse = ", ") |> paste("and", e_prov_counts$`
+Prov. / Terr.
+`[3])," (",paste(min(e_prov_counts$n), "-", max(e_prov_counts$n))," events). The longest events this month occurred in ",paste(e_prov_max_dur$`
+Prov. / Terr.
+`[1:2], collapse = ", ") |> paste("and", e_prov_max_dur$`
+Prov. / Terr.
+`[3]), " (max ",paste(min(e_prov_max_dur$dur), "-", max(e_prov_max_dur$dur))," days long). "
   )
   
   p_texts = sapply(prov_pretty, \(prov){
@@ -813,8 +1026,12 @@ texts = lapply(months, \(month){
       dplyr::arrange(desc(aqhip)) |>
       dplyr::mutate(desc = stringr::str_extract(aqhip, "\\[(\\d*\\-\\d*)",group = 1),
              desc = ifelse(is.na(desc),"exceeding 100",paste("between", desc)))
-    p_e_data = e_data |> dplyr::filter(`Prov./Terr.` == prov) |>
-      dplyr::arrange(desc(`Mean * Duration`))
+    p_e_data = e_data |> dplyr::filter(`
+Prov. / Terr.
+` == prov) |>
+      dplyr::arrange(desc(`
+Mean * Duration
+`))
     
     if(nrow(p_m_data)==1 & p_m_data$aqhip[1] == "Low [0-30)"){
        paste0(
@@ -850,7 +1067,8 @@ for(t in texts){
   cat(t, "\n\n---\n\n")
 }
 
-```
+`
+``
   
 </details>
 
@@ -862,7 +1080,7 @@ for(t in texts){
 #### Peak Events (Zone Maximum)
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$max |> 
+plot_paths$max |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_texts$max)
 ```
@@ -872,7 +1090,7 @@ plot_paths$max |>
 #### Widespread Events (Zone Median)
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$median |> 
+plot_paths$median |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_texts$median)
 ```
@@ -892,256 +1110,408 @@ table
 fig_dims = list(h = NA, w = 11, u = 'in') # height depends on # of events
 
 meta = obs |>
-  dplyr::group_by(monitor)|>
-  dplyr::filter( !duplicated(site_id)) |>
+  dplyr::group_by(monitor) |>
+  dplyr::filter(!duplicated(site_id)) |>
   dplyr::select(-date, -pm25)
 
 worst_events = events |>
   dplyr::filter(mean_pm25 >= 10) |>
   dplyr::group_by(prov_terr) |>
   dplyr::mutate(event_rank_prov = rank(-event_magnitude)) |>
-  dplyr::filter(event_rank_prov <= 9 ) |>
+  dplyr::filter(event_rank_prov <= 9) |>
   dplyr::ungroup()
 
 pd = obs |>
   dplyr::select(site_id, monitor, date, pm25, prov_terr, fcst_zone) |>
   # Infill missing dates by site
-  dplyr::full_join(expand.grid(site_id_monitor = paste(meta$site_id, meta$monitor), 
-                        date = hours_to_summarise) |>
-              dplyr::mutate(site_id = stringr::str_split(site_id_monitor, " ", simplify = TRUE)[,1] |>
-                       as.numeric(),
-                     monitor = stringr::str_split(site_id_monitor, " ", simplify = TRUE)[,2]) |>
-              dplyr::select(-site_id_monitor) |>
-              dplyr::left_join(meta |> dplyr::select(site_id, monitor, prov_terr, fcst_zone), 
-                        by = c("site_id", "monitor")) , 
-            by = c("site_id", "monitor", "prov_terr", "fcst_zone", "date")) |>
-  dplyr::arrange(site_id, date)  |>
-  dplyr::right_join(worst_events |> dplyr::select(prov_terr, fcst_zone, min_date, max_date), 
-             by = c("prov_terr","fcst_zone"), relationship = "many-to-many")|>
-  dplyr::filter(lubridate::floor_date(date, "days") |> dplyr::between(date_range[1], max_date)) |>
-  dplyr::mutate(event_range = ifelse(date_range[1] != date_range[2],
-                              paste(format(date_range[1], "%b. %d"), "-", format(max_date, "%b. %d")),
-                              format(date_range[1], "%b. %d")))
+  dplyr::full_join(
+    expand.grid(
+      site_id_monitor = paste(meta$site_id, meta$monitor),
+      date = hours_to_summarise
+    ) |>
+      dplyr::mutate(
+        site_id = stringr::str_split(site_id_monitor, " ", simplify = TRUE)[,
+          1
+        ] |>
+          as.numeric(),
+        monitor = stringr::str_split(site_id_monitor, " ", simplify = TRUE)[, 2]
+      ) |>
+      dplyr::select(-site_id_monitor) |>
+      dplyr::left_join(
+        meta |> dplyr::select(site_id, monitor, prov_terr, fcst_zone),
+        by = c("site_id", "monitor")
+      ),
+    by = c("site_id", "monitor", "prov_terr", "fcst_zone", "date")
+  ) |>
+  dplyr::arrange(site_id, date) |>
+  dplyr::right_join(
+    worst_events |> dplyr::select(prov_terr, fcst_zone, min_date, max_date),
+    by = c("prov_terr", "fcst_zone"),
+    relationship = "many-to-many"
+  ) |>
+  dplyr::filter(
+    lubridate::floor_date(date, "days") |>
+      dplyr::between(date_range[1], max_date)
+  ) |>
+  dplyr::mutate(
+    event_range = ifelse(
+      date_range[1] != date_range[2],
+      paste(format(date_range[1], "%b. %d"), "-", format(max_date, "%b. %d")),
+      format(date_range[1], "%b. %d")
+    )
+  )
 
 pd_means = pd |>
-  dplyr::group_by(prov_terr, fcst_zone, date, event_range) |> 
-  dplyr::summarise(pm25 = mean(pm25, na.rm = TRUE),
-            min_date = min(date),
-            max_date = max(date))
+  dplyr::group_by(prov_terr, fcst_zone, date, event_range) |>
+  dplyr::summarise(
+    pm25 = mean(pm25, na.rm = TRUE),
+    min_date = min(date),
+    max_date = max(date)
+  )
 
 pd_sites = pd |>
   dplyr::group_by(prov_terr, fcst_zone, event_range) |>
-  dplyr::summarise(n_pa = sum(monitor[!duplicated(site_id)] == "PA"),
-            n_fem = sum(monitor[!duplicated(site_id)] == "FEM"),
-            fem_mean = mean(pm25[monitor == "FEM"], na.rm = TRUE) |>
-              round(1),
-            pa_mean = mean(pm25[monitor == "PA"], na.rm = TRUE) |> 
-              round(1),
-            pm25_mean = mean(pm25, na.rm = TRUE) |> 
-              round(),
-            pm25_max = max(pm25, na.rm = TRUE) |> 
-              round(),
-            y = max(pm25, na.rm = TRUE) * 1.04,
-            x = min(min_date),
-            x2 = max(max_date),
-            min_date  = min(date),
-            max_date  = max(date),
-            duration = difftime(x2+lubridate::days(1), x,units='days')) |>
-  dplyr::mutate(label = paste0(duration, " Day Event",
-                        "\n", n_fem, " FEM, ", n_pa, " PA",
-                        "\nMean: ", pm25_mean, " ug/m³",
-                        "\nMax: ", pm25_max, " ug/m³"
-  )
+  dplyr::summarise(
+    n_pa = sum(monitor[!duplicated(site_id)] == "PA"),
+    n_fem = sum(monitor[!duplicated(site_id)] == "FEM"),
+    fem_mean = mean(pm25[monitor == "FEM"], na.rm = TRUE) |>
+      round(1),
+    pa_mean = mean(pm25[monitor == "PA"], na.rm = TRUE) |>
+      round(1),
+    pm25_mean = mean(pm25, na.rm = TRUE) |>
+      round(),
+    pm25_max = max(pm25, na.rm = TRUE) |>
+      round(),
+    y = max(pm25, na.rm = TRUE) * 1.04,
+    x = min(min_date),
+    x2 = max(max_date),
+    min_date = min(date),
+    max_date = max(date),
+    duration = difftime(x2 + lubridate::days(1), x, units = 'days')
+  ) |>
+  dplyr::mutate(
+    label = paste0(
+      duration,
+      " Day Event",
+      "\n",
+      n_fem,
+      " FEM, ",
+      n_pa,
+      " PA",
+      "\nMean: ",
+      pm25_mean,
+      " ug/m³",
+      "\nMax: ",
+      pm25_max,
+      " ug/m³"
+    )
   )
 
 fills = pd |>
   dplyr::group_by(prov_terr, fcst_zone, event_range) |>
-  dplyr::summarise(max_pm25 = max(pm25, na.rm = TRUE),
-            min_date = min(min_date),
-            max_date = max(max_date)) 
+  dplyr::summarise(
+    max_pm25 = max(pm25, na.rm = TRUE),
+    min_date = min(min_date),
+    max_date = max(max_date)
+  )
 fills = fills |>
-  dplyr::full_join(expand.grid(prov_terr = unique(fills$prov_terr), aqhip = 1:11),
-            by = "prov_terr", relationship = "many-to-many") |>
+  dplyr::full_join(
+    expand.grid(prov_terr = unique(fills$prov_terr), aqhip = 1:11),
+    by = "prov_terr",
+    relationship = "many-to-many"
+  ) |>
   dplyr::group_by(prov_terr, event_range, aqhip) |>
   dplyr::mutate(
-    x0 = min(min_date), x1 = max(max_date)+lubridate::hours(23),
-    y0 = (mean(aqhip, na.rm = TRUE)-1)*10, 
-    y1 = (mean(aqhip, na.rm = TRUE)*10)
+    x0 = min(min_date),
+    x1 = max(max_date) + lubridate::hours(23),
+    y0 = (mean(aqhip, na.rm = TRUE) - 1) * 10,
+    y1 = (mean(aqhip, na.rm = TRUE) * 10)
   ) |>
-  dplyr::filter(!(aqhip < 11 & y1 > ceiling(max_pm25*1.04/10)*10),
-         !(aqhip == 11 & max_pm25 < 110)) |>
+  dplyr::filter(
+    !(aqhip < 11 & y1 > ceiling(max_pm25 * 1.04 / 10) * 10),
+    !(aqhip == 11 & max_pm25 < 110)
+  ) |>
   dplyr::mutate(y1 = ifelse(y1 == max(y1), Inf, y1))
 
-plot_paths = paste0("../../deployments/reports/seasonal/plots/",report_season,
-                    names(prov_pretty),"_worst_events.png") |>
+plot_paths = paste0(
+  "../../deployments/reports/seasonal/plots/",
+  report_season,
+  names(prov_pretty),
+  "_worst_events.png"
+) |>
   as.list() |>
   setNames(names(prov_pretty))
-for(pt in names(prov_pretty)){
-  
+for (pt in names(prov_pretty)) {
   fp = plot_paths[[pt]]
-  
-  ppd = pd  |>
+
+  ppd = pd |>
     dplyr::bind_rows(
       pd_means |> dplyr::mutate(monitor = "Mean")
     ) |>
     dplyr::filter(prov_terr == prov_pretty[[pt]], !is.na(fcst_zone)) |>
-    dplyr::mutate(monitor = factor(monitor, c("Mean",'FEM',"PA")),
-           event_range = factor(event_range,
-                                unique(event_range)[rank(unique(min_date))])) |>
+    dplyr::mutate(
+      monitor = factor(monitor, c("Mean", 'FEM', "PA")),
+      event_range = factor(
+        event_range,
+        unique(event_range)[rank(unique(min_date))]
+      )
+    ) |>
     dplyr::ungroup()
-  
-  if(nrow(ppd) == 0){
-    gg = ggplot()+
-      annotate("text",  x = 4, y = 25, size=6,
-               label = "No detected events in available data.") + 
-      theme_void() 
-    ggsave(gg, filename = fp,
-         height = 5, width = fig_dims$w, units = fig_dims$u, dpi = 300)
+
+  if (nrow(ppd) == 0) {
+    gg = ggplot() +
+      annotate(
+        "text",
+        x = 4,
+        y = 25,
+        size = 6,
+        label = "No detected events in available data."
+      ) +
+      theme_void()
+    ggsave(
+      gg,
+      filename = fp,
+      height = 5,
+      width = fig_dims$w,
+      units = fig_dims$u,
+      dpi = 300
+    )
     next
   }
-  
-  zones_shp = fcst_zones_clean |> 
+
+  zones_shp = fcst_zones_clean |>
     dplyr::filter(prov_terr == pt)
-  
+
   zones_shp = zones_shp[
-    ppd |> dplyr::select(fcst_zone, event_range) |> unique() |>
+    ppd |>
+      dplyr::select(fcst_zone, event_range) |>
+      unique() |>
       dplyr::pull(fcst_zone) |>
-      sapply(\(z) which(zones_shp$fcst_zone == z)),]
-  
-  zone_areas = zones_shp |> 
+      sapply(\(z) which(zones_shp$fcst_zone == z)),
+  ]
+
+  zone_areas = zones_shp |>
     st_area() |>
-    as.numeric() / 10^6 |>
-    round()
+    as.numeric() /
+    10^6 |>
+      round()
   names(zone_areas) = zones_shp$fcst_zone
-  
+
   f = fills |>
-    dplyr::filter(prov_terr == prov_pretty[[pt]])|>
+    dplyr::filter(prov_terr == prov_pretty[[pt]]) |>
     dplyr::arrange(min_date) |>
     dplyr::ungroup() |>
     dplyr::mutate(event_range = factor(event_range, unique(event_range)))
-  
-  monitors = ppd |> dplyr::arrange(monitor) |> dplyr::pull(monitor) |>unique() |> as.character()
-  
+
+  monitors = ppd |>
+    dplyr::arrange(monitor) |>
+    dplyr::pull(monitor) |>
+    unique() |>
+    as.character()
+
   gg = ppd |>
     ggplot() +
     # AQHI+ colours in background
-    geom_rect(data = f , xmin=-Inf, xmax=Inf, 
-              aes(ymin=y0, ymax=y1, fill = factor(aqhip)), 
-              show.legend = FALSE) +
+    geom_rect(
+      data = f,
+      xmin = -Inf,
+      xmax = Inf,
+      aes(ymin = y0, ymax = y1, fill = factor(aqhip)),
+      show.legend = FALSE
+    ) +
     scale_fill_manual(values = leg_ugm3$colours |> setNames(1:11)) +
     # Summary box in top left
-    geom_label(data = pd_sites |>
-                 dplyr::filter(prov_terr == prov_pretty[[pt]], !is.na(fcst_zone)) |>
-                 dplyr::arrange(min_date) |>
-                 dplyr::ungroup() |>
-                 dplyr::mutate(event_range = factor(event_range, unique(event_range))) |>
-                 dplyr::mutate(zone_area = zone_areas[fcst_zone],
-                        label = paste0(label,
-                        "\nZone Area: ", zone_area |> sapply(format, big.mark=","), 
-                        " km²")),
-               aes(x = x, y = y, label = label, group = event_range), 
-               vjust = 1, hjust = 0, colour = "black", size = 2.5, 
-               alpha = 0.5, label.r = unit(0,"lines")) +
+    geom_label(
+      data = pd_sites |>
+        dplyr::filter(prov_terr == prov_pretty[[pt]], !is.na(fcst_zone)) |>
+        dplyr::arrange(min_date) |>
+        dplyr::ungroup() |>
+        dplyr::mutate(event_range = factor(event_range, unique(event_range))) |>
+        dplyr::mutate(
+          zone_area = zone_areas[fcst_zone],
+          label = paste0(
+            label,
+            "\nZone Area: ",
+            zone_area |> sapply(format, big.mark = ","),
+            " km²"
+          )
+        ),
+      aes(x = x, y = y, label = label, group = event_range),
+      vjust = 1,
+      hjust = 0,
+      colour = "black",
+      size = 2.5,
+      alpha = 0.5,
+      label.r = unit(0, "lines")
+    ) +
     # Monitor points
     geom_point(
-      data = ppd |> dplyr::filter(monitor == "PA"), 
-      aes(x = date, y = pm25, group = site_id, 
-          colour = "PA"), size = 0.3) +
+      data = ppd |> dplyr::filter(monitor == "PA"),
+      aes(x = date, y = pm25, group = site_id, colour = "PA"),
+      size = 0.3
+    ) +
     geom_point(
-      data = ppd |> dplyr::filter(monitor == "FEM"), 
-      aes(x = date, y = pm25, group = site_id, 
-          colour = "FEM"), size = 0.3) +
+      data = ppd |> dplyr::filter(monitor == "FEM"),
+      aes(x = date, y = pm25, group = site_id, colour = "FEM"),
+      size = 0.3
+    ) +
     # Mean lines
     geom_line(
-      data = ppd |> dplyr::filter(monitor == "Mean"), 
-      aes(x = date, y = pm25, group = site_id, 
-          colour = "Mean")) +
+      data = ppd |> dplyr::filter(monitor == "Mean"),
+      aes(x = date, y = pm25, group = site_id, colour = "Mean")
+    ) +
     # Split into panels
-    facet_wrap(.~stringr::str_wrap(fcst_zone, 35)+event_range, scales = "free",drop = TRUE) +
+    facet_wrap(
+      . ~ stringr::str_wrap(fcst_zone, 35) + event_range,
+      scales = "free",
+      drop = TRUE
+    ) +
     # X/Y bounds/format
-    scale_y_continuous(expand = expansion(c(0,0.0175)), limits = c(0, NA))+
-    scale_x_datetime(expand = expansion(c(0.02,0.02)), date_labels = "%b. %d")+
-    
-    scale_color_manual(values = c(FEM = "#F6AA1C", PA = "#856084", Mean = "black"),
-                       breaks = c("Mean","FEM","PA")) +
+    scale_y_continuous(expand = expansion(c(0, 0.0175)), limits = c(0, NA)) +
+    scale_x_datetime(
+      expand = expansion(c(0.02, 0.02)),
+      date_labels = "%b. %d"
+    ) +
+
+    scale_color_manual(
+      values = c(FEM = "#F6AA1C", PA = "#856084", Mean = "black"),
+      breaks = c("Mean", "FEM", "PA")
+    ) +
     ggpubr:::theme_pubr(border = TRUE) +
-    labs(y = bquote("Hourly PM"[2.5]~"Concentration ("*mu*"g m"^-3*")"),
-         x = element_blank(),
-       caption = plot_captions$`FEM and PA`,
-         colour = bquote("PM"[2.5]~"Monitor"))+
-    guides(colour = guide_legend(
-      override.aes = list(
-      linewidth = c(Mean = 1, FEM = NA, PA = NA)[monitors],
-      size = c(Mean = 0, FEM = 1, PA = 1)[monitors],
-      colour = c(Mean = "black", FEM = "#F6AA1C", PA = "#856084")[monitors]
-    )))+
+    labs(
+      y = bquote("Hourly PM"[2.5] ~ "Concentration (" * mu * "g m"^-3 * ")"),
+      x = element_blank(),
+      caption = plot_captions$`FEM and PA`,
+      colour = bquote("PM"[2.5] ~ "Monitor")
+    ) +
+    guides(
+      colour = guide_legend(
+        override.aes = list(
+          linewidth = c(Mean = 1, FEM = NA, PA = NA)[monitors],
+          size = c(Mean = 0, FEM = 1, PA = 1)[monitors],
+          colour = c(Mean = "black", FEM = "#F6AA1C", PA = "#856084")[monitors]
+        )
+      )
+    ) +
     theme(
       axis.text = element_text(size = 8),
       strip.text = element_text(size = 8),
-      plot.title = ggtext::element_markdown())
-  
+      plot.title = ggtext::element_markdown()
+    )
+
   n_events = ppd |> dplyr::select(fcst_zone, event_range) |> unique() |> nrow()
-  
-  height = 2 + 3*n_events/3
-  ggsave(gg, filename = fp,
-         height = height, width = fig_dims$w, units = fig_dims$u, dpi = 300)
+
+  height = 2 + 3 * n_events / 3
+  ggsave(
+    gg,
+    filename = fp,
+    height = height,
+    width = fig_dims$w,
+    units = fig_dims$u,
+    dpi = 300
+  )
 }
-plot_texts = paste0("Hourly PM<sub>2.5</sub> concentrations from all FEM and PA monitors in the forecast zone for a selection of the worst events this season in ", prov_pretty, '. 
+plot_texts = paste0(
+  "Hourly PM<sub>2.5</sub> concentrations from all FEM and PA monitors in the forecast zone for a selection of the worst events this season in ",
+  prov_pretty,
+  '. 
 
 Federal Equivelant Method (FEM) monitors are the gold standard for hourly observations. The PurpleAir (PA) low cost monitors are not as accurate, but are cheaper/easier to install allowing for a larger network.
                     
 Each event panel is labelled with the forecast zone name followed by the date range of the event. Summary text is included in the top left. 
 
-Note: Forecast zones vary in size, larger zones may have greater variation in observations due to physical distances between monitors.') |>
-  as.list()|>
+Note: Forecast zones vary in size, larger zones may have greater variation in observations due to physical distances between monitors.'
+) |>
+  as.list() |>
   setNames(names(prov_pretty))
 
 ```
 
 ```{r}
 
-texts = sapply(prov_pretty, \(prov){
+texts = sapply(prov_pretty, \(prov) {
   e_data = events |>
     dplyr::ungroup() |>
     dplyr::filter(prov_terr == prov)
-  
+
   worst = worst_events |>
     dplyr::filter(prov_terr == prov) |>
     dplyr::arrange(min_date) |>
     dplyr::group_by(fcst_zone) |>
-    dplyr::summarise(dates = ifelse(duration == 1,
-                             format(min_date,"%b %d"),
-                             paste(format(min_date,"%b %d"), format(max_date,"%b %d"), sep = " to ")
-                             ) |>
-                paste(collapse = ", ")
-                )
+    dplyr::summarise(
+      dates = ifelse(
+        duration == 1,
+        format(min_date, "%b %d"),
+        paste(
+          format(min_date, "%b %d"),
+          format(max_date, "%b %d"),
+          sep = " to "
+        )
+      ) |>
+        paste(collapse = ", ")
+    )
   worst_summs = worst_events |>
     dplyr::filter(prov_terr == prov) |>
-    dplyr::summarise(dur_range = min(duration) |> paste(max(duration), sep = " - "),
-              mean_range = min(mean_pm25) |> paste(max(mean_pm25), sep = " - "),
-              max_range = min(max_pm25) |> paste(max(max_pm25), sep = " - "),
-              dur_max = as.numeric(max(duration)),
-              zone_dur_max = fcst_zone[duration == dur_max][1],
-              dur_max_dates = paste0(format(min_date,"%b %d")[duration == dur_max][1],
-                                     " - ",
-                                     format(max_date,"%b %d")[duration == dur_max][1]),
-              dur_max_mean = mean_pm25[duration == dur_max][1],
-              dur_max_max = max_pm25[duration == dur_max][1]
-              )
+    dplyr::summarise(
+      dur_range = min(duration) |> paste(max(duration), sep = " - "),
+      mean_range = min(mean_pm25) |> paste(max(mean_pm25), sep = " - "),
+      max_range = min(max_pm25) |> paste(max(max_pm25), sep = " - "),
+      dur_max = as.numeric(max(duration)),
+      zone_dur_max = fcst_zone[duration == dur_max][1],
+      dur_max_dates = paste0(
+        format(min_date, "%b %d")[duration == dur_max][1],
+        " - ",
+        format(max_date, "%b %d")[duration == dur_max][1]
+      ),
+      dur_max_mean = mean_pm25[duration == dur_max][1],
+      dur_max_max = max_pm25[duration == dur_max][1]
+    )
   worst_text = paste0(
-    "the ",worst$fcst_zone, " region (", worst$dates,")"
+    "the ",
+    worst$fcst_zone,
+    " region (",
+    worst$dates,
+    ")"
   )
-  worst_text = worst_text[-length(worst_text)] |> paste(collapse = ", ") |>
-    paste0(", and ",last(worst_text))
-  
-  if(nrow(worst) == 0){
-    paste0("In ",prov," during the `r report_season` season, no events of continued elevated PM<sub>2.5</sub> occurred where observations were available.")
-  }else{
+  worst_text = worst_text[-length(worst_text)] |>
+    paste(collapse = ", ") |>
+    paste0(", and ", last(worst_text))
+
+  if (nrow(worst) == 0) {
     paste0(
-      "In ",prov," during the ",report_season," season, ",nrow(e_data)," events of continued elevated PM<sub>2.5</sub> occurred. The most significant events occurred in ",worst_text,". These events ranged from ",worst_summs$dur_range," days long, with mean and max concentrations over the duration ranging from ",worst_summs$mean_range," &mu;g m<sup>-3</sup> and ",worst_summs$max_range," &mu;g m<sup>-3</sup>, respectively. The longest event (",worst_summs$dur_max," days) occurred in the ",worst_summs$zone_dur_max," region from ",worst_summs$dur_max_dates,", where a maximum hourly concentration of ",worst_summs$dur_max_max," &mu;g m<sup>-3</sup> and an overall mean of ",worst_summs$dur_mean," &mu;g m<sup>-3</sup> was observed."
+      "In ",
+      prov,
+      " during the `r report_season` season, no events of continued elevated PM<sub>2.5</sub> occurred where observations were available."
+    )
+  } else {
+    paste0(
+      "In ",
+      prov,
+      " during the ",
+      report_season,
+      " season, ",
+      nrow(e_data),
+      " events of continued elevated PM<sub>2.5</sub> occurred. The most significant events occurred in ",
+      worst_text,
+      ". These events ranged from ",
+      worst_summs$dur_range,
+      " days long, with mean and max concentrations over the duration ranging from ",
+      worst_summs$mean_range,
+      " &mu;g m<sup>-3</sup> and ",
+      worst_summs$max_range,
+      " &mu;g m<sup>-3</sup>, respectively. The longest event (",
+      worst_summs$dur_max,
+      " days) occurred in the ",
+      worst_summs$zone_dur_max,
+      " region from ",
+      worst_summs$dur_max_dates,
+      ", where a maximum hourly concentration of ",
+      worst_summs$dur_max_max,
+      " &mu;g m<sup>-3</sup> and an overall mean of ",
+      worst_summs$dur_mean,
+      " &mu;g m<sup>-3</sup> was observed."
     )
   }
-  
 })
 
 ```
@@ -1170,12 +1540,15 @@ for(t in texts){
 
 ```{r include = TRUE, results="asis"}
 
-for(p in names(prov_pretty)){
+for (p in names(prov_pretty)) {
   pp = prov_pretty[[p]]
-  cat("#### ",pp,"\n")
-  cat(plot_paths[[p]] |> 
-        stringr::str_replace(report_dir_esc, "./")|> 
-        plot_card(plot_texts[[p]]), "\n")
+  cat("#### ", pp, "\n")
+  cat(
+    plot_paths[[p]] |>
+      stringr::str_replace(report_dir_esc, "./") |>
+      plot_card(plot_texts[[p]]),
+    "\n"
+  )
 }
 
 ```
@@ -1189,23 +1562,28 @@ fig_dims = list(h = 7, w = 11, u = 'in')
 pd = obs |>
   dplyr::filter(!is.na(nearest_community), nc_dist_km < 25) |>
   # Average together community observations (get hourly community record)
-  dplyr::group_by(community = nearest_community, 
-           prov_terr, date) |>
-  dplyr::summarise(community_pm25 = mean(pm25, na.rm = TRUE),
-            max_monitor_dist = max(nc_dist_km, na.rm = TRUE),
-            mean_monitor_dist = mean(nc_dist_km, na.rm = TRUE),
-            n_monitors = length(unique(paste(monitor,site_id))),
-            n_pa =  sum(unique(paste(monitor,site_id)) |> startsWith("PA"), na.rm = TRUE),
-            n_fem = n_monitors - n_pa,
-            lat = mean(nc_lat), lng = mean(nc_lng)
-            ) |>
+  dplyr::group_by(community = nearest_community, prov_terr, date) |>
+  dplyr::summarise(
+    community_pm25 = mean(pm25, na.rm = TRUE),
+    max_monitor_dist = max(nc_dist_km, na.rm = TRUE),
+    mean_monitor_dist = mean(nc_dist_km, na.rm = TRUE),
+    n_monitors = length(unique(paste(monitor, site_id))),
+    n_pa = sum(
+      unique(paste(monitor, site_id)) |> startsWith("PA"),
+      na.rm = TRUE
+    ),
+    n_fem = n_monitors - n_pa,
+    lat = mean(nc_lat),
+    lng = mean(nc_lng)
+  ) |>
   # Average from hourly records to 1 record per community
   dplyr::group_by(community, prov_terr) |>
   dplyr::summarise(
     n_monitors = max(n_monitors, na.rm = TRUE),
     n_pa = max(n_pa, na.rm = TRUE),
     n_fem = max(n_fem, na.rm = TRUE),
-    lat = mean(lat), lng = mean(lng),
+    lat = mean(lat),
+    lng = mean(lng),
     min_community_pm25 = min(community_pm25, na.rm = TRUE),
     median_community_pm25 = median(community_pm25, na.rm = TRUE),
     mean_community_pm25 = mean(community_pm25, na.rm = TRUE),
@@ -1214,81 +1592,148 @@ pd = obs |>
     hours_w_obs = sum(!is.na(community_pm25)),
     hours_exceeding_60 = sum(community_pm25 > 60, na.rm = TRUE),
     hours_exceeding_100 = sum(community_pm25 > 100, na.rm = TRUE)
-    ) |>
-  dplyr::mutate(dplyr::across(-(1:5), \(x) round(x, digits = 1))) |> 
+  ) |>
+  dplyr::mutate(dplyr::across(-(1:5), \(x) round(x, digits = 1))) |>
   dplyr::mutate(prov_terr = factor(prov_terr, prov_pretty, names(prov_pretty)))
 
-  # Make paths to files for saving plots
-plot_paths = paste0(report_dir, "plots/communities_",c("vHigh", "High"),"_hours_", 
-                    report_season,".html") |> 
-  setNames(c("exceeds_100", "exceeds_60")) |> as.list()
+# Make paths to files for saving plots
+plot_paths = paste0(
+  report_dir,
+  "plots/communities_",
+  c("vHigh", "High"),
+  "_hours_",
+  report_season,
+  ".html"
+) |>
+  setNames(c("exceeds_100", "exceeds_60")) |>
+  as.list()
 
 # MAke and save plots
 # > 100 hours
-box = boxplot(hours_exceeding_100~prov_terr,pd,plot = FALSE)
-pd=pd |> dplyr::mutate(is_outlier = hours_exceeding_100 > box$stats[4,as.numeric(prov_terr)])
+box = boxplot(hours_exceeding_100 ~ prov_terr, pd, plot = FALSE)
+pd = pd |>
+  dplyr::mutate(
+    is_outlier = hours_exceeding_100 > box$stats[4, as.numeric(prov_terr)]
+  )
 outliers = subset(pd, is_outlier)
 
 plot_1 = pd |>
   plot_ly(y = ~hours_exceeding_100, x = ~prov_terr) |>
-  add_boxplot(name = "",
-              boxpoints= FALSE, 
-              color=I('black'), alpha = 0.2) |>
+  add_boxplot(name = "", boxpoints = FALSE, color = I('black'), alpha = 0.2) |>
   layout(
-    title = paste("Community-Level, Very High PM2.5 Exceedances for",report_season),
+    title = paste(
+      "Community-Level, Very High PM2.5 Exceedances for",
+      report_season
+    ),
     showlegend = FALSE,
-    xaxis = list(title = "Province | Territory",
-                 zeroline = TRUE, showgrid= FALSE),
-    yaxis = list(title = paste0("# Hours Community Exceeds PM2.5 of 100 ug/m3"),
-                 zeroline = TRUE, showgrid= FALSE))|>
-  add_markers(data = outliers, text = ~paste0("<b>",community,"</b>",
-                                              # "<br>",community_type,
-                                              "<br># of observation sites: ",n_monitors,
-                                              "<br>6-month mean: ",round(mean_community_pm25,1)," ug/m3",
-                                              "<br>6-month max: ",round(max_community_pm25,1)," ug/m3",
-                                              "<br># hours >60 ug/m3: ",hours_exceeding_60, " / ",length(hours_to_summarise),
-                                              "<br># hours >100 ug/m3: ",hours_exceeding_100, " / ",length(hours_to_summarise)
-                                              # "<br>Forecast Zone: ",fcst_zone
-  ), hoverinfo='text',
-  marker = list(color = "rgb(107,174,214)", 
-                line = list(color = "black", width = 1))
+    xaxis = list(
+      title = "Province | Territory",
+      zeroline = TRUE,
+      showgrid = FALSE
+    ),
+    yaxis = list(
+      title = paste0("# Hours Community Exceeds PM2.5 of 100 ug/m3"),
+      zeroline = TRUE,
+      showgrid = FALSE
+    )
   ) |>
-    htmlwidgets::saveWidget(plot_paths$exceeds_100,
-                            libdir="./libs", 
-                            selfcontained = FALSE)
+  add_markers(
+    data = outliers,
+    text = ~ paste0(
+      "<b>",
+      community,
+      "</b>",
+      # "<br>",community_type,
+      "<br># of observation sites: ",
+      n_monitors,
+      "<br>6-month mean: ",
+      round(mean_community_pm25, 1),
+      " ug/m3",
+      "<br>6-month max: ",
+      round(max_community_pm25, 1),
+      " ug/m3",
+      "<br># hours >60 ug/m3: ",
+      hours_exceeding_60,
+      " / ",
+      length(hours_to_summarise),
+      "<br># hours >100 ug/m3: ",
+      hours_exceeding_100,
+      " / ",
+      length(hours_to_summarise)
+      # "<br>Forecast Zone: ",fcst_zone
+    ),
+    hoverinfo = 'text',
+    marker = list(
+      color = "rgb(107,174,214)",
+      line = list(color = "black", width = 1)
+    )
+  ) |>
+  htmlwidgets::saveWidget(
+    plot_paths$exceeds_100,
+    libdir = "./libs",
+    selfcontained = FALSE
+  )
 # > 60 hours
-box = boxplot(hours_exceeding_60~prov_terr,pd,plot = FALSE)
-pd=pd |> dplyr::mutate(is_outlier = hours_exceeding_60 > box$stats[4,as.numeric(prov_terr)])
+box = boxplot(hours_exceeding_60 ~ prov_terr, pd, plot = FALSE)
+pd = pd |>
+  dplyr::mutate(
+    is_outlier = hours_exceeding_60 > box$stats[4, as.numeric(prov_terr)]
+  )
 outliers = subset(pd, is_outlier)
 
 pd |>
   plot_ly(y = ~hours_exceeding_60, x = ~prov_terr) |>
-  add_boxplot(name = "",
-              boxpoints= FALSE, 
-              color=I('black'), alpha = 0.2) |>
+  add_boxplot(name = "", boxpoints = FALSE, color = I('black'), alpha = 0.2) |>
   layout(
-    title = paste("Community-Level, High PM2.5 Exceedances for",report_season),
+    title = paste("Community-Level, High PM2.5 Exceedances for", report_season),
     showlegend = FALSE,
-    xaxis = list(title = "Province | Territory",
-                 zeroline = TRUE, showgrid= FALSE),
-    yaxis = list(title = paste0("# Hours Community Exceeds PM2.5 of 60 ug/m3"),
-                 zeroline = TRUE, showgrid= FALSE))|>
-  add_markers(data = outliers, text = ~paste0("<b>",community,"</b>",
-                                              # "<br>",community_type,
-                                              "<br># of observation sites: ",n_monitors,
-                                              "<br>6-month mean: ",round(mean_community_pm25,1)," ug/m3",
-                                              "<br>6-month max: ",round(max_community_pm25,1)," ug/m3",
-                                              "<br># hours >60 ug/m3: ",hours_exceeding_60, " / ",length(hours_to_summarise),
-                                              "<br># hours >100 ug/m3: ",hours_exceeding_100, " / ",length(hours_to_summarise)
-                                              # "<br>Forecast Zone: ",fcst_zone
-  ), hoverinfo='text',
-  marker = list(color = "rgb(107,174,214)", 
-                line = list(color = "black", width = 1))
+    xaxis = list(
+      title = "Province | Territory",
+      zeroline = TRUE,
+      showgrid = FALSE
+    ),
+    yaxis = list(
+      title = paste0("# Hours Community Exceeds PM2.5 of 60 ug/m3"),
+      zeroline = TRUE,
+      showgrid = FALSE
+    )
   ) |>
-    htmlwidgets::saveWidget(plot_paths$exceeds_60,
-                            libdir="./libs", 
-                            selfcontained = FALSE)
-
+  add_markers(
+    data = outliers,
+    text = ~ paste0(
+      "<b>",
+      community,
+      "</b>",
+      # "<br>",community_type,
+      "<br># of observation sites: ",
+      n_monitors,
+      "<br>6-month mean: ",
+      round(mean_community_pm25, 1),
+      " ug/m3",
+      "<br>6-month max: ",
+      round(max_community_pm25, 1),
+      " ug/m3",
+      "<br># hours >60 ug/m3: ",
+      hours_exceeding_60,
+      " / ",
+      length(hours_to_summarise),
+      "<br># hours >100 ug/m3: ",
+      hours_exceeding_100,
+      " / ",
+      length(hours_to_summarise)
+      # "<br>Forecast Zone: ",fcst_zone
+    ),
+    hoverinfo = 'text',
+    marker = list(
+      color = "rgb(107,174,214)",
+      line = list(color = "black", width = 1)
+    )
+  ) |>
+  htmlwidgets::saveWidget(
+    plot_paths$exceeds_60,
+    libdir = "./libs",
+    selfcontained = FALSE
+  )
 
 
 # Define plot summary text (figure titles essentially)
@@ -1299,28 +1744,44 @@ plot_texts = list(
 
 # Make summary data for autmated text for this section
 
-
 # Table
-t_data =  pd |>
-  dplyr::arrange(desc(hours_exceeding_100),
-          desc(hours_exceeding_60), 
-          desc(mean_community_pm25)) |>
-  dplyr::select(Community = community, `Prov./Terr.` = prov_terr,
-         `# of FEMs` = n_fem, `# of PAs` = n_pa, 
-         "With Obs. (Any)" = hours_w_obs, "Above 60 (High)" = hours_exceeding_60, 
-         "Above 100 (V. High)" = hours_exceeding_100,
-         "Min." = min_community_pm25, "Max." = max_community_pm25, "Mean" = mean_community_pm25)
-table = reactable(data = t_data, defaultPageSize = 10,
-            # columns = list(
-            #   `Mean` = colDef(header = with_tooltip("Mean", "Average of the forecast zone seasonal mean PM2.5 concentrations within each province/territory")),
-            # ),
-            columnGroups = list(
-              colGroup(name = "Location", columns = c("Community","Prov./Terr.")),
-              colGroup(name = "PM2.5 Monitors", columns = c("# of FEMs", "# of PAs")),
-              colGroup(name = "Hours", columns = c("With Obs. (Any)", "Above 60 (High)", "Above 100 (V. High)")),
-              colGroup(name = "PM2.5 Concentration (ug/m3)", columns = c("Min.", "Max.", "Mean"))
-            )
+t_data = pd |>
+  dplyr::arrange(
+    desc(hours_exceeding_100),
+    desc(hours_exceeding_60),
+    desc(mean_community_pm25)
+  ) |>
+  dplyr::select(
+    Community = community,
+    `Prov./Terr.` = prov_terr,
+    `# of FEMs` = n_fem,
+    `# of PAs` = n_pa,
+    "With Obs. (Any)" = hours_w_obs,
+    "Above 60 (High)" = hours_exceeding_60,
+    "Above 100 (V. High)" = hours_exceeding_100,
+    "Min." = min_community_pm25,
+    "Max." = max_community_pm25,
+    "Mean" = mean_community_pm25
   )
+table = reactable(
+  data = t_data,
+  defaultPageSize = 10,
+  # columns = list(
+  #   `Mean` = colDef(header = with_tooltip("Mean", "Average of the forecast zone seasonal mean PM2.5 concentrations within each province/territory")),
+  # ),
+  columnGroups = list(
+    colGroup(name = "Location", columns = c("Community", "Prov./Terr.")),
+    colGroup(name = "PM2.5 Monitors", columns = c("# of FEMs", "# of PAs")),
+    colGroup(
+      name = "Hours",
+      columns = c("With Obs. (Any)", "Above 60 (High)", "Above 100 (V. High)")
+    ),
+    colGroup(
+      name = "PM2.5 Concentration (ug/m3)",
+      columns = c("Min.", "Max.", "Mean")
+    )
+  )
+)
 
 ```
 
@@ -1330,14 +1791,16 @@ text = list(
   n_max_100 = pd |>
     dplyr::filter(max_community_pm25 > 100),
   more_100_over_100 = pd |>
-    dplyr::bind_rows(dplyr::mutate(pd, prov_terr = "Canada"))|>
+    dplyr::bind_rows(dplyr::mutate(pd, prov_terr = "Canada")) |>
     dplyr::group_by(prov_terr) |>
     dplyr::mutate(n_total = n()) |>
     dplyr::filter(hours_exceeding_100 > 100) |>
     dplyr::group_by(prov_terr) |>
-    dplyr::summarise(n=n(),
-              n_total = max(n_total),
-              p = round(n /n_total *100,1)) |>
+    dplyr::summarise(
+      n = n(),
+      n_total = max(n_total),
+      p = round(n / n_total * 100, 1)
+    ) |>
     dplyr::arrange(desc(n)),
   worst = pd |>
     dplyr::arrange(desc(hours_exceeding_100)) |>
@@ -1345,27 +1808,43 @@ text = list(
   n_max_60 = pd |>
     dplyr::filter(max_community_pm25 > 60),
   more_60_over_100 = pd |>
-    dplyr::bind_rows(dplyr::mutate(pd, prov_terr = "Canada"))|>
+    dplyr::bind_rows(dplyr::mutate(pd, prov_terr = "Canada")) |>
     dplyr::group_by(prov_terr) |>
     dplyr::mutate(n_total = n()) |>
     dplyr::filter(hours_exceeding_60 > 100) |>
     dplyr::group_by(prov_terr) |>
-    dplyr::summarise(n=n(),
-              n_total = max(n_total),
-              p = round(n /n_total *100,1)) |>
+    dplyr::summarise(
+      n = n(),
+      n_total = max(n_total),
+      p = round(n / n_total * 100, 1)
+    ) |>
     dplyr::arrange(desc(n)),
   worst_60 = pd |>
     dplyr::arrange(desc(hours_exceeding_60)) |>
     head(1)
 )
 
-t = text$more_100_over_100$prov_terr[text$more_100_over_100$prov_terr!="Canada"]
-text$provs_over_100 = paste0(paste(
-  t[-length(t)], collapse = ", "), ", and ", dplyr::last(t))
-t = text$more_60_over_100$prov_terr[text$more_60_over_100$prov_terr!="Canada"]
-text$provs_over_60 = paste0(paste(
-  t[-length(t)], collapse = ", "), ", and ", dplyr::last(t))
-  
+t = text$more_100_over_100$prov_terr[
+  text$more_100_over_100$prov_terr != "Canada"
+]
+text$provs_over_100 = paste0(
+  paste(
+    t[-length(t)],
+    collapse = ", "
+  ),
+  ", and ",
+  dplyr::last(t)
+)
+t = text$more_60_over_100$prov_terr[text$more_60_over_100$prov_terr != "Canada"]
+text$provs_over_60 = paste0(
+  paste(
+    t[-length(t)],
+    collapse = ", "
+  ),
+  ", and ",
+  dplyr::last(t)
+)
+
 ```
 
 ::: card
@@ -1389,9 +1868,9 @@ text$provs_over_60 = paste0(paste(
 #### Hours > 100 (V. High)
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$exceeds_100 |> 
-  stringr::str_replace(report_dir_esc, "./")|> 
-  plot_card(plot_texts$exceeds_100, iframe=TRUE)
+plot_paths$exceeds_100 |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(plot_texts$exceeds_100, iframe = TRUE)
 ```
 
 |
@@ -1399,9 +1878,9 @@ plot_paths$exceeds_100 |>
 #### Hours > 60 (High)
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$exceeds_60 |> 
-  stringr::str_replace(report_dir_esc, "./")|> 
-  plot_card(plot_texts$exceeds_60, iframe=TRUE)
+plot_paths$exceeds_60 |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(plot_texts$exceeds_60, iframe = TRUE)
 ```
 
 |
