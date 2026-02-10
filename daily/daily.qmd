@@ -21,16 +21,16 @@ plot_captions <- date_range |>
 
 ```
 
-
-```{r loadData, cache=cache }
+```{r load_data}
 
 obs <- date_range |> 
   load_report_data(max_pm25_allowed = max_pm25_allowed)
 
-.tmp = make_summaries(obs, type = "daily", fcst_zones = fcst_zones)
-for (i in seq_along(.tmp)) {
-  assign(names(.tmp)[i], .tmp[[i]])
-}
+# Save for testing
+rds_path <- report_dir |> file.path("index_obs.rds")
+obs |> saveRDS(file = rds_path)
+
+summaries <- obs |> make_summaries(type = "daily", fcst_zones = fcst_zones)
 
 ```
 
@@ -95,8 +95,8 @@ All PM<sub>2.5</sub> data are sourced from the [UNBC AQmap](https://aqmap.ca/aqm
 fig_dims = list(h = 7, w = 11, u = 'in')
 
 # Prov/Terr monitor counts for centers of donuts
-labels = obs_summary |>
-  dplyr::bind_rows(obs_summary |> dplyr::mutate(monitor = "FEM and PA")) |>
+labels = summaries$obs_summary |>
+  dplyr::bind_rows(summaries$obs_summary |> dplyr::mutate(monitor = "FEM and PA")) |>
   dplyr::full_join(
     expand.grid(
       prov_terr = names(prov_pretty),
@@ -111,7 +111,7 @@ pd = list()
 plot_paths = list()
 for (stat in c("mean", "max")) {
   # Get data for donut plots
-  pd[[stat]] = make_donut_data(obs_summary, paste0("pm25_", stat))
+  pd[[stat]] = make_donut_data(summaries$obs_summary, paste0("pm25_", stat))
 
   # Create paths for donut plots
   plot_paths[[stat]] = paste0(
@@ -241,7 +241,7 @@ plot_paths$max[['PA Only']] |>
 ```{r, maps}
 
 # Make data for the maps
-map_data = make_map_data(obs_summary)
+map_data = make_map_data(summaries$obs_summary)
 
 # Get bounds to be used for all maps
 bounds = map_data |>
@@ -271,7 +271,7 @@ plot_paths = paste0(
       subset(monitor == names(monitor_groups)[monitor_groups == m])
   }
   pd |>
-    make_map(bounds, zone_summaries, include_active_fires = FALSE) |>
+    make_map(bounds, summaries$zone_summaries, include_active_fires = FALSE) |>
     mapview::mapshot(plot_paths[[m]], libdir = "./libs", selfcontained = FALSE)
 })
 
@@ -289,7 +289,7 @@ Below the map is a table summarising the data from the monitoring sites displaye
   as.list()
 
 # Make data for tables below maps
-table_data = make_map_table_data(obs_summary, obs_current)
+table_data = make_map_table_data(summaries$obs_summary, summaries$obs_current)
 
 # Make tables
 tables = lapply(names(monitor_groups), \(m) {
@@ -350,7 +350,7 @@ dl_buttons = lapply(names(monitor_groups), \(m) {
   setNames(monitor_groups)
 
 # Make summary data for autmated text for this section
-aqhi_p_counts_by_prov = obs_summary |>
+aqhi_p_counts_by_prov = summaries$obs_summary |>
   dplyr::group_by(
     aqhi_p_24hr = aqhi_p(pm25_mean, use_risk = TRUE, include_ugm3_range = TRUE),
     prov_terr,
@@ -467,7 +467,7 @@ tables[["PA Only"]]
 ```{r site_boxplots}
 
 # Make data for boxplots
-pd = obs_summary |>
+pd = summaries$obs_summary |>
   dplyr::mutate(
     monitor2 = ifelse(
       monitor == "FEM",
@@ -476,7 +476,7 @@ pd = obs_summary |>
     )
   ) |>
   dplyr::bind_rows(
-    obs_summary |> dplyr::mutate(monitor2 = monitor_groups[3])
+    summaries$obs_summary |> dplyr::mutate(monitor2 = monitor_groups[3])
   ) |>
   dplyr::mutate(aqhi_p_mean = aqhi_p(pm25_mean)) |>
   dplyr::full_join(expand.grid(
@@ -944,7 +944,7 @@ for (p in names(prov_pretty)) {
 ```{r community_summary, include = TRUE}
 
 # Make data for table
-table_data = community_summ |>
+table_data = summaries$community_summ |>
   dplyr::arrange(desc(pm25_24hr_mean)) |>
   dplyr::mutate(aqmap_link = make_aqmap_link(nc_lat, nc_lng, 12, "EN")) |>
   dplyr::mutate(fcst_zone = iconv(fcst_zone, to = "ASCII//TRANSLIT")) |>
@@ -1024,7 +1024,7 @@ table_data |>
 dl = dl_button_html("./data/", file)
 
 # Make summary data for automated text for this section
-pd = community_summ |>
+pd = summaries$community_summ |>
   dplyr::ungroup() |>
   dplyr::select(
     P = prov_terr,

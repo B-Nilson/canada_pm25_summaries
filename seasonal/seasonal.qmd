@@ -31,21 +31,16 @@ plot_captions <- date_range |>
 
 ```
 
-```{r loadData, cache=cache }
+```{r load_data }
 
-season_rds =  paste0(report_dir, "data/", report_season,"_obs.rds")
+obs <- date_range |> 
+  load_report_data(max_pm25_allowed = max_pm25_allowed)
 
-if(!file.exists(season_rds)){
-  obs <- date_range |> 
-    load_report_data(max_pm25_allowed = max_pm25_allowed)
-  # Save for testing
-  saveRDS(obs, season_rds)
-}else{
-  obs = readRDS(season_rds)
-}
+# Save for testing
+rds_path <- report_dir |> file.path("index_obs.rds")
+obs |> saveRDS(file = rds_path)
 
-# .tmp = make_summaries(obs, type = "seasonal", fcst_zones = fcst_zones)
-# for (i in seq_along(.tmp)) assign(names(.tmp)[i], .tmp[[i]])
+# summaries <- obs |> make_summaries(type = "seasonal", fcst_zones = fcst_zones)
 
 ```
 
