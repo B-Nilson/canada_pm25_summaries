@@ -82,13 +82,14 @@ load_fem_report_data <- function(
     dplyr::filter(date |> dplyr::between(min_date, max_date)) |>
     dplyr::mutate(monitor = "FEM")
 
-  meta <- db |>
+  meta_query <- db |>
     dplyr::tbl(meta_table) |>
     dplyr::filter(prov_terr != "United States") |>
-    dplyr::select(dplyr::all_of(desired_cols))
+    dplyr::select(dplyr::any_of(meta_cols))
 
   obs_query |>
-    dplyr::left_join(meta_query, by = "site_id")
+    dplyr::left_join(meta_query, by = "site_id") |>
+    dplyr::filter(!is.na(lat)) # handle obs sites without meta
 }
 
 load_lcm_report_data <- function(
@@ -114,45 +115,52 @@ load_lcm_report_data <- function(
   obs_query <- obs_tables |>
     handyr::for_each(
       .show_progress = FALSE,
+      .as_list = TRUE,
       \(obs_table) {
         monitor_name <- obs_table |> stringr::str_remove("_obs") |> toupper()
         db |>
           dplyr::tbl(obs_table) |>
-          dplyr::select(dplyr::any_of(desired_cols)) |>
+          dplyr::select(dplyr::any_of(obs_cols)) |>
           dplyr::filter(date |> dplyr::between(min_date, max_date)) |>
           dplyr::mutate(monitor = monitor_name)
       }
-    ) |>
-    do.call(what = dplyr::union_all) |>
+    )
+  if (length(obs_tables) > 1) {
+    obs_query <- obs_query |> do.call(what = dplyr::union_all)
+  } else {
+    obs_query <- obs_query[[1]]
+  }
+  obs_query <- obs_query |>
     dplyr::group_by(
       monitor,
       site_id,
       date = dplyr::sql(!!sql_round_to_hourly)
     ) |>
     dplyr::summarise(
-      # TODO: ensure works with sql
-      dplyr::across(
-        -dplyr::any_of("qaqc_flag_pm2.5"),
-        \(x) mean(x, na.rm = TRUE)
-      ),
-      qaqc_flag_pm2.5 = max(qaqc_flag_pm2.5, na.rm = TRUE),
+      dplyr::across(dplyr::everything(), \(x) mean(x, na.rm = TRUE)),
       .groups = "drop"
     )
 
   meta_query <- meta_tables |>
     handyr::for_each(
       .show_progress = FALSE,
+      .as_list = TRUE,
       \(meta_table) {
         monitor_name <- meta_table |> stringr::str_remove("_meta") |> toupper()
         db |>
           dplyr::tbl(meta_table) |>
           dplyr::select(dplyr::all_of(meta_cols)) |>
-          dplyr::mutate(monitor = monitor_name)
+          dplyr::mutate(monitor = monitor_name) |>
+          dplyr::filter(prov_terr != "United States")
       }
-    ) |>
-    do.call(what = dplyr::union_all) |>
-    dplyr::filter(prov_terr != "United States")
+    )
+  if (length(meta_tables) > 1) {
+    meta_query <- meta_query |> do.call(what = dplyr::union_all)
+  } else {
+    meta_query <- meta_query[[1]]
+  }
 
   obs_query |>
-    dplyr::left_join(meta_query, by = "site_id")
+    dplyr::left_join(meta_query, by = c("monitor", "site_id")) |>
+    dplyr::filter(!is.na(lat)) # handle obs sites without meta
 }
