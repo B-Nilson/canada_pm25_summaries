@@ -14,7 +14,7 @@ date_range <- report_dir |>
   get_report_start_end(
     type = "seasonal", 
     months_in_seasons = months_in_seasons,
-    run_future = FALSE
+    run_future = run_current_season
   )
             
 summary_months <- date_range |> 

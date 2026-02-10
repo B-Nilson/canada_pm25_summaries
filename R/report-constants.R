@@ -3,6 +3,10 @@
 #Change local->server when running on AQmap server
 run_location <- "server"
 
+run_current_day <- FALSE
+run_current_month <- FALSE
+run_current_season <- FALSE
+
 cache <- run_location == "local"
 
 # File Locations -----
