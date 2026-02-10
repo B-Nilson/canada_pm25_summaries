@@ -9,7 +9,7 @@ make_summaries <- function(
     current = obs |> dplyr::filter(date == max(date))
   )
   summaries$overall <- summaries$overall |>
-    dplyr::full_join(
+    dplyr::left_join(
       summaries$current |> dplyr::select(site_id, monitor, pm25_current = pm25),
       by = c('site_id', 'monitor')
     )

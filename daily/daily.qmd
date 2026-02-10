@@ -95,7 +95,7 @@ All PM<sub>2.5</sub> data are sourced from the [UNBC AQmap](https://aqmap.ca/aqm
 
 ```{r prov_donuts}
 
-donut_data <- summaries$overall_summary |>
+donuts <- summaries$overall |>
   save_aqhi_donuts_plots(
     monitor_groups = monitor_groups,
     stats = c("mean", "max"),
@@ -106,20 +106,22 @@ donut_data <- summaries$overall_summary |>
   )
 
 # Define plot summary text (figure titles essentially)
-plot_text = list()
-plot_text$mean = 'Distribution of 24-hour mean concentrations at %m PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a 24-hour mean within that concentration range.'
-plot_text$max = plot_text$mean |> stringr::str_replace("mean", "max")
+plot_text_template <- "Distribution of 24-hour mean concentrations at %s PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a 24-hour mean within that concentration range." |>
+  sprintf(monitor_groups)
+plot_text = list(
+  mean = plot_text_template,
+  max = plot_text_template |> stringr::str_replace_all(" mean ", " max ")
+)
 
 # Make summary data for autmated text for this section
-.tmp = donut_data$mean |>
-  dplyr::select(-1) |>
-  subset(monitor != "FEM and PA") |>
-  dplyr::group_by(monitor, aqhi_p) |>
-  dplyr::summarise(n = sum(n)) |>
-  dplyr::mutate(p = round(n / sum(n) * 100, 1))
-
-p_fem = subset(.tmp, monitor == "FEM")
-p_pa = subset(.tmp, monitor == "PA")
+p <- c(pa = "PA", fem = "FEM") |>
+  lapply(\(network) {
+    donuts$data$mean |>
+      dplyr::filter(monitor == network) |>
+      dplyr::group_by(monitor, aqhi_p) |>
+      dplyr::summarise(n = sum(n), .groups = "drop") |>
+      dplyr::mutate(p = round(n / sum(n) * 100, 1))
+  })
 
 ```
 
@@ -129,11 +131,11 @@ p_pa = subset(.tmp, monitor == "PA")
 <details>
 <summary>Click for an automated text summary.</summary>
 
-There are <strong>`r sum(p_fem$n)` FEM sites</strong> and <strong>`r sum(p_pa$n)` PA sites</strong> currently reporting PM<sub>2.5</sub> in Canada. <strong>
+There are <strong>`r sum(p$fem$n)` FEM sites</strong> and <strong>`r sum(p$pa$n)` PA sites</strong> currently reporting PM<sub>2.5</sub> in Canada. <strong>
 
-- `r  p_fem$p[4]`%</strong> of the FEM sites in Canada have a 24-hour mean exceeding 100 &mu;g m<sup>-3</sup>, <strong> `r p_fem$p[3]`%</strong> are between 60 and 100 &mu;g m<sup>-3</sup>, and <strong> `r p_fem$p[2]`%</strong> are between 30 and 60 &mu;g m<sup>-3</sup>.<strong> 
+- `r  p$fem$p[4]`%</strong> of the FEM sites in Canada have a 24-hour mean exceeding 100 &mu;g m<sup>-3</sup>, <strong> `r p$fem$p[3]`%</strong> are between 60 and 100 &mu;g m<sup>-3</sup>, and <strong> `r p$fem$p[2]`%</strong> are between 30 and 60 &mu;g m<sup>-3</sup>.<strong> 
 
-- `r p_pa$p[4]`%</strong> of the PA sites in Canada have a 24-hour mean exceeding 100 &mu;g m<sup>-3</sup>, <strong> `r p_pa$p[3]`%</strong> are between 60 and 100 &mu;g m<sup>-3</sup>, and <strong> `r p_pa$p[2]`%</strong> are between 30 and 60 &mu;g m<sup>-3</sup>.
+- `r p$pa$p[4]`%</strong> of the PA sites in Canada have a 24-hour mean exceeding 100 &mu;g m<sup>-3</sup>, <strong> `r p$pa$p[3]`%</strong> are between 60 and 100 &mu;g m<sup>-3</sup>, and <strong> `r p$pa$p[2]`%</strong> are between 30 and 60 &mu;g m<sup>-3</sup>.
   
 </details>
 
@@ -145,49 +147,43 @@ There are <strong>`r sum(p_fem$n)` FEM sites</strong> and <strong>`r sum(p_pa$n)
 #### FEM and PA
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$mean[['FEM and PA']] |>
+donuts$paths$mean_fem_and_pa |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(
-    plot_text$mean |>
-      stringr::str_replace("%m", "regulatory (FEM) and PurpleAir (PA)")
-  )
+  plot_card(plot_text$mean$`FEM and PA`)
 ```
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$max[['FEM and PA']] |>
+donuts$paths$max_fem_and_pa |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(
-    plot_text$max |>
-      stringr::str_replace("%m", "regulatory (FEM) and PurpleAir (PA)")
-  )
+  plot_card(plot_text$max$`FEM and PA`)
 ```
 
 #### FEM Only
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$mean[['FEM Only']] |>
+donuts$paths$mean_fem_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_text$mean |> stringr::str_replace("%m", "regulatory (FEM)"))
+  plot_card(plot_text$mean$`FEM Only`)
 ```
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$max[['FEM Only']] |>
+donuts$paths$max_fem_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_text$max |> stringr::str_replace("%m", "regulatory (FEM)"))
+  plot_card(plot_text$max$`FEM Only`)
 ```
 
 #### PA Only
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$mean[['PA Only']] |>
+donuts$paths$mean_pa_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_text$mean |> stringr::str_replace("%m", "PurpleAir (PA)"))
+  plot_card(plot_text$mean$`PA Only`)
 ```
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$max[['PA Only']] |>
+donuts$paths$max_pa_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_text$max |> stringr::str_replace("%m", "PurpleAir (PA)"))
+  plot_card(plot_text$max$`PA Only`)
 ```
 
 ### <big><strong>Where were PM<sub>2.5</sub> concentrations high?</strong></big>{.tabset}

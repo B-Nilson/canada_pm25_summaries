@@ -32,39 +32,49 @@ save_aqhi_donuts_plots <- function(
     as.list() |>
     setNames(plot_types)
 
-  lapply(stats, \(stat) {
-    plot_data <- overall_summary |>
-      make_donut_data(pm25_col = paste0("pm25_", stat))
+  plot_data <- stats |>
+    setNames(stats) |>
+    lapply(\(stat) {
+      plot_data <- overall_summary |>
+        make_donut_data(pm25_col = paste0("pm25_", stat))
 
-    # Make and save donut plots
-    lapply(monitors_clean, \(monitor_group) {
-      plot_type <- paste0(stat, "_", monitor_group)
-      group_name <- names(monitors_clean)[monitors_clean == monitor_group]
-      plot_data |>
-        dplyr::filter(monitor == group_name) |>
-        make_donut_plot(
-          labels = labels |>
-            dplyr::filter(monitor == group_name),
-          stat = stringr::str_to_title(stat),
-          plot_caption = plot_captions[[group_name]],
-          avg = avg
-        ) |>
-        ggplot2::ggsave(
-          filename = plot_paths[[plot_type]],
-          dpi = 300,
-          units = fig_dims$u,
-          height = fig_dims$h,
-          width = fig_dims$w
-        )
+      # Make and save donut plots
+      lapply(monitors_clean, \(monitor_group) {
+        plot_type <- paste0(stat, "_", monitor_group)
+        group_name <- names(monitors_clean)[monitors_clean == monitor_group]
+        plot_data |>
+          dplyr::filter(monitor == group_name) |>
+          make_donut_plot(
+            labels = labels |>
+              dplyr::filter(monitor == group_name),
+            stat = stringr::str_to_title(stat),
+            networks = group_name,
+            plot_caption = plot_captions[[group_name]],
+            avg = avg
+          ) |>
+          ggplot2::ggsave(
+            filename = plot_paths[[plot_type]],
+            dpi = 300,
+            units = fig_dims$u,
+            height = fig_dims$h,
+            width = fig_dims$w
+          )
+      })
+      return(plot_data)
     })
-    return(plot_data)
-  })
+  return(
+    list(
+      data = plot_data,
+      paths = plot_paths
+    )
+  )
 }
 
 make_donut_plot <- function(
   plot_data,
   labels,
   plot_caption = NULL,
+  networks = "FEM and PA",
   stat = "Mean",
   avg = "24-hour"
 ) {
@@ -87,7 +97,7 @@ make_donut_plot <- function(
     ggplot2::labs(
       fill = bquote(.(avg) ~ .(stat) ~ "PM"[2.5] ~ (mu * "g m"^-3)),
       title = bquote(
-        .(m) ~ "Monitor Counts and Site" ~ .(stat) ~ "PM"[2.5] ~
+        .(networks) ~ "Monitor Counts and Site" ~ .(stat) ~ "PM"[2.5] ~
           "Distributions by Province/Territory"
       ),
       caption = plot_caption
@@ -167,6 +177,7 @@ make_donut_data <- function(overall_summary, pm25_col = "pm25_mean") {
     dplyr::arrange(prov_terr, monitor, aqhi_p) |>
     dplyr::mutate(
       p = round(n / sum(n), 3),
+      p = ifelse(is.na(p), 0, p),
       ymax = cumsum(p),
       ymin = c(0, head(ymax, n = -1)),
       label_pos = (ymin + ymax) / 2,
