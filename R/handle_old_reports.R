@@ -103,16 +103,16 @@ parse_report_name <- function(report_name, type) {
         to = c("%Y %b %d (%p)", "%B %Y")
       )
 
-    existing_reports_parsed <- existing_reports |>
+    reports_parsed <- report_name |>
       stringr::str_remove("\\.html") |>
       stringr::str_replace("-a$", " 00") |>
       stringr::str_replace("-b$", " 12") |>
       lubridate::parse_date_time(date_fmt) -
       lubridate::hours(ifelse(type == "daily", 1, 0))
-    existing_reports_parsed <- existing_reports_parsed |>
+    reports_parsed <- reports_parsed |>
       format(drpdwn_date_fmt)
   } else {
-    existing_reports_parsed <- existing_reports |>
+    reports_parsed <- report_name |>
       stringr::str_replace("-", " ") |>
       stringr::str_remove("\\.html")
   }
