@@ -30,7 +30,8 @@ obs <- date_range |> load_report_data(meta_cols = meta_cols)
 rds_path <- report_dir |> file.path("index_obs.rds")
 obs |> saveRDS(file = rds_path)
 
-summaries <- obs |> make_summaries(type = "monthly", fcst_zones = fcst_zones)
+summaries <- obs |>
+  make_summaries(type = "monthly", fcst_zones = fcst_zones, meta_cols = meta_cols)
 
 ```
 
@@ -67,7 +68,7 @@ if(!file.exists(pop_rds)){
 }
 
 # Mark cell proximity to PA/FEM
-locs = summaries$obs_monthly |>
+locs = summaries$monthly |>
   dplyr::ungroup() |>
   dplyr::select(monitor, lat, lng) |>
   st_as_sf(coords = c("lng", "lat"), crs = "WGS84")
@@ -246,8 +247,8 @@ All PM<sub>2.5</sub> data are sourced from the [UNBC AQmap](https://aqmap.ca/aqm
 fig_dims = list(h = 7, w = 11, u = 'in')
 
 # Prov/Terr monitor counts for centers of donuts
-labels = summaries$obs_summary |>
-  dplyr::bind_rows(summaries$obs_summary |> dplyr::mutate(monitor = "FEM and PA")) |>
+labels = summaries$overall |>
+  dplyr::bind_rows(summaries$overall |> dplyr::mutate(monitor = "FEM and PA")) |>
   dplyr::full_join(
     expand.grid(prov_terr = names(prov_pretty), monitor = c("PA","FEM","FEM and PA"))
   ) |>
@@ -259,7 +260,7 @@ pd = list()
 plot_paths = list()
 for(stat in c("mean", "max")){
   # Get data for donut plots
-  pd[[stat]] = make_donut_data(summaries$obs_summary, paste0("pm25_", stat))
+  pd[[stat]] = make_donut_data(summaries$overall, paste0("pm25_", stat))
   
   # Create paths for donut plots
   plot_paths[[stat]] = paste0(report_dir,
@@ -563,7 +564,7 @@ plot_path = paste0(report_dir, "plots/fcstzone_mean_map_daily_",
 
 
 # To add slider controls see jsfiddle.net/qs6dL200
-map = make_anim_map(summaries$zone_sum_daily, legend_title,
+map = make_anim_map(summaries$daily_by_zone, legend_title,
                     height = 600)
 
 mapview::mapshot(map, plot_path,libdir="./libs",selfcontained= FALSE)
@@ -581,7 +582,7 @@ legend_titles$pm25 = legend_title |>
 legend_titles$pm25_max = legend_titles$pm25 |> 
   stringr::str_replace("Mean", "Max")
 
-map = make_sync_map(summaries$zone_sum_month, 
+map = make_sync_map(summaries$monthly_by_zone), 
                     cols = c("pm25", "pm25_max"), 
                     legend_titles)
 
@@ -589,7 +590,7 @@ map = make_sync_map(summaries$zone_sum_month,
 htmltools::save_html(map, plot2_path, libdir="./libs")
 
 # Make summary data for autmated text for this section
-aqhi_p_counts_by_prov = summaries$obs_summary |>
+aqhi_p_counts_by_prov = summaries$overall |>
   dplyr::group_by(aqhi_p_24hr = aqhi_p(pm25_mean, by_risk = TRUE, include_ugm3_range = TRUE),
            prov_terr, monitor) |>
   dplyr::summarise(n_monitors = n(), .groups = "drop") |>
@@ -619,7 +620,7 @@ high_pa_by_prov = aqhi_p_counts_by_prov |>
   subset(PA != 0 & aqhi_p_24hr == "High [60-100)") |>
   dplyr::arrange(desc(PA))
 
-wd = summaries$worst_day_df |>
+wd = summaries$worst_day |>
   dplyr::select(p=`Prov./Terr.`,w=`Worst Day`,m=`Mean of Site Means`) |>
   dplyr::arrange(p) |>
   dplyr::group_by(w) |>
@@ -864,15 +865,15 @@ for(p in names(prov_pretty)){
 ```{r site_boxplots}
 
 # Get data for site mean boxplots
-pd = summaries$obs_summary |>
+pd = summaries$overall |>
   dplyr::mutate(monitor2 = ifelse(monitor == "FEM", "FEM Only",
                            ifelse(monitor == "PA","PA Only",
                                   "FEM and PA"))) |>
-  dplyr::bind_rows(summaries$obs_summary |> dplyr::mutate(monitor2 = "FEM and PA")) |>
+  dplyr::bind_rows(summaries$overall |> dplyr::mutate(monitor2 = "FEM and PA")) |>
   dplyr::mutate(aqhi_p_mean = aqhi_p(pm25_mean)) |>
   dplyr::full_join(expand.grid(prov_terr = unlist(prov_order), 
                         monitor2 = monitor_groups,
-                        date_max = unique(summaries$obs_summary$date_max))) |>
+                        date_max = unique(summaries$overall$date_max))) |>
   dplyr::mutate(date = date_max) |>
   dplyr::mutate(pretty_prov = prov_terr |> 
            factor(names(prov_pretty),prov_pretty))
@@ -969,10 +970,10 @@ plot_paths[["PA Only"]] |>
 ```{r community_boxplots}
 
 # Get data for site mean boxplots
-pd = summaries$obs_summary2 |>
+pd = summaries$overall |>
   dplyr::mutate(monitor2 = ifelse(monitor == "FEM", "FEM Only",
                            ifelse(monitor == "PA","PA Only","FEM and PA"))) |>
-  dplyr::bind_rows(summaries$obs_summary2 |> dplyr::mutate(monitor2 = "FEM and PA") |>
+  dplyr::bind_rows(summaries$overall |> dplyr::mutate(monitor2 = "FEM and PA") |>
               dplyr::group_by(prov_terr, fcst_zone, 
            nearest_community, monitor2) |>
              dplyr::summarise(n_hours_above_30=max(n_hours_above_30,na.rm=TRUE),
@@ -985,7 +986,7 @@ pd = summaries$obs_summary2 |>
   dplyr::mutate(aqhi_p_mean = aqhi_p(pm25_mean)) |>
   dplyr::full_join(expand.grid(prov_terr = unlist(prov_order), 
                         monitor2 = monitor_groups,
-                        date_max = unique(summaries$obs_summary$date_max))) |>
+                        date_max = unique(summaries$overall$date_max))) |>
   dplyr::mutate(date = date_max)
 # Make paths to files for saving plots
 plot_paths = paste0(report_dir, "plots/communities_veryHigh_hours_", 
@@ -1007,7 +1008,7 @@ plot_texts = paste0(
 ) |> as.list() |> setNames(monitor_groups)
 
 # Make summary for automated text
-vals = summaries$community_summ |>
+vals = summaries$community |>
   dplyr::ungroup() |>
   dplyr::select(P=prov_terr, 
          C = nearest_community,
@@ -1078,8 +1079,8 @@ plot_paths[["PA Only"]] |>
 
 ```{r worst_day_tables}
 # Make download link and table for province level
-dl = summaries$worst_day_df |>
-  setNames(names(summaries$worst_day_df) |> stringr::str_replace_all("\n"," ")) |>
+dl = summaries$worst_day |>
+  setNames(names(summaries$worst_day) |> stringr::str_replace_all("\n"," ")) |>
    download_this(
     output_name = "worst_days_by_provterr_" |> 
       paste0(max(obs$date) |> format("%Y-%B")),
@@ -1090,7 +1091,7 @@ dl = summaries$worst_day_df |>
     csv2 = FALSE,
     icon = "fa fa-save"
   )
-table =  reactable(data = summaries$worst_day_df,
+table =  reactable(data = summaries$worst_day,
                    pagination= FALSE,
             defaultSorted = "Mean of Site Means",
             defaultSortOrder = "desc",
@@ -1102,7 +1103,7 @@ table =  reactable(data = summaries$worst_day_df,
     )
 
 # Make download link and table for fcst zone level
-pd = summaries$obs_daily |>
+pd = summaries$daily |>
   dplyr::group_by(nearest_community, date) |>
   dplyr::mutate(n_communities_ge_100 = as.numeric(pm25>=100)) |>
   dplyr::group_by(prov_terr, fcst_zone, date) |>
@@ -1210,7 +1211,7 @@ The "worst day" for PM<sub>2.5</sub> concentrations **for each forecast zone**. 
 
 ```{r analysis7, cache= FALSE}
 
-dat1 = summaries$obs_summary |>
+dat1 = summaries$overall |>
   dplyr::group_by(prov_terr, fcst_zone) |>
   dplyr::summarise(
     pm25_mean_month = mean(pm25_mean, na.rm=TRUE) |>round(1),

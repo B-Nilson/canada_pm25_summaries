@@ -39,7 +39,8 @@ obs <- date_range |> load_report_data(meta_cols = meta_cols)
 rds_path <- report_dir |> file.path("index_obs.rds")
 obs |> saveRDS(file = rds_path)
 
-# summaries <- obs |> make_summaries(type = "seasonal", fcst_zones = fcst_zones)
+# summaries <- obs |> 
+#   make_summaries(type = "seasonal", fcst_zones = fcst_zones, meta_cols = meta_cols)
 
 ```
 

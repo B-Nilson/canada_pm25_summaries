@@ -11,12 +11,12 @@ source("R/report-constants.R")
 report_dir <- report_dir |> file.path("daily")
 
 # Handle report start/end time
-date_range <- report_dir |> 
+date_range <- report_dir |>
   get_report_start_end(type = "daily", run_future = run_current_day)
 
 hours_to_summarise <- date_range |> make_hourly_seq()
 
-plot_captions <- date_range |> 
+plot_captions <- date_range |>
   make_plot_captions(networks = names(monitor_groups))
 
 ```
@@ -29,7 +29,8 @@ obs <- date_range |> load_report_data(meta_cols = meta_cols)
 rds_path <- report_dir |> file.path("index_obs.rds")
 obs |> saveRDS(file = rds_path)
 
-summaries <- obs |> make_summaries(type = "daily", fcst_zones = fcst_zones)
+summaries <- obs |>
+  make_summaries(type = "daily", fcst_zones = fcst_zones, meta_cols = meta_cols)
 
 ```
 
@@ -94,8 +95,10 @@ All PM<sub>2.5</sub> data are sourced from the [UNBC AQmap](https://aqmap.ca/aqm
 fig_dims = list(h = 7, w = 11, u = 'in')
 
 # Prov/Terr monitor counts for centers of donuts
-labels = summaries$obs_summary |>
-  dplyr::bind_rows(summaries$obs_summary |> dplyr::mutate(monitor = "FEM and PA")) |>
+labels = summaries$overall |>
+  dplyr::bind_rows(
+    summaries$overall |> dplyr::mutate(monitor = "FEM and PA")
+  ) |>
   dplyr::full_join(
     expand.grid(
       prov_terr = names(prov_pretty),
@@ -110,7 +113,7 @@ pd = list()
 plot_paths = list()
 for (stat in c("mean", "max")) {
   # Get data for donut plots
-  pd[[stat]] = make_donut_data(summaries$obs_summary, paste0("pm25_", stat))
+  pd[[stat]] = make_donut_data(summaries$overall, paste0("pm25_", stat))
 
   # Create paths for donut plots
   plot_paths[[stat]] = paste0(
@@ -240,7 +243,7 @@ plot_paths$max[['PA Only']] |>
 ```{r, maps}
 
 # Make data for the maps
-map_data = make_map_data(summaries$obs_summary)
+map_data = make_map_data(summaries$overall)
 
 # Get bounds to be used for all maps
 bounds = map_data |>
@@ -270,7 +273,7 @@ plot_paths = paste0(
       subset(monitor == names(monitor_groups)[monitor_groups == m])
   }
   pd |>
-    make_map(bounds, summaries$zone_summaries, include_active_fires = FALSE) |>
+    make_map(bounds, summaries$by_zone, include_active_fires = FALSE) |>
     mapview::mapshot(plot_paths[[m]], libdir = "./libs", selfcontained = FALSE)
 })
 
@@ -288,7 +291,7 @@ Below the map is a table summarising the data from the monitoring sites displaye
   as.list()
 
 # Make data for tables below maps
-table_data = make_map_table_data(summaries$obs_summary, summaries$obs_current)
+table_data = make_map_table_data(summaries$overall, summaries$current)
 
 # Make tables
 tables = lapply(names(monitor_groups), \(m) {
@@ -349,7 +352,7 @@ dl_buttons = lapply(names(monitor_groups), \(m) {
   setNames(monitor_groups)
 
 # Make summary data for autmated text for this section
-aqhi_p_counts_by_prov = summaries$obs_summary |>
+aqhi_p_counts_by_prov = summaries$overall |>
   dplyr::group_by(
     aqhi_p_24hr = aqhi_p(pm25_mean, use_risk = TRUE, include_ugm3_range = TRUE),
     prov_terr,
@@ -466,7 +469,7 @@ tables[["PA Only"]]
 ```{r site_boxplots}
 
 # Make data for boxplots
-pd = summaries$obs_summary |>
+pd = summaries$overall |>
   dplyr::mutate(
     monitor2 = ifelse(
       monitor == "FEM",
@@ -475,7 +478,7 @@ pd = summaries$obs_summary |>
     )
   ) |>
   dplyr::bind_rows(
-    summaries$obs_summary |> dplyr::mutate(monitor2 = monitor_groups[3])
+    summaries$overall |> dplyr::mutate(monitor2 = monitor_groups[3])
   ) |>
   dplyr::mutate(aqhi_p_mean = aqhi_p(pm25_mean)) |>
   dplyr::full_join(expand.grid(
@@ -943,7 +946,7 @@ for (p in names(prov_pretty)) {
 ```{r community_summary, include = TRUE}
 
 # Make data for table
-table_data = summaries$community_summ |>
+table_data = summaries$community |>
   dplyr::arrange(desc(pm25_24hr_mean)) |>
   dplyr::mutate(aqmap_link = make_aqmap_link(nc_lat, nc_lng, 12, "EN")) |>
   dplyr::mutate(fcst_zone = iconv(fcst_zone, to = "ASCII//TRANSLIT")) |>
@@ -1023,7 +1026,7 @@ table_data |>
 dl = dl_button_html("./data/", file)
 
 # Make summary data for automated text for this section
-pd = summaries$community_summ |>
+pd = summaries$community |>
   dplyr::ungroup() |>
   dplyr::select(
     P = prov_terr,

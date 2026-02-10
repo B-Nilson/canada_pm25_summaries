@@ -547,452 +547,311 @@ get_active_fire_data <- function() {
     subset(startdate <= max_date)
 }
 
-make_summaries <- function(
-  obs,
-  type = c("daily", "monthly", "seasonal")[1],
-  municipality_csv = NULL,
-  meta_cols,
-  fcst_zones
-) {
-  obs_summary <- obs |>
+safe_mean <- function(x, digits = 1) {
+  mean(x, na.rm = TRUE) |>
+    suppressWarnings() |>
+    dplyr::replace_values(NaN ~ NA_real_) |>
+    round(digits = digits)
+}
+
+make_overall_summary <- function(obs, meta_cols) {
+  obs_cols <- c("pm25", "pm25_a", "pm25_b", "rh", "temperature")
+  obs |>
     # Mark days where multiple hours exceeded 100 ug/m3
     dplyr::group_by(
       date = lubridate::floor_date(date, "days"),
-      prov_terr,
-      fcst_zone,
-      nearest_community,
-      monitor,
-      name,
-      site_id,
-      lat,
-      lng
+      dplyr::pick(dplyr::all_of(meta_cols))
     ) |>
-    dplyr::mutate(days_w_over_100 = sum(pm25 >= 100) >= 12) |>
-    # Reduce to 1 entry per site
+    dplyr::mutate(is_over_100 = sum(pm25 >= 100, na.rm = TRUE) >= 12) |>
+    dplyr::group_by(monitor, dplyr::pick(dplyr::all_of(meta_cols))) |>
+    dplyr::summarise(
+      dplyr::across(
+        dplyr::any_of(obs_cols),
+        list(
+          mean = safe_mean,
+          max = \(x) handyr::max(x, na.rm = TRUE)
+        )
+      ),
+      n_hours_observed = sum(!is.na(pm25)),
+      n_hours_above_30 = sum(pm25 >= 30, na.rm = TRUE),
+      n_hours_above_60 = sum(pm25 >= 60, na.rm = TRUE),
+      n_hours_above_100 = sum(pm25 >= 100, na.rm = TRUE),
+      days_w_over_100 = unique(date[is_over_100]) |>
+        format("%m-%d") |>
+        paste(collapse = ","),
+      .groups = "drop"
+    ) |>
+    dplyr::filter(!is.na(pm25_mean))
+}
+
+make_zone_summary <- function(overall_summary, fcst_zones) {
+  overall_summary |>
+    dplyr::mutate(
+      fcst_zone = fcst_zone |> dplyr::replace_values(NA ~ "Not inside a zone")
+    ) |>
+    dplyr::group_by(fcst_zone, monitor) |>
+    dplyr::summarise(
+      n_monitors = dplyr::n(),
+      mean_pm25_24hr_mean = pm25_mean |> safe_mean(),
+      dplyr::across(
+        dplyr::starts_with("n_hours_above"),
+        list(max = \(x) handyr::max(x, na.rm = TRUE))
+      ),
+      .groups = "drop"
+    ) |>
+    tidyr::pivot_wider(
+      names_from = monitor,
+      values_from = -c(monitor, fcst_zone)
+    ) |>
+    dplyr::full_join(
+      fcst_zones |> dplyr::select(fcst_zone, fcst_zone_fr),
+      by = c('fcst_zone')
+    ) |>
+    sf::st_as_sf() |>
+    dplyr::mutate(
+      dplyr::across(
+        dplyr::starts_with("n_"),
+        \(x) x |> dplyr::replace_values(NA ~ 0)
+      ),
+      mean_pm25_24hr_mean = ((dplyr::replace_values(
+        mean_pm25_24hr_mean_PA * n_monitors_PA,
+        NA ~ 0
+      ) +
+        dplyr::replace_values(
+          mean_pm25_24hr_mean_FEM * n_monitors_FEM,
+          NA ~ 0
+        )) /
+        (n_monitors_PA + n_monitors_FEM)) |>
+        round(digits = 1)
+    )
+}
+
+make_zone_hover <- function(
+  date,
+  fcst_zone,
+  n,
+  n_fem,
+  n_pa,
+  pm25_mean,
+  pm25_max,
+  date_fmt = "%Y-%m-%d",
+  avg_text = "24-hour"
+) {
+  date_str <- date |> format(date_fmt)
+  paste(
+    "<big><strong>%s</strong></big>",
+    "Date: <b>%s</b>",
+    "<b>%s monitors</b> (FEM: %s, PA: %s)",
+    "%s mean PM<sub>2.5</sub>: <b>%s &mu;g m<sup>-3</sup></b>",
+    "%s max PM<sub>2.5</sub>: <b>%s &mu;g m<sup>-3</sup></b>",
+    sep = "<br>"
+  ) |>
+    sprintf(
+      fcst_zone,
+      date_str,
+      n,
+      n_fem,
+      n_pa,
+      avg_text,
+      pm25_mean,
+      avg_text,
+      pm25_max
+    ) |>
+    stringr::str_replace_all("NA &mu;g m<sup>-3</sup>", "No Data.")
+}
+
+make_period_summary <- function(obs, period = "days") {
+  obs |>
+    dplyr::group_by(
+      date = lubridate::floor_date(date, period),
+      monitor,
+      dplyr::pick(dplyr::any_of(meta_cols))
+    ) |>
+    dplyr::summarise(
+      dplyr::across(
+        dplyr::everything(),
+        list(
+          mean = safe_mean,
+          max = \(x) handyr::max(x, na.rm = TRUE)
+        )
+      ),
+      .groups = "drop"
+    )
+}
+
+make_period_by_zone_summary <- function(
+  period_summary,
+  period_label = "24-hour",
+  period_date_fmt = "%F",
+  fcst_zones,
+  fcst_zones_clean
+) {
+  period_summary |>
+    dplyr::summarise(
+      pm25_mean = pm25 |> safe_mean(),
+      pm25_max = pm25 |> handyr::max(na.rm = TRUE),
+      n = dplyr::n(),
+      n_fem = sum(monitor == "FEM"),
+      n_pa = sum(monitor == "PA"),
+      .by = c("date", "prov_terr", "fcst_zone")
+    ) |>
+    tidyr::complete(fcst_zone = fcst_zones$fcst_zone, date) |>
+    dplyr::select(-prov_terr) |>
+    dplyr::left_join(
+      fcst_zones_clean |>
+        dplyr::left_join(
+          fcst_zones |> dplyr::select(fcst_zone, geometry),
+          by = "fcst_zone"
+        ),
+      by = "fcst_zone"
+    ) |>
+    sf::st_as_sf() |>
+    dplyr::mutate(
+      dplyr::across(
+        c(dplyr::starts_with("n_"), n),
+        \(x) x |> dplyr::replace_values(NA ~ 0)
+      ),
+      label = date |>
+        make_zone_hover(
+          fcst_zone = fcst_zone,
+          n = n,
+          n_fem = n_fem,
+          n_pa = n_pa,
+          pm25_mean = pm25_mean,
+          pm25_max = pm25_max,
+          date_fmt = period_date_fmt,
+          avg_text = period_label
+        )
+    )
+}
+
+make_community_summary <- function(overall_summary) {
+  overall_summary |>
     dplyr::group_by(
       prov_terr,
       fcst_zone,
       nearest_community,
       nc_lat,
       nc_lng,
-      monitor,
-      name,
-      site_id,
-      lat,
-      lng
-    ) |>
-    dplyr::mutate(
-      n_hours_above_30 = sum(pm25 >= 30, na.rm = TRUE),
-      n_hours_above_60 = sum(pm25 >= 60, na.rm = TRUE),
-      n_hours_above_100 = sum(pm25 >= 100, na.rm = TRUE),
-      days_w_over_100 = unique(date[days_w_over_100]) |>
-        format("%m-%d") |>
-        paste(collapse = ",")
+      monitor
     ) |>
     dplyr::summarise(
+      n_monitors = dplyr::n(),
       dplyr::across(
-        dplyr::everything(),
+        c(dplyr::starts_with(c("nc_dist", "pm25", "n_hours"))),
         list(
-          mean = \(x) mean(x, na.rm = TRUE),
-          max = handyr::max(na.rm = TRUE)
+          network_mean = safe_mean,
+          network_max = \(x) handyr::max(x, na.rm = TRUE)
         )
-      )
+      ),
+      .groups = "drop_last"
     ) |>
-    dplyr::mutate(dplyr::across(c("pm25_mean", "pm25_max"), \(x) {
-      round(x, digits = 1)
-    })) |>
-    subset(!is.na(pm25_mean)) |>
-    dplyr::select(
-      -n_hours_above_30_max,
-      -n_hours_above_60_max,
-      -n_hours_above_100_max
-    ) |>
-    dplyr::rename(
-      n_hours_above_30 = n_hours_above_30_mean,
-      n_hours_above_60 = n_hours_above_60_mean,
-      n_hours_above_100 = n_hours_above_100_mean
-    )
-
-  obs_current <- obs |>
-    dplyr::filter(date == max(date))
-
-  zone_summaries <- obs_summary |>
-    dplyr::ungroup() |>
-    # Get summaries by zone
-    dplyr::select(
-      fcst_zone,
-      monitor,
-      pm25_mean,
-      n_hours_above_30,
-      n_hours_above_60,
-      n_hours_above_100
-    ) |>
-    dplyr::group_by(fcst_zone, monitor) |>
-    dplyr::mutate(n_monitors = dplyr::n()) |>
     dplyr::summarise(
-      mean_pm25_24hr_mean = mean(pm25_mean, na.rm = TRUE) |> round(1),
-      n_monitors = max(n_monitors, na.rm = TRUE),
-      n_hours_above_30_max = max(n_hours_above_30, na.rm = TRUE),
-      n_hours_above_60_max = max(n_hours_above_60, na.rm = TRUE),
-      n_hours_above_100_max = max(n_hours_above_100, na.rm = TRUE)
-    ) |>
-    # From long to wide (columns for each monitor type)
-    as.data.frame() |>
-    dplyr::group_by(fcst_zone, monitor) |>
-    # Drop any NA zones (where monitors are present, but no zone is defined)
-    subset(!is.na(fcst_zone)) |>
-    tidyr::pivot_wider(
-      1,
-      names_from = 'monitor',
-      values_from = c(
-        'mean_pm25_24hr_mean',
-        'n_monitors',
-        'n_hours_above_30_max',
-        'n_hours_above_60_max',
-        'n_hours_above_100_max'
-      )
-    ) |>
-    # Clean up, and include zones with no monitors
-    dplyr::full_join(
-      fcst_zones |> dplyr::select(fcst_zone, fcst_zone_fr),
-      by = c('fcst_zone')
-    ) |>
-    dplyr::mutate(dplyr::across(4:5, \(x) handyr::swap(x, NA, 0))) |>
-    sf::st_as_sf() |>
-    # Add overall summaries (FEM+PA+EGG) - weighted by n monitors
+      n_monitors = paste(paste0(monitor, ": ", n_monitors), collapse = " | "),
+      dplyr::across(
+        c(dplyr::starts_with(c("nc_dist", "pm25", "n_hours"))),
+        list(
+          comm_mean = safe_mean,
+          comm_max = \(x) handyr::max(x, na.rm = TRUE)
+        )
+      ),
+      .groups = "drop"
+    )
+}
+
+make_worst_day_summary <- function(daily_summary) {
+  daily_summary |>
     dplyr::mutate(
-      mean_pm25_24hr_mean = weighted.mean(
-        c(mean_pm25_24hr_mean_PA, mean_pm25_24hr_mean_FEM),
-        c(n_monitors_PA, n_monitors_FEM)
-      ) |>
-        round(1),
-      mean_pm25_24hr_mean = ifelse(
-        n_monitors_PA + n_monitors_FEM == 0,
-        NA,
-        mean_pm25_24hr_mean
-      )
+      n_communities_ge_100 = as.numeric(pm25_max >= 100),
+      .by = c("nearest_community", "date")
+    ) |>
+    dplyr::summarise(
+      n_sites = dplyr::n(),
+      n_communities_ge_100 = sum(n_communities_ge_100, na.rm = TRUE),
+      n_sites_ge_100 = sum(pm25_max >= 100, na.rm = TRUE),
+      dplyr::across(
+        c(dplyr::starts_with(c("pm25"))),
+        list(
+          mean = safe_mean,
+          min = \(x) handyr::min(x, na.rm = TRUE),
+          max = \(x) handyr::max(x, na.rm = TRUE)
+        )
+      ),
+      .by = c("prov_terr", "date")
+    ) |>
+    dplyr::arrange(
+      prov_terr,
+      dplyr::desc(n_communities_ge_100),
+      dplyr::desc(n_sites_ge_100),
+      dplyr::desc(pm25_mean_mean),
+      dplyr::desc(pm25_max_mean)
+    ) |>
+    dplyr::filter(!duplicated(prov_terr)) |>
+    dplyr::mutate(
+      worst_day = date |> format("%B %d (%a)"),
+      n_ge_100 = "%s / %s (%s" |>
+        sprintf(
+          n_sites_ge_100,
+          n_sites,
+          round(n_sites_ge_100 / n_sites * 100, 1)
+        ) |> 
+          paste0("%)"),
+    )
+}
+
+make_summaries <- function(
+  obs,
+  type = c("daily", "monthly", "seasonal")[1],
+  meta_cols,
+  fcst_zones
+) {
+  summaries <- list(
+    overall = obs |> make_overall_summary(meta_cols = meta_cols),
+    current = obs |> dplyr::filter(date == max(date))
+  )
+  summaries$overall <- summaries$overall |>
+    dplyr::full_join(
+      summaries$current |> dplyr::select(site_id, monitor, pm25_current = pm25),
+      by = c('site_id', 'monitor')
     )
 
-  out <- list(
-    obs_summary = obs_summary,
-    obs_current = obs_current,
-    zone_summaries = zone_summaries
-  )
+  summaries$by_zone <- summaries$overall |>
+    make_zone_summary(fcst_zones = fcst_zones)
 
   if (type != "daily") {
-    obs_summary2 <- obs |>
-      dplyr::select(-site_id, -lat, -lng) |>
-      # Reduce to 1 entry per site
-      dplyr::group_by(prov_terr, fcst_zone, nearest_community, monitor, name) |>
-      dplyr::mutate(
-        n_hours_above_30 = sum(pm25 >= 30, na.rm = TRUE),
-        n_hours_above_60 = sum(pm25 >= 60, na.rm = TRUE),
-        n_hours_above_100 = sum(pm25 >= 100, na.rm = TRUE)
-      ) |>
-      dplyr::group_by(prov_terr, fcst_zone, nearest_community, monitor) |>
-      dplyr::mutate(n_sites = length(unique(name))) |>
-      dplyr::select(-name) |>
-      dplyr::summarise(
-        dplyr::across(
-          dplyr::everything(),
-          list(
-            mean = \(x) mean(x, na.rm = TRUE),
-            max = handyr::max(na.rm = TRUE)
-          )
-        )
-      ) |>
-      dplyr::filter(!is.na(pm25_mean)) |>
-      dplyr::select(
-        -n_hours_above_30_mean,
-        -n_hours_above_60_mean,
-        -n_hours_above_100_mean,
-        -n_sites_max
-      ) |>
-      dplyr::rename(
-        n_hours_above_30 = n_hours_above_30_max,
-        n_hours_above_60 = n_hours_above_60_max,
-        n_hours_above_100 = n_hours_above_100_max,
-        n_sites = n_sites_mean
-      )
-    obs_daily <- obs |>
-      dplyr::group_by(
-        date = lubridate::floor_date(date, "days"),
-        prov_terr,
-        fcst_zone,
-        nearest_community,
-        monitor,
-        name,
-        site_id,
-        lat,
-        lng
-      ) |>
-      dplyr::summarise(
-        dplyr::across(dplyr::everything(), \(x) mean(x, na.rm = TRUE))
-      ) |>
-      dplyr::mutate(pm25 = round(pm25, 1))
+    summaries$daily <- obs |>
+      make_period_summary(period = "days")
 
-    obs_monthly <- obs |>
-      dplyr::group_by(
-        date = lubridate::floor_date(date, "months"),
-        prov_terr,
-        fcst_zone,
-        nearest_community,
-        monitor,
-        name,
-        site_id,
-        lat,
-        lng
-      ) |>
-      dplyr::summarise(
-        dplyr::across(dplyr::everything(), \(x) mean(x, na.rm = TRUE))
-      ) |>
-      dplyr::mutate(pm25 = round(pm25, 1))
+    summaries$monthly <- obs |>
+      make_period_summary(period = "months")
 
-    zone_sum_daily <- obs_daily |>
-      dplyr::group_by(date, prov_terr, fcst_zone) |>
-      dplyr::summarise(
-        pm25 = mean(pm25, na.rm = TRUE),
-        n = dplyr::n(),
-        n_fem = sum(monitor == "FEM"),
-        n_pa = n - n_fem
-      ) |>
-      dplyr::full_join(expand.grid(
-        fcst_zone = fcst_zones$fcst_zone,
-        date = unique(obs_daily$date)
-      )) |>
-      dplyr::left_join(
-        fcst_zones |> dplyr::select(fcst_zone, geometry),
-        by = "fcst_zone"
-      ) |>
-      sf::st_as_sf() |>
-      sf::st_transform(st_crs("WGS84")) |>
-      dplyr::mutate(
-        date_str = format(date, "%F"),
-        n = ifelse(is.na(n), 0, n),
-        n_fem = ifelse(is.na(n_fem), 0, n_fem),
-        n_pa = ifelse(is.na(n_pa), 0, n_pa),
-        label = paste0(
-          "<big><strong>",
-          fcst_zone,
-          "</strong></big>",
-          "<br>",
-          "Date: <b>",
-          date_str,
-          "</b>",
-          "<br>",
-          "<b>",
-          n,
-          " monitors</b> (FEM: ",
-          n_fem,
-          ", PA: ",
-          n_pa,
-          ")<br>",
-          "Mean 24-hour PM<sub>2.5</sub>: <b>",
-          round(pm25, 1),
-          " &mu;g m<sup>-3</sup></b>"
-        ) |>
-          stringr::str_replace_all("NA &mu;g m<sup>-3</sup>", "No Data.")
+    summaries$daily_by_zone <- summaries$daily |>
+      make_period_by_zone_summary(
+        fcst_zones = fcst_zones,
+        fcst_zones_clean = fcst_zones,
+        period_label = "24-hour",
+        period_date_fmt = "%F"
       )
-    zone_sum_month <- obs |>
-      dplyr::group_by(date, prov_terr, fcst_zone) |>
-      dplyr::summarise(
-        pm25_max = max(pm25, na.rm = TRUE),
-        pm25 = mean(pm25, na.rm = TRUE),
-        n = dplyr::n(),
-        n_fem = sum(monitor == "FEM"),
-        n_pa = n - n_fem
-      ) |>
-      dplyr::group_by(
-        date = lubridate::floor_date(date, "month"),
-        prov_terr,
-        fcst_zone
-      ) |>
-      dplyr::summarise(
-        pm25_max = max(pm25, na.rm = TRUE),
-        pm25 = mean(pm25, na.rm = TRUE),
-        n = max(n, na.rm = TRUE),
-        n_fem = max(n_fem, na.rm = TRUE),
-        n_pa = max(n_pa, na.rm = TRUE)
-      ) |>
-      dplyr::full_join(expand.grid(
-        fcst_zone = fcst_zones$fcst_zone,
-        date = unique(lubridate::floor_date(obs$date, 'months'))
-      )) |>
-      dplyr::left_join(
-        fcst_zones |> dplyr::select(fcst_zone, prov2 = prov_terr, geometry),
-        by = "fcst_zone"
-      ) |>
-      dplyr::mutate(
-        prov_terr = ifelse(is.na(prov_terr), prov2, as.character(prov_terr))
-      ) |>
-      sf::st_as_sf() |>
-      sf::st_transform(sf::st_crs("WGS84")) |>
-      dplyr::mutate(
-        date_str = format(date, "%F %HZ"),
-        n = ifelse(is.na(n), 0, n),
-        n_fem = ifelse(is.na(n_fem), 0, n_fem),
-        n_pa = ifelse(is.na(n_pa), 0, n_pa),
-        label = paste0(
-          "<big><strong>",
-          fcst_zone,
-          "</strong></big>",
-          "<br>",
-          "Date: <b>",
-          date_str,
-          " - ",
-          max(obs$date) |> format("%F %HZ"),
-          "</b>",
-          "<br>",
-          "<b>",
-          n,
-          " monitors</b> (FEM: ",
-          n_fem,
-          ", PA: ",
-          n_pa,
-          ")<br>",
-          "Monthly Mean PM<sub>2.5</sub>: <b>",
-          round(pm25, 1),
-          " &mu;g m<sup>-3</sup></b><br>;",
-          "Monthly Maximum PM<sub>2.5</sub>: <b>",
-          round(pm25_max, 1),
-          " &mu;g m<sup>-3</sup></b>"
-        ) |>
-          stringr::str_replace_all("NA &mu;g m<sup>-3</sup>", "No Data.")
+
+    summaries$monthly_by_zone <- summaries$monthly |>
+      make_period_by_zone_summary(
+        fcst_zones = fcst_zones,
+        fcst_zones_clean = fcst_zones,
+        period_label = "Monthly",
+        period_date_fmt = "%F %HZ" # TODO: why hours?
       )
-    out <- c(
-      out,
-      list(
-        obs_summary2 = obs_summary2,
-        obs_daily = obs_daily,
-        obs_monthly = obs_monthly,
-        zone_sum_daily = zone_sum_daily,
-        zone_sum_month = zone_sum_month
-      )
-    )
   }
 
   if (type != "seasonal") {
-    community_summ <- obs_summary |>
-      dplyr::filter(!is.na(nearest_community)) |>
-      dplyr::full_join(
-        obs_current |>
-          dplyr::select(site_id, name, pm25_current = pm25, monitor),
-        by = c('site_id', 'name', 'monitor')
-      ) |>
-      # Reduce to 1 entry per monitor type per community
-      dplyr::group_by(
-        prov_terr,
-        fcst_zone,
-        nearest_community,
-        nc_lat,
-        nc_lng,
-        monitor
-      ) |>
-      dplyr::summarise(
-        n_monitors = dplyr::n(),
-        mean_dist = mean(nc_dist_km_mean, na.rm = TRUE),
-        max_dist = max(nc_dist_km_max, na.rm = TRUE),
-        pm25_24hr_mean = mean(pm25_mean, na.rm = TRUE),
-        pm25_24hr_max = max(pm25_max, na.rm = TRUE),
-        pm25_current_mean = mean(pm25_current, na.rm = TRUE),
-        n_hours_above_30_max = max(n_hours_above_30, na.rm = TRUE),
-        n_hours_above_60_max = max(n_hours_above_60, na.rm = TRUE),
-        n_hours_above_100_max = max(n_hours_above_100, na.rm = TRUE)
-      ) |>
-      # Reduce to 1 entry per community
-      dplyr::group_by(
-        prov_terr,
-        fcst_zone,
-        nearest_community,
-        nc_lat,
-        nc_lng
-      ) |>
-      dplyr::summarise(
-        # n_monitors = paste(paste(monitor, collapse = " | "),":",paste(n_monitors, collapse = " | ")),
-        n_monitors = paste(paste0(monitor, ": ", n_monitors), collapse = " | "),
-        mean_dist = mean(mean_dist, na.rm = TRUE),
-        max_dist = max(max_dist, na.rm = TRUE),
-        pm25_24hr_mean = mean(pm25_24hr_mean, na.rm = TRUE),
-        pm25_24hr_max = max(pm25_24hr_max, na.rm = TRUE),
-        pm25_current_mean = mean(pm25_current_mean, na.rm = TRUE),
-        n_hours_above_30_max = max(n_hours_above_30_max, na.rm = TRUE),
-        n_hours_above_60_max = max(n_hours_above_60_max, na.rm = TRUE),
-        n_hours_above_100_max = max(n_hours_above_100_max, na.rm = TRUE)
-      ) |>
-      subset(!is.na(pm25_24hr_mean) & !is.na(prov_terr)) |>
-      # dplyr::left_join(municipalities |>
-      #             data.frame(lat = st_coordinates(.)[,2],
-      #                        lng = st_coordinates(.)[,1]) |>
-      #             dplyr::select(nearest_community = name, lng, lat),
-      #           by = "nearest_community") |>
-      # dplyr::mutate(aqhi_p_cat_mean = aqhi_p(pm25_24hr_mean,use_risk = TRUE),
-      #        aqhi_p_cat_max = aqhi_p(pm25_24hr_max,TRUE,TRUE),
-      #        aqhi_p_cat_current = aqhi_p(pm25_current_mean, use_risk = TRUE),
-      # ) |>
-      dplyr::mutate(
-        mean_dist = round(mean_dist, 1),
-        pm25_24hr_mean = round(pm25_24hr_mean, 1),
-        pm25_current_mean = round(pm25_current_mean, 1)
-      )
-    out <- c(
-      out,
-      list(
-        community_summ = community_summ
-      )
-    )
+    summaries$community <- summaries$overall |>
+      make_community_summary()
   }
   if (type == "monthly") {
-    worst_day_df <- obs_daily |>
-      dplyr::group_by(nearest_community, date) |>
-      dplyr::mutate(n_communities_ge_100 = as.numeric(pm25 >= 100)) |>
-      dplyr::group_by(prov_terr, date) |>
-      dplyr::summarise(
-        n_sites = dplyr::n(),
-        n_communities_ge_100 = length(unique(nearest_community[
-          n_communities_ge_100 == 1
-        ])),
-        n_sites_above_100 = sum(pm25 >= 100, na.rm = TRUE),
-        # n_sites_above_60 = sum(pm25>=60,na.rm = TRUE),
-        mean_pm25 = round(mean(pm25, na.rm = TRUE), 1),
-        min_pm25 = min(pm25, na.rm = TRUE),
-        max_pm25 = max(pm25, na.rm = TRUE)
-      ) |>
-      dplyr::arrange(
-        prov_terr,
-        dplyr::desc(n_sites_above_100),
-        dplyr::desc(n_sites_above_100),
-        dplyr::desc(mean_pm25)
-      ) |>
-      dplyr::filter(!duplicated(prov_terr)) |>
-      dplyr::rename(worst_day = date) |>
-      dplyr::mutate(
-        n_ge_100 = paste0(
-          n_sites_above_100,
-          " / ",
-          n_sites,
-          " (",
-          round(n_sites_above_100 / n_sites * 100, 1),
-          "%)"
-        ),
-        worst_day = format(worst_day, "%B %d (%a)")
-      ) |>
-      dplyr::select(
-        "Prov./Terr." = prov_terr,
-        "Worst Day" = worst_day,
-        "Sites w/ Daily Mean Above 100 ug/m3" = n_ge_100,
-        "Min of Site Means" = min_pm25,
-        "Mean of Site Means" = mean_pm25,
-        "Max of Site Means" = max_pm25
-      )
-    out <- c(
-      out,
-      list(
-        worst_day_df = worst_day_df
-      )
-    )
+    summaries$worst_day <- summaries$daily |>
+      make_worst_day_summary()
   }
 
-  return(out)
+  return(summaries)
 }
 
 make_donut_data <- function(obs_summary, pm25_col = "pm25_mean") {
