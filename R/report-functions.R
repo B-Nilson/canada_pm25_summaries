@@ -2,6 +2,7 @@ source("R/get_report_start_end.R")
 source("R/load_report_data.R")
 source("R/handle_old_reports.R")
 source("R/make_summaries.R")
+source("R/aqhi_donut_plots.R")
 
 make_hourly_seq <- function(date_range) {
   date_range |>
@@ -303,35 +304,6 @@ safe_mean <- function(x, digits = 1) {
     suppressWarnings() |>
     dplyr::replace_values(NaN ~ NA_real_) |>
     round(digits = digits)
-}
-
-make_donut_data <- function(overall_summary, pm25_col = "pm25_mean") {
-  overall_summary |>
-    dplyr::bind_rows(
-      overall_summary |> dplyr::mutate(monitor = "FEM and PA")
-    ) |>
-    dplyr::mutate(
-      aqhi_p = aqhi::AQHI_plus(get(pm25_col))$risk
-    ) |>
-    tidyr::complete(
-      prov_terr = levels(prov_terr) |> factor(levels = levels(prov_terr)),
-      monitor,
-      aqhi_p = levels(aqhi_p) |> factor(levels = levels(aqhi_p))
-    ) |>
-    dplyr::summarise(
-      n = sum(!is.na(get(pm25_col))),
-      .by = c(prov_terr, monitor, aqhi_p)
-    ) |>
-    dplyr::arrange(prov_terr, monitor, aqhi_p) |>
-    dplyr::mutate(
-      p = round(n / sum(n), 3),
-      ymax = cumsum(p),
-      ymin = c(0, head(ymax, n = -1)),
-      label_pos = (ymin + ymax) / 2,
-      aqhi_p = paste(aqhi_p, "Risk") |>
-        factor(levels = levels(aqhi_p) |> paste("Risk")),
-      .by = c(prov_terr, monitor)
-    )
 }
 
 make_map_table_data <- function(obs_summary, obs_current) {
@@ -646,90 +618,6 @@ $text
       stringr::str_replace("\\$text", text) |>
       HTML()
   )
-}
-
-make_donut_plot <- function(
-  plot_data,
-  labels,
-  plot_caption = NULL,
-  stat = "Mean",
-  avg = "24-hour"
-) {
-  legend_position <- c(4 / 5, 1 / 5.5)
-  base_outline <- data.frame(xmin = 3, xmax = 4, ymin = 0, ymax = 1)
-  outline_colour <- "black"
-
-  base_plot <- plot_data |>
-    ggplot2::ggplot() +
-    ggplot2::geom_rect(
-      data = base_outline,
-      ggplot2::aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-      colour = outline_colour,
-      fill = NA
-    ) +
-    ggplot2::coord_polar(theta = "y") +
-    ggplot2::theme_void() +
-    ggplot2::xlim(c(2, 4)) +
-    ggplot2::facet_wrap(~prov_terr, nrow = 3) +
-    ggplot2::labs(
-      fill = bquote(.(avg) ~ .(stat) ~ "PM"[2.5] ~ (mu * "g m"^-3)),
-      title = bquote(
-        .(m) ~ "Monitor Counts and Site" ~ .(stat) ~ "PM"[2.5] ~
-          "Distributions by Province/Territory"
-      ),
-      caption = plot_caption
-    ) +
-    ggplot2::theme(
-      legend.position = legend_position,
-      legend.direction = "horizontal",
-      plot.background = ggplot2::element_rect(fill = "white", colour = NA),
-      plot.subtitle = ggplot2::element_text(
-        margin = ggplot2::margin(b = 6, unit = "pt")
-      )
-    ) +
-    ggplot2::guides(
-      fill = ggplot2::guide_legend(
-        nrow = 2,
-        byrow = FALSE,
-        title.position = 'top'
-      )
-    )
-
-  base_plot +
-    # Add AQHI coloured bars
-    ggplot2::geom_rect(
-      xmin = base_outline$xmin,
-      xmax = base_outline$xmax,
-      ggplot2::aes(ymin = ymin, ymax = ymax, fill = aqhi_p),
-      colour = outline_colour
-    ) +
-    ggplot2::scale_fill_manual(
-      values = aqhi::get_aqhi_colours(c(1, 4, 7, 11)),
-      breaks = levels(plot_data$aqhi_p)
-    ) +
-    # Add percentage labels where > 5%
-    ggplot2::geom_text(
-      x = mean(c(base_outline$xmin, base_outline$xmax)),
-      ggplot2::aes(
-        color = as.numeric(aqhi_p) == 4,
-        label = ifelse(p > 0.05, paste0(round(p * 100), "%"), NA),
-        y = label_pos
-      ),
-      hjust = 0.5,
-      vjust = 0.5,
-      show.legend = FALSE,
-      size = 3
-    ) +
-    ggplot2::scale_colour_manual(values = c("FALSE" = "black", "TRUE" = "white")) +
-    # Add monitor count labels
-    ggplot2::geom_text(
-      data = labels,
-      ggplot2::aes(label = n),
-      x = 2,
-      y = 0,
-      hjust = 0.5,
-      vjust = 0.5
-    )
 }
 
 make_grid_plot <- function(
