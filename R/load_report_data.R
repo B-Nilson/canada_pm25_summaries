@@ -15,21 +15,9 @@ load_report_data <- function(
   date_range,
   db = NULL,
   fem_tables = list(obs = "fem_obs", meta = "fem_meta"),
-  lcm_tables = list(obs = "pa_obs", meta = "pa_meta")
+  lcm_tables = list(obs = "pa_obs", meta = "pa_meta"),
+  meta_cols
 ) {
-  meta_cols <- c(
-    "site_id",
-    "name",
-    "lat",
-    "lng",
-    "prov_terr",
-    "is_aqsu",
-    "fcst_zone",
-    "nearest_community",
-    "nc_dist_km",
-    "nc_lat",
-    "nc_lng"
-  )
   if (is.null(db)) {
     db <- connect_to_db()
     on.exit({

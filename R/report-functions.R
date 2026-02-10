@@ -551,6 +551,7 @@ make_summaries <- function(
   obs,
   type = c("daily", "monthly", "seasonal")[1],
   municipality_csv = NULL,
+  meta_cols,
   fcst_zones
 ) {
   obs_summary <- obs |>

@@ -37,6 +37,20 @@ extrafont::loadfonts(device = "all")
 
 # File meta ------
 
+meta_cols <- c(
+  "site_id",
+  "name",
+  "lat",
+  "lng",
+  "prov_terr",
+  "is_aqsu",
+  "fcst_zone",
+  "nearest_community",
+  "nc_dist_km",
+  "nc_lat",
+  "nc_lng"
+)
+
 # AQCSV Header
 header <- c(
   "site",
