@@ -119,9 +119,12 @@ events = get_pm_events(obs, c("prov_terr","fcst_zone"))
 
 ```{r handleOldReports, include= FALSE, echo= FALSE}
 
-old_report_dropdown = handle_old_reports(
-  report_dir, report_pattern = "[Summer,Winter]\\.html$",
-  date_range[2], type = "seasonal")
+old_report_dropdown <- report_dir |> 
+  handle_old_reports(
+    report_pattern = "[Summer,Winter]\\.html$",
+    max_date = date_range[2], 
+    type = "seasonal"
+  )
 
 ```
 

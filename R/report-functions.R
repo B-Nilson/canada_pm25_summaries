@@ -401,6 +401,10 @@ get_previous_report_name <- function(
 }
 
 parse_report_name <- function(report_name, type) {
+  date_fmt <- dplyr::case_when(
+    type == "daily" ~ "%Y-%m-%d %H",
+    type %in% c("monthly", "seasonal") ~ "%Y-%m"
+  )
   if (type != "seasonal") {
     drpdwn_date_fmt <- type |>
       dplyr::recode_values(
@@ -430,10 +434,7 @@ make_old_reports_dropdown <- function(
   dropdown_label = "Select a Report"
 ) {
   dropdown_entries <- '<a class="dropdown-item" href="%s">%s</a>' |>
-    sprintf(
-      paste0("./", report_paths),
-      report_names
-    ) |>
+    sprintf(report_paths, report_names) |>
     paste(collapse = "\n    ")
 
   menu_style <- "max-height:210px; overflow-y:auto;"
@@ -461,16 +462,22 @@ make_old_reports_dropdown <- function(
 
 handle_old_reports <- function(
   report_dir,
+  historic_dir = "historic",
   report_pattern = "\\d\\.html$",
   max_date,
   type = c("daily", "monthly", "seasonal")[1]
 ) {
-  index_exists <- file.exists(paste0(report_dir, "index.html"))
+  index_exists <- report_dir |>
+    file.path("index.html") |>
+    file.exists()
   existing_reports <- report_dir |>
-    list.files(pattern = report_pattern) |>
+    file.path(historic_dir) |>
+    list.files(pattern = report_pattern, full.names = TRUE) |>
     sort(decreasing = TRUE)
   if (length(existing_reports) > 0) {
-    names(existing_reports) <- existing_reports |> stringr::str_split_1("\\.")
+    names(existing_reports) <- existing_reports |>
+      basename() |>
+      stringr::str_remove("\\.html")
   }
 
   # Rename index.html if not done so already
@@ -481,14 +488,16 @@ handle_old_reports <- function(
         months_in_seasons = months_in_seasons
       )
 
-    index_path <- paste0(report_dir, "index.html")
-    new_path <- paste0(report_dir, previous_report, ".html")
+    index_path <- report_dir |> file.path("index.html")
+    new_path <- report_dir |>
+      file.path(historic_dir, paste0(previous_report, ".html"))
     need_to_rename <- (length(existing_reports) &
       !previous_report %in% names(existing_reports)) |
       length(existing_reports) == 0
     if (need_to_rename) {
       index_path |> file.copy(new_path)
-      existing_reports <- existing_reports |> c(previous_report)
+      existing_reports <- existing_reports |> c(new_path)
+      names(existing_reports)[length(existing_reports)] <- previous_report
     } else {
       "Either no historic reports, or the report for %s already exists - not renaming index.html." |>
         sprintf(previous_report) |>
@@ -499,7 +508,8 @@ handle_old_reports <- function(
   existing_reports_parsed <- existing_reports |>
     parse_report_name(type = type)
 
-  paste("./historic/", existing_reports) |>
+  existing_reports |>
+    stringr::str_replace(report_dir, ".") |> # make relative to report
     make_old_reports_dropdown(
       report_names = existing_reports_parsed,
       button_label = "Select previous reports",

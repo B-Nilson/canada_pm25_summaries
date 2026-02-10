@@ -187,9 +187,12 @@ coverage = dplyr::bind_rows(pop_coverage, fnic_coverage)
 
 ```{r handleOldReports}
 
-old_report_dropdown = report_dir |>
-  handle_old_reports(report_pattern = "\\d\\.html$",
-                     date_range[2], type = "monthly")
+old_report_dropdown <- report_dir |>
+  handle_old_reports(
+    report_pattern = "\\d\\.html$",
+    max_date = date_range[2], 
+    type = "monthly"
+  )
 
 ```
 
