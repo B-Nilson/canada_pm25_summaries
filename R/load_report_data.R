@@ -16,14 +16,26 @@ load_report_data <- function(
   db = NULL,
   fem_tables = list(obs = "fem_obs", meta = "fem_meta"),
   lcm_tables = list(obs = "pa_obs", meta = "pa_meta"),
-  meta_cols
+  meta_cols,
+  cache_path = "index_obs.rds"
 ) {
   if (is.null(db)) {
-    db <- connect_to_db()
-    on.exit({
-      DBI::dbDisconnect(db)
-    })
+    db <- handyr::on_error(
+      {
+        db <- connect_to_db()
+        on.exit({
+          DBI::dbDisconnect(db)
+        })
+        db
+      },
+      .warn = "Unable to connect to database, defaulting to cached data from last run",
+      .return = NULL
+    )
+    if (is.null(db)) {
+      return(readRDS(cache_path))
+    }
   }
+
   fem_report_data_query <- date_range |>
     load_fem_report_data(
       db = db,
@@ -40,16 +52,19 @@ load_report_data <- function(
       meta_cols = meta_cols
     )
 
-  pt_order <- levels(canadata::provinces_and_territories$name_en) |> 
+  pt_order <- levels(canadata::provinces_and_territories$name_en) |>
     dplyr::replace_values("Quebec" ~ "Québec") # TODO: remove once col in database matches canadata
-  fem_report_data_query |>
+  obs <- fem_report_data_query |>
     dplyr::union_all(lcm_report_data_query) |>
     dplyr::collect() |>
     dplyr::mutate(prov_terr = prov_terr |> factor(levels = pt_order)) |>
     # Infill Date Gaps
     dplyr::group_by(dplyr::pick(dplyr::all_of(c("monitor", meta_cols)))) |>
-    tidyr::complete(date = make_hourly_seq(date_range)) |> 
+    tidyr::complete(date = make_hourly_seq(date_range)) |>
     dplyr::ungroup()
+
+  obs |> saveRDS(file = cache_path) # Cache data to rds for testing
+  return(obs)
 }
 
 load_fem_report_data <- function(

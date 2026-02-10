@@ -23,11 +23,11 @@ plot_captions <- date_range |>
 
 ```{r load_data}
 
-obs <- date_range |> load_report_data(meta_cols = meta_cols)
-
-# Save for testing
-rds_path <- report_dir |> file.path("index_obs.rds")
-obs |> saveRDS(file = rds_path)
+obs <- date_range |> 
+  load_report_data(
+    meta_cols = meta_cols,
+    cache_path = file.path(report_dir, "index_obs.rds") # used when db not available
+  )
 
 summaries <- obs |>
   make_summaries(type = "daily", fcst_zones = fcst_zones, meta_cols = meta_cols)
