@@ -8,10 +8,10 @@ $(window).on('load', () => on_page_load("#analysis-of-past-24-hours-of-pm2\\.5-o
 
 source("R/report-functions.R")
 source("R/report-constants.R")
+report_dir <- report_dir |> file.path("daily")
 
 # Handle report start/end time
 date_range <- report_dir |> 
-  file.path("daily") |> 
   get_report_start_end(type = "daily", run_future = run_current_day)
 
 hours_to_summarise <- date_range |> make_hourly_seq()

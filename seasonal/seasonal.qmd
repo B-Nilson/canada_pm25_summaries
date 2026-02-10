@@ -8,9 +8,9 @@ $(window).on('load', () => on_page_load("#analysis-of-past-6-months-of-pm2\\.5-o
 
 source("R/report-functions.R")
 source("R/report-constants.R")
+report_dir <- report_dir |> file.path("seasonal")
 
 date_range <- report_dir |> 
-  file.path("seasonal") |>
   get_report_start_end(
     type = "seasonal", 
     months_in_seasons = months_in_seasons,

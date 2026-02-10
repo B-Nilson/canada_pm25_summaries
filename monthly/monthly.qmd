@@ -8,9 +8,9 @@ $(window).on('load', () => on_page_load("#analysis-of-past-month-of-pm2\\.5-obse
 
 source("R/report-functions.R")
 source("R/report-constants.R")
+report_dir <- report_dir |> file.path("monthly")
 
 date_range <- report_dir |> 
-  file.path("monthly") |> 
   get_report_start_end(type = "monthly", run_future = run_current_month)
 
 output_date_fmt <- date_range[2] |> format("%Y-%m")
