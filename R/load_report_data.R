@@ -118,7 +118,7 @@ load_lcm_report_data <- function(
           dplyr::tbl(obs_table) |>
           dplyr::select(dplyr::any_of(obs_cols)) |>
           dplyr::filter(date |> dplyr::between(min_date, max_date)) |>
-          dplyr::mutate(monitor = monitor_name)
+          dplyr::mutate(monitor = monitor_name, site_id = as.character(site_id))
       }
     )
   if (length(obs_tables) > 1) {
@@ -146,7 +146,10 @@ load_lcm_report_data <- function(
         db |>
           dplyr::tbl(meta_table) |>
           dplyr::select(dplyr::all_of(meta_cols)) |>
-          dplyr::mutate(monitor = monitor_name) |>
+          dplyr::mutate(
+            monitor = monitor_name,
+            site_id = as.character(site_id)
+          ) |>
           dplyr::filter(prov_terr != "United States")
       }
     )
