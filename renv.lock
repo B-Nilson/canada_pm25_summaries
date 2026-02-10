@@ -621,6 +621,43 @@
       "Author": "Tony Plate [aut, cre], Richard Heiberger [aut]",
       "Repository": "CRAN"
     },
+    "aqhi": {
+      "Package": "aqhi",
+      "Version": "0.9.0",
+      "Source": "GitHub",
+      "Type": "Package",
+      "Title": "Canadian Air Quality Health Index",
+      "Authors@R": "person(\"Brayden\", \"Nilson\", email = \"nilson.brayden@gmail.com\", role = c(\"aut\", \"cre\", \"cph\"))",
+      "Description": "Calculate the Canadian Air Quality Health Index (AQHI) and the AQHI+ modification in both English and French.  AQHI is formulated from 3-hour rolling mean fine particulate matter (PM2.5), nitrogen dioxide (NO2), and ozone (O3), while AQHI+ uses only 1-hour mean PM2.5.   AQHI+ overrides AQHI by default if higher for a given hour. AQHI colours, associated risk levels, and health messaging can be produced individually. Stieb, D. et al. (2008) <doi:10.3155/1047-3289.58.3.435>, Yao, J. et al. (2019) <doi:10.17269/s41997-019-00237-w>, Environment and Climate Change Canada (2018) <https://www.canada.ca/en/environment-climate-change/services/air-quality-health-index/understanding-messages.html>, Environment and Climate Change Canada (2021) <https://www.canada.ca/en/environment-climate-change/services/air-quality-health-index/about.html>.",
+      "License": "MIT + file LICENSE",
+      "Encoding": "UTF-8",
+      "Roxygen": "list(markdown = TRUE)",
+      "RoxygenNote": "7.3.3",
+      "Imports": [
+        "dplyr",
+        "rlang",
+        "stats",
+        "tidyr"
+      ],
+      "Suggests": [
+        "testthat (>= 3.0.0)"
+      ],
+      "Config/testthat/edition": "3",
+      "URL": "https://github.com/B-Nilson/aqhi, https://b-nilson.github.io/aqhi/",
+      "BugReports": "https://github.com/B-Nilson/aqhi/issues",
+      "Depends": [
+        "R (>= 4.1.0)"
+      ],
+      "LazyData": "true",
+      "Author": "Brayden Nilson [aut, cre, cph]",
+      "Maintainer": "Brayden Nilson <nilson.brayden@gmail.com>",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "B-Nilson",
+      "RemoteRepo": "aqhi",
+      "RemoteRef": "main",
+      "RemoteSha": "44c17fad6b8bd4f89c4469e155097e372b469fd5"
+    },
     "askpass": {
       "Package": "askpass",
       "Version": "1.2.1",
