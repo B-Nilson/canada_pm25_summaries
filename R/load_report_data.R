@@ -59,7 +59,7 @@ load_report_data <- function(
     dplyr::collect() |>
     dplyr::mutate(prov_terr = prov_terr |> factor(levels = pt_order)) |>
     # Infill Date Gaps
-    dplyr::group_by(dplyr::pick(dplyr::all_of(meta_cols))) |>
+    dplyr::group_by(dplyr::pick(dplyr::all_of(c("monitor", meta_cols)))) |>
     tidyr::complete(date = make_hourly_seq(date_range))
 }
 
