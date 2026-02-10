@@ -305,40 +305,32 @@ safe_mean <- function(x, digits = 1) {
     round(digits = digits)
 }
 
-make_donut_data <- function(obs_summary, pm25_col = "pm25_mean") {
-  obs_summary |>
-    dplyr::bind_rows(obs_summary |> dplyr::mutate(monitor = "FEM and PA")) |>
-    dplyr::group_by(
-      prov_terr,
+make_donut_data <- function(overall_summary, pm25_col = "pm25_mean") {
+  overall_summary |>
+    dplyr::bind_rows(
+      overall_summary |> dplyr::mutate(monitor = "FEM and PA")
+    ) |>
+    dplyr::mutate(
+      aqhi_p = aqhi::AQHI_plus(get(pm25_col))$risk
+    ) |>
+    tidyr::complete(
+      prov_terr = levels(prov_terr) |> factor(levels = levels(prov_terr)),
       monitor,
-      aqhi_p = aqhi_p(!!as.name(pm25_col), use_risk = TRUE)
+      aqhi_p = levels(aqhi_p) |> factor(levels = levels(aqhi_p))
     ) |>
-    dplyr::full_join(
-      expand.grid(
-        prov_terr = names(prov_pretty),
-        monitor = names(monitor_groups),
-        aqhi_p = levels(aqhi_p(1, use_risk = TRUE))
-      )
+    dplyr::summarise(
+      n = sum(!is.na(get(pm25_col))),
+      .by = c(prov_terr, monitor, aqhi_p)
     ) |>
-    dplyr::summarise(n = sum(!is.na(!!as.name(pm25_col)))) |>
+    dplyr::arrange(prov_terr, monitor, aqhi_p) |>
     dplyr::mutate(
-      aqhi_p = factor(
-        aqhi_p,
-        levels(aqhi_p),
-        levels(aqhi_p) |>
-          stringr::str_replace("1-3", "0-30") |>
-          stringr::str_replace("4-6", "30-60") |>
-          stringr::str_replace("7-10", "60-100") |>
-          stringr::str_replace("10\\+", ">100")
-      )
-    ) |>
-    dplyr::group_by(prov_terr, monitor) |>
-    dplyr::mutate(p = round(n / sum(n), 3)) |>
-    dplyr::arrange(aqhi_p) |>
-    dplyr::mutate(
+      p = round(n / sum(n), 3),
       ymax = cumsum(p),
       ymin = c(0, head(ymax, n = -1)),
-      label_pos = (ymin + ymax) / 2
+      label_pos = (ymin + ymax) / 2,
+      aqhi_p = paste(aqhi_p, "Risk") |>
+        factor(levels = levels(aqhi_p) |> paste("Risk")),
+      .by = c(prov_terr, monitor)
     )
 }
 
@@ -656,69 +648,39 @@ $text
   )
 }
 
-# ONLY TESTED FOR DAILY REPORT
-make_donut_plot <- function(pd, labels, m, stat = "Mean", avg = "24-hour") {
-  pd |>
-    subset(monitor == m) |>
+make_donut_plot <- function(
+  plot_data,
+  labels,
+  plot_caption = NULL,
+  stat = "Mean",
+  avg = "24-hour"
+) {
+  legend_position <- c(4 / 5, 1 / 5.5)
+  base_outline <- data.frame(xmin = 3, xmax = 4, ymin = 0, ymax = 1)
+  outline_colour <- "black"
+
+  base_plot <- plot_data |>
     ggplot2::ggplot() +
     ggplot2::geom_rect(
-      xmin = 3,
-      xmax = 4,
-      ymin = 0,
-      ymax = 1,
-      colour = 'black',
+      data = base_outline,
+      ggplot2::aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+      colour = outline_colour,
       fill = NA
     ) +
     ggplot2::coord_polar(theta = "y") +
     ggplot2::theme_void() +
     ggplot2::xlim(c(2, 4)) +
     ggplot2::facet_wrap(~prov_terr, nrow = 3) +
-    ggplot2::geom_rect(
-      xmin = 3,
-      xmax = 4,
-      ggplot2::aes(ymin = ymin, ymax = ymax, fill = aqhi_p),
-      colour = 'black'
-    ) +
-    ggplot2::scale_fill_manual(
-      values = leg_ugm3$colours[c(1, 4, 7, 11)],
-      breaks = levels(pd$aqhi_p)
-    ) +
     ggplot2::labs(
       fill = bquote(.(avg) ~ .(stat) ~ "PM"[2.5] ~ (mu * "g m"^-3)),
-      # caption = paste("Data valid for", max(obs$date) |> format("%Y-%m-%d %H:%M"),
-      # "(UTC)"),
       title = bquote(
         .(m) ~ "Monitor Counts and Site" ~ .(stat) ~ "PM"[2.5] ~
           "Distributions by Province/Territory"
       ),
-      caption = plot_captions[[m]]
-    ) +
-    ggplot2::geom_text(
-      ggplot2::aes(
-        color = as.numeric(aqhi_p) == 4,
-        label = ifelse(p > 0.05, paste0(round(p * 100), "%"), NA),
-        x = 3.5,
-        y = label_pos
-      ),
-      hjust = 0.5,
-      vjust = 0.5,
-      show.legend = FALSE,
-      size = 3
-    ) +
-    ggplot2::geom_text(
-      data = labels |>
-        subset(monitor == m),
-      ggplot2::aes(label = n),
-      x = 2,
-      y = 0,
-      hjust = 0.5,
-      vjust = 0.5
-    ) +
-    ggplot2::scale_colour_manual(
-      values = c("FALSE" = "black", "TRUE" = "white")
+      caption = plot_caption
     ) +
     ggplot2::theme(
-      legend.position = c(4 / 5, 1 / 5.5),
+      legend.position = legend_position,
       legend.direction = "horizontal",
       plot.background = ggplot2::element_rect(fill = "white", colour = NA),
       plot.subtitle = ggplot2::element_text(
@@ -731,6 +693,42 @@ make_donut_plot <- function(pd, labels, m, stat = "Mean", avg = "24-hour") {
         byrow = FALSE,
         title.position = 'top'
       )
+    )
+
+  base_plot +
+    # Add AQHI coloured bars
+    ggplot2::geom_rect(
+      xmin = base_outline$xmin,
+      xmax = base_outline$xmax,
+      ggplot2::aes(ymin = ymin, ymax = ymax, fill = aqhi_p),
+      colour = outline_colour
+    ) +
+    ggplot2::scale_fill_manual(
+      values = aqhi::get_aqhi_colours(c(1, 4, 7, 11)),
+      breaks = levels(plot_data$aqhi_p)
+    ) +
+    # Add percentage labels where > 5%
+    ggplot2::geom_text(
+      x = mean(c(base_outline$xmin, base_outline$xmax)),
+      ggplot2::aes(
+        color = as.numeric(aqhi_p) == 4,
+        label = ifelse(p > 0.05, paste0(round(p * 100), "%"), NA),
+        y = label_pos
+      ),
+      hjust = 0.5,
+      vjust = 0.5,
+      show.legend = FALSE,
+      size = 3
+    ) +
+    ggplot2::scale_colour_manual(values = c("FALSE" = "black", "TRUE" = "white")) +
+    # Add monitor count labels
+    ggplot2::geom_text(
+      data = labels,
+      ggplot2::aes(label = n),
+      x = 2,
+      y = 0,
+      hjust = 0.5,
+      vjust = 0.5
     )
 }
 

@@ -246,48 +246,15 @@ All PM<sub>2.5</sub> data are sourced from the [UNBC AQmap](https://aqmap.ca/aqm
 
 ```{r prov_donuts}
 
-# Define dimensions for output figures
-fig_dims = list(h = 7, w = 11, u = 'in')
-
-# Prov/Terr monitor counts for centers of donuts
-labels = summaries$overall |>
-  dplyr::bind_rows(summaries$overall |> dplyr::mutate(monitor = "FEM and PA")) |>
-  dplyr::full_join(
-    expand.grid(prov_terr = names(prov_pretty), monitor = c("PA","FEM","FEM and PA"))
-  ) |>
-  dplyr::group_by(prov_terr, monitor) |>
-  dplyr::summarise(n = sum(!is.na(pm25_max))) |>
-  dplyr::mutate(label = paste("n =\n",n), x = 0, y=0)
-
-pd = list()
-plot_paths = list()
-for(stat in c("mean", "max")){
-  # Get data for donut plots
-  pd[[stat]] = make_donut_data(summaries$overall, paste0("pm25_", stat))
-  
-  # Create paths for donut plots
-  plot_paths[[stat]] = paste0(report_dir,
-    "plots/monitor_", stat, "_donuts_", 
-    monitor_groups |> 
-      stringr::str_to_lower() |> 
-      stringr::str_replace_all(" ", "_"),
-    "_", output_date_fmt, ".png"
-  ) |> setNames(monitor_groups)
-  
-  # Make and save donut plots
-  .tmp = monitor_groups |>
-    setNames(monitor_groups) |>
-    lapply(
-      \(m){
-          pth = plot_paths[[stat]][[m]]
-          pd[[stat]] |> 
-            make_donut_plot(labels, m |> stringr::str_remove(" Only"), 
-                            stringr::str_to_title(stat), format(date_range[2], "%b.")) |> 
-            ggsave(filename = pth, dpi = 300, units = fig_dims$u, 
-                   height = fig_dims$h, width = fig_dims$w)
-      }
-    )
-}
+donut_data <- summaries$overall_summary |>
+  save_aqhi_donuts_plots(
+    monitor_groups = monitor_groups,
+    stats = c("mean", "max"),
+    avg = "Monthly",
+    report_dir = report_dir,
+    figure_dir = figure_dir,
+    plot_timestamp = plot_timestamp
+  )
 
 # Define plot summary text (figure titles essentially)
 plot_text = list()
@@ -295,7 +262,7 @@ plot_text$mean = 'Distribution of monthly mean concentrations at %m PM<sub>2.5</
 plot_text$max = plot_text$mean |> stringr::str_replace("mean","max")
 
 # Make summary data for autmated text for this section
-.tmp = pd$mean |>
+.tmp = donut_data$mean |>
   dplyr::select(-1) |>
   subset(monitor!= "FEM and PA") |>
   dplyr::group_by(monitor, aqhi_p) |>
