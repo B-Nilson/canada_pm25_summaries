@@ -15,8 +15,7 @@ load_report_data <- function(
   date_range,
   db = NULL,
   fem_tables = list(obs = "fem_obs", meta = "fem_meta"),
-  lcm_tables = list(obs = "pa_obs", meta = "pa_meta"),
-  max_pm25_allowed = 2000
+  lcm_tables = list(obs = "pa_obs", meta = "pa_meta")
 ) {
   meta_cols <- c(
     "site_id",
@@ -57,10 +56,7 @@ load_report_data <- function(
   fem_report_data_query |>
     dplyr::union_all(lcm_report_data_query) |>
     dplyr::collect() |>
-    dplyr::mutate(
-      prov_terr = prov_terr |> factor(levels = pt_order),
-      pm25 = ifelse(pm25 > max_pm25_allowed, NA_real_, pm25)
-    ) |>
+    dplyr::mutate(prov_terr = prov_terr |> factor(levels = pt_order)) |>
     # Infill Date Gaps
     dplyr::group_by(dplyr::pick(dplyr::all_of(meta_cols))) |>
     tidyr::complete(date = make_hourly_seq(date_range))

@@ -24,8 +24,7 @@ plot_captions <- date_range |>
 
 ```{r load_data}
 
-obs <- date_range |> 
-  load_report_data(max_pm25_allowed = max_pm25_allowed)
+obs <- date_range |> load_report_data()
 
 # Save for testing
 rds_path <- report_dir |> file.path("index_obs.rds")

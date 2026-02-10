@@ -119,8 +119,6 @@ municipal_classes <- c(
 
 # Misc -----
 
-max_pm25_allowed <- 1500
-
 # Define legend breaks and colours from AQHI+ scale
 leg_ugm3 <- data.frame(
   breaks = 0:10 * 10,
