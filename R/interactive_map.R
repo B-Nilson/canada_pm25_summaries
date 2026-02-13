@@ -1,6 +1,5 @@
-make_map <- function(
+make_pm25_obs_map <- function(
   pd,
-  bounds,
   zone_summaries,
   include_active_fires = TRUE,
   mean_pm25_col = 'mean_pm25_24hr_mean'
@@ -10,85 +9,9 @@ make_map <- function(
     layers.all <- layers.all[-length(layers.all)]
   }
 
-  popup <- function(
-    name,
-    pm25_24_fem,
-    pm25_24_pa,
-    pm25_24_all,
-    n_fem,
-    n_pa,
-    FR = FALSE
-  ) {
-    if (FR) {
-      text <- c(
-        'Zone de prévision',
-        '# de moniteurs',
-        'Moyenne sur 24 h PM<sub>2,5</sub>'
-      )
-      fem <- 'MEF'
-      all <- "TOUT"
-    } else {
-      text <- c('Forecast Zone', '# of Monitors', 'Mean 24hr PM<sub>2.5</sub>')
-      fem <- 'FEM'
-      all <- 'ALL'
-    }
-    paste0(
-      "<big><strong>",
-      text[1],
-      ": ",
-      name,
-      "</strong></big>
-    <table style='margin: auto;'>
-      <thead>
-        <tr>
-          <th style='text-align:center'></th>
-          <th style='text-align:center'>",
-      fem,
-      "</th>
-          <th style='text-align:center'>PA</th>
-          <th style='text-align:center'>",
-      all,
-      "</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td style='font-weight: bold;text-align:center'>",
-      text[2],
-      "</td>
-          <td style='text-align:center'>",
-      n_fem,
-      "</td>
-          <td style='text-align:center'>",
-      n_pa,
-      "</td>
-          <td style='text-align:center'>",
-      n_fem + n_pa,
-      "</td>
-        </tr>
-        <tr>
-          <td style='font-weight: bold;text-align:center'>",
-      text[3],
-      "</td>
-          <td style='text-align:center'>",
-      pm25_24_fem,
-      " μg m<sup>-3</sup></td>
-          <td style='text-align:center'>",
-      pm25_24_pa,
-      " μg m<sup>-3</sup></td>
-          <td style='text-align:center'>",
-      pm25_24_all,
-      " μg m<sup>-3</sup></td>
-        </tr>
-      </tbody>
-      </table>"
-    ) |>
-      stringr::str_replace_all(">NA μg m<sup>-3</sup><", ">-<")
-  }
-
-  fcst.pal <- leaflet::colorBin(
-    palette = leg_ugm3$colours,
-    bins = c(leg_ugm3$breaks, Inf),
+  aqhi_pal <- leaflet::colorBin(
+    palette = aqhi::get_aqhi_colours(1:11),
+    bins = c(0:10 * 10, Inf),
     right = FALSE,
     na.color = "#bbbbbb"
   )
@@ -97,9 +20,7 @@ make_map <- function(
 
   map <- pd |>
     leaflet::leaflet(height = 600, width = "100%") |>
-    # Set zoom to show all markers
-    leaflet::fitBounds(bounds[1], bounds[3], bounds[2], bounds[4]) |>
-    leaflet::addProviderTiles(providers$OpenStreetMap) |>
+    leaflet::addProviderTiles(leaflet::providers$OpenStreetMap) |>
     leaflet::addMarkers(
       lng = ~lng,
       lat = ~lat,
@@ -109,14 +30,14 @@ make_map <- function(
       icon = ~ list(iconUrl = icon_link, iconHeight = 26, iconWidth = 26)
     ) |>
     leaflet::addPolygons(
-      data = zone_summaries,
-      fillColor = ~ fcst.pal(get(mean_pm25_col)),
+      data = zone_summaries |> dplyr::filter(!is.na(fcst_zone_fr)),
+      fillColor = ~ aqhi_pal(get(mean_pm25_col)),
       color = "black",
       weight = 1,
       fillOpacity = ~ ifelse(is.na(get(mean_pm25_col)), 0, 0.5),
       popupOptions = leaflet::popupOptions(minWidth = '330'),
       group = layers.all[2],
-      popup = ~ popup(
+      popup = ~ make_map_popup(
         fcst_zone,
         mean_pm25_24hr_mean_FEM,
         mean_pm25_24hr_mean_PA,
@@ -169,46 +90,116 @@ make_map <- function(
   return(map)
 }
 
-make_map_data <- function(obs_summary) {
-  obs_summary |>
-    # subset(n_hours_above_60 >=3) |>
+make_map_data <- function(
+  overall_summary,
+  icon_dir = "https://aqmap.ca/aqmap/icons"
+) {
+  overall_summary |>
     dplyr::mutate(
       icon_link = paste0(
-        "../icons/icon_",
-        ifelse(monitor == "FEM", 23, 21),
-        "_",
-        ifelse(pm25_mean > 999, "+", round(pm25_mean)),
-        ".png"
+        "%s/icon_%s_%s.png" |>
+          sprintf(
+            icon_dir,
+            ifelse(monitor == "FEM", 23, 21),
+            ifelse(pm25_mean > 999, "+", round(pm25_mean))
+          )
       ),
-      labels = htmltools::HTML(paste0(
-        "<strong><big>Site: ",
-        name,
-        " (",
-        monitor,
-        ")</big></strong><br><b>Nearby Community:</b>",
-        nearest_community,
-        "(~",
-        round(nc_dist_km_mean, 1),
-        " km)",
-        "<br><b>24hr mean PM<sub>2.5</sub>:</b> ",
-        round(pm25_mean, 1),
-        " &mu;g m<sup>-3</sup>",
-        "<br><b>24hr max PM<sub>2.5</sub>:</b> ",
-        pm25_max,
-        " &mu;g m<sup>-3</sup>",
-        "<br><b># Hours with PM<sub>2.5</sub> >= 60 ug/m3:</b> ",
-        n_hours_above_60
-      ))
+      labels = "<big><strong>Site: %s (%s)</strong></big>" |>
+        c(
+          "<b>Nearby Community:</b> %s (~%s km)",
+          "<b>24hr mean PM<sub>2.5</sub>:</b> %s &mu;g m<sup>-3</sup>",
+          "<b>24hr max PM<sub>2.5</sub>:</b> %s &mu;g m<sup>-3</sup>",
+          "<b># Hours with PM<sub>2.5</sub> >= 60 &mu;g m<sup>-3</sup>:</b> %s"
+        ) |>
+        paste(collapse = "<br>") |>
+        sprintf(
+          name,
+          monitor,
+          nearest_community,
+          nc_dist_km,
+          pm25_mean,
+          pm25_max,
+          n_hours_above_60
+        )
     )
 }
 
-make_map_table_data <- function(obs_summary, obs_current) {
-  obs_summary |>
-    dplyr::full_join(
-      obs_current |>
-        dplyr::select(site_id, name, pm25_current = pm25, monitor),
-      by = c('site_id', 'name', 'monitor')
+make_map_popup <- function(
+  name,
+  pm25_24_fem,
+  pm25_24_pa,
+  pm25_24_all,
+  n_fem,
+  n_pa,
+  language = "EN"
+) {
+  # Handle displayed text language
+  text <- list(
+    EN = c(
+      'Forecast Zone',
+      '# of Monitors',
+      'Mean 24hr PM<sub>2.5</sub>'
+    ),
+    FR = c(
+      'Zone de prévision',
+      '# de moniteurs',
+      'Moyenne sur 24 h PM<sub>2,5</sub>'
+    )
+  )[[language]]
+  fem_label <- list(
+    EN = 'FEM',
+    FR = 'MEF'
+  )[[language]]
+  all_label <- list(
+    EN = 'ALL',
+    FR = 'TOUT'
+  )[[language]]
+
+  "
+    <big><strong>%s: %s</strong></big>
+    <table style='margin: auto;'>
+      <thead><tr>
+          <th style='text-align:center'></th>
+          <th style='text-align:center'>%s</th>
+          <th style='text-align:center'>PA</th>
+          <th style='text-align:center'>%s</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style='font-weight: bold;text-align:center'>%s</td>
+          <td style='text-align:center'>%s</td>
+          <td style='text-align:center'>%s</td>
+          <td style='text-align:center'>%s</td>
+        </tr>
+        <tr>
+          <td style='font-weight: bold;text-align:center'>%s</td>
+          <td style='text-align:center'>%s &mu;g m<sup>-3</sup></td>
+          <td style='text-align:center'>%s &mu;g m<sup>-3</sup></td>
+          <td style='text-align:center'>%s &mu;g m<sup>-3</sup></td>
+        </tr>
+      </tbody>
+    </table>" |>
+    sprintf(
+      text[1],
+      name,
+      fem_label,
+      all_label,
+      text[2],
+      n_fem,
+      n_pa,
+      n_fem + n_pa,
+      text[3],
+      pm25_24_fem,
+      pm25_24_pa,
+      pm25_24_all
     ) |>
+    stringr::str_replace_all(">NA &mu;g m<sup>-3</sup><", ">-<")
+}
+
+
+make_map_table_data <- function(obs_summary) {
+  obs_summary |>
     dplyr::mutate(
       aqhi_p_cat_mean = aqhi_p(pm25_mean, use_risk = TRUE),
       aqhi_p_cat_max = aqhi_p(pm25_max, use_risk = TRUE),
@@ -281,12 +272,4 @@ get_active_fire_data <- function() {
       labels2 = sapply(labels, htmltools::HTML)
     ) |>
     subset(startdate <= max_date)
-}
-
-# Returns the xy extent of the data for the specified xy columns
-get_extent <- function(df, xy = 1:2) {
-  extent <- df[, xy] |>
-    setNames(c("x", "y")) |>
-    dplyr::summarise(xmin = min(x), xmax = max(x), ymin = min(y), ymax = max(y))
-  return(as.numeric(extent[1, ]))
 }

@@ -193,51 +193,50 @@ donuts$paths$max_pa_only |>
 
 ```{r, maps}
 
-# Make data for the maps
-map_data = make_map_data(summaries$overall)
-
-# Get bounds to be used for all maps
-bounds = map_data |>
-  dplyr::ungroup() |>
-  dplyr::select(lng, lat) |>
-  get_extent()
+map_data <- summaries$overall |>
+  make_map_data()
 
 # Make paths to map files
-plot_paths = paste0(
-  report_dir,
-  "plots/high_site_mean_map_",
-  monitor_groups |>
-    stringr::str_to_lower() |>
-    stringr::str_replace_all(" ", "_"),
-  '_',
-  format(date_range[2], "%F-%Hz"),
-  ".html"
-) |>
+plot_names <- "site_mean_map_%s_%s.html" |>
+  sprintf(
+    monitor_groups |>
+      stringr::str_to_lower() |>
+      stringr::str_replace_all(" ", "_"),
+    plot_timestamp
+  )
+plot_paths <- report_dir |>
+  file.path("plots", plot_names) |>
   setNames(monitor_groups) |>
   as.list()
 
 # Make and save maps
-.tmp = lapply(monitor_groups, \(m) {
-  pd = map_data
-  if (m != "FEM and PA") {
-    pd = pd |>
-      subset(monitor == names(monitor_groups)[monitor_groups == m])
+lapply(monitor_groups, \(monitor_group) {
+  group_name <- names(monitor_groups)[monitor_groups == monitor_group]
+  pd <- map_data
+  if (monitor_group != "FEM and PA") {
+    pd <- pd |>
+      dplyr::filter(
+        monitor == ifelse(monitor_group != "FEM and PA", group_name, monitor)
+      )
   }
   pd |>
-    make_map(bounds, summaries$by_zone, include_active_fires = FALSE) |>
-    mapview::mapshot(plot_paths[[m]], libdir = "./libs", selfcontained = FALSE)
+    make_pm25_obs_map(
+      zone_summaries = summaries$by_zone,
+      include_active_fires = FALSE
+    ) |>
+    aqmapr::save_map(
+      save_to = plot_paths[[monitor_group]],
+      library_dir = "./libs",
+      self_contained = FALSE
+    ) |>
+    invisible()
 })
 
 # Define plot summary text (figure titles essentially)
-plot_texts = paste0(
-  "Here is an interactive map showing 24-hour mean PM<sub>2.5</sub> concentrations from monitoring sites (",
-  monitor_groups,
-  ") in Canada for the past 24 hours. Canadian forecast zones are shown coloured by the mean 24-hour concentration of the (",
-  monitor_groups,
-  ") monitors within the zone. Toggle layers displayed in the top right menu.
+plot_texts <- "Here is an interactive map showing 24-hour mean PM<sub>2.5</sub> concentrations from monitoring sites (%s) in Canada for the past 24 hours. Canadian forecast zones are shown coloured by the mean 24-hour concentration of the monitors within the zone. Toggle layers displayed in the top right menu.
 
-Below the map is a table summarising the data from the monitoring sites displayed in the map. The table is interactive, filterable,  and may have pages if there are many sites. If you click the link on a site's name it will take you to that monitor on [AQmap](https://aqmap.ca/)."
-) |>
+Below the map is a table summarising the data from the monitoring sites displayed in the map. The table is interactive, filterable, and may have pages if there are many sites. If you click the link on a site's name it will take you to that monitor on [AQmap](https://aqmap.ca/)." |>
+  sprintf(monitor_groups) |>
   setNames(monitor_groups) |>
   as.list()
 
