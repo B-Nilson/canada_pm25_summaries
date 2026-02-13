@@ -773,9 +773,7 @@ grid_data = list(
 plot_paths = report_dir |>
   paste0(
     "plots/prov_median-peak_daily_grid_",
-    monitor_groups |>
-      stringr::str_to_lower() |>
-      stringr::str_replace_all(" ", "_"),
+    monitor_groups_cleaned,
     '_',
     output_date_fmt,
     ".png"
@@ -1011,9 +1009,7 @@ pd = summaries$overall |>
 plot_paths = paste0(
   report_dir,
   "plots/site_mean_boxplots_",
-  monitor_groups |>
-    stringr::str_to_lower() |>
-    stringr::str_replace_all(" ", "_"),
+  monitor_groups_cleaned,
   '_',
   output_date_fmt,
   ".html"
@@ -1181,9 +1177,7 @@ pd = summaries$overall |>
 plot_paths = paste0(
   report_dir,
   "plots/communities_veryHigh_hours_",
-  monitor_groups |>
-    stringr::str_to_lower() |>
-    stringr::str_replace_all(" ", "_"),
+  monitor_groups_cleaned,
   '_',
   output_date_fmt,
   ".html"

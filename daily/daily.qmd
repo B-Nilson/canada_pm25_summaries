@@ -332,9 +332,7 @@ pd = summaries$overall |>
 plot_paths = paste0(
   report_dir,
   "plots/site_mean_boxplots_",
-  monitor_groups |>
-    stringr::str_to_lower() |>
-    stringr::str_replace_all(" ", "_"),
+  monitor_groups_cleaned,
   '_',
   format(date_range[2], "%F-%Hz"),
   ".html"
@@ -572,9 +570,7 @@ grid_data = list(
 plot_paths = report_dir |>
   paste0(
     "plots/prov_median-peak_hourly_grid_",
-    monitor_groups |>
-      stringr::str_to_lower() |>
-      stringr::str_replace_all(" ", "_"),
+    monitor_groups_cleaned,
     '_',
     format(date_range[2], "%F-%Hz"),
     ".png"
