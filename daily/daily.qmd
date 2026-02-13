@@ -35,7 +35,10 @@ summaries <- obs |>
   make_summaries(
     type = "daily",
     fcst_zones = fcst_zones,
-    meta_cols = meta_cols
+    meta_cols = meta_cols,
+    report_dir = report_dir,
+    figure_dir = figure_dir,
+    plot_timestamp = plot_timestamp
   )
 
 ```
@@ -98,16 +101,6 @@ All PM<sub>2.5</sub> data are sourced from the [UNBC AQmap](https://aqmap.ca/aqm
 
 ```{r prov_donuts}
 
-donuts <- summaries$overall |>
-  save_aqhi_donuts_plots(
-    monitor_groups = monitor_groups,
-    stats = c("mean", "max"),
-    avg = "24-hour",
-    report_dir = report_dir,
-    figure_dir = figure_dir,
-    plot_timestamp = plot_timestamp
-  )
-
 # Define plot summary text (figure titles essentially)
 plot_text_template <- "Distribution of 24-hour mean concentrations at %s PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a 24-hour mean within that concentration range." |>
   sprintf(monitor_groups)
@@ -119,7 +112,7 @@ plot_text = list(
 # Make summary data for autmated text for this section
 p <- c(pa = "PA", fem = "FEM") |>
   lapply(\(network) {
-    donuts$data$mean |>
+    summaries$donuts$data$mean |>
       dplyr::filter(monitor == network) |>
       dplyr::group_by(monitor, aqhi_p) |>
       dplyr::summarise(n = sum(n), .groups = "drop") |>
@@ -150,13 +143,13 @@ There are <strong>`r sum(p$fem$n)` FEM sites</strong> and <strong>`r sum(p$pa$n)
 #### FEM and PA
 
 ```{r include=TRUE, results = 'asis'}
-donuts$paths$mean_fem_and_pa |>
+summaries$donuts$paths$mean_fem_and_pa |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_text$mean$`FEM and PA`)
 ```
 
 ```{r include=TRUE, results = 'asis'}
-donuts$paths$max_fem_and_pa |>
+summaries$donuts$paths$max_fem_and_pa |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_text$max$`FEM and PA`)
 ```
@@ -164,13 +157,13 @@ donuts$paths$max_fem_and_pa |>
 #### FEM Only
 
 ```{r include=TRUE, results = 'asis'}
-donuts$paths$mean_fem_only |>
+summaries$donuts$paths$mean_fem_only |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_text$mean$`FEM Only`)
 ```
 
 ```{r include=TRUE, results = 'asis'}
-donuts$paths$max_fem_only |>
+summaries$donuts$paths$max_fem_only |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_text$max$`FEM Only`)
 ```
@@ -178,13 +171,13 @@ donuts$paths$max_fem_only |>
 #### PA Only
 
 ```{r include=TRUE, results = 'asis'}
-donuts$paths$mean_pa_only |>
+summaries$donuts$paths$mean_pa_only |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_text$mean$`PA Only`)
 ```
 
 ```{r include=TRUE, results = 'asis'}
-donuts$paths$max_pa_only |>
+summaries$donuts$paths$max_pa_only |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_text$max$`PA Only`)
 ```

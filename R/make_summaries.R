@@ -2,7 +2,10 @@ make_summaries <- function(
   obs,
   type = c("daily", "monthly", "seasonal")[1],
   meta_cols,
-  fcst_zones
+  fcst_zones,
+  report_dir = ".",
+  figure_dir = "plots",
+  plot_timestamp = format(Sys.time(), "%Y%m%d%H%M%S")
 ) {
   summaries <- list(
     overall = obs |> make_overall_summary(meta_cols = meta_cols),
@@ -44,6 +47,20 @@ make_summaries <- function(
   if (type != "seasonal") {
     summaries$community <- summaries$overall |>
       make_community_summary()
+
+    summaries$donuts <- summaries$overall |>
+      save_aqhi_donuts_plots(
+        monitor_groups = monitor_groups,
+        stats = c("mean", "max"),
+        avg = type |>
+          dplyr::recode_values(
+            from = c("daily", "monthly"),
+            to = c("24-hour", "Monthly")
+          ),
+        report_dir = report_dir,
+        figure_dir = figure_dir,
+        plot_timestamp = plot_timestamp
+      )
   }
   if (type == "monthly") {
     summaries$worst_day <- summaries$daily |>

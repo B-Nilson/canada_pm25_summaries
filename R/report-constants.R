@@ -23,6 +23,7 @@ aqcsv_folders <- c(raw = "unvalidated", fem = "fem")
 
 report_dir = "./"
 report_dir_esc = "\\./"
+figure_dir <- "plots" # relative to report_dir
 
 # Font(s) ----------
 
