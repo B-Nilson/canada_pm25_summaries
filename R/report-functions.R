@@ -859,3 +859,13 @@ dl_button_html <- function(outdir, file) {
   ) |>
     htmltools::HTML()
 }
+
+make_download_button <- function(data_for_download, data_dir, file_path) {
+  sanitized_header <- data_for_download |>
+    names() |>
+    stringr::str_replace_all("\n", " ")
+  data_for_download |>
+    setNames(sanitized_header) |>
+    data.table::fwrite(file_path, dateTimeAs = "write.csv")
+  dl_button_html(outdir = data_dir |> paste0("/"), file = basename(file_path))
+}

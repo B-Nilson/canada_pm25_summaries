@@ -235,6 +235,58 @@ make_map_table_data <- function(obs_summary) {
     dplyr::filter(!duplicated(`Site Name`))
 }
 
+make_map_table <- function(
+  table_data,
+  monitor_group,
+  report_dir,
+  data_dir,
+  plot_timestamp
+) {
+  dir.create(file.path(report_dir, data_dir), showWarnings = FALSE)
+  pd <- table_data
+  if (monitor_group != "FEM and PA") {
+    pd <- table_data |>
+      subset(Monitor == monitor_group)
+  }
+
+  column_definitions <- list(
+    'Site Name' = reactable::colDef(cell = \(Site, ...) {
+      s_name = table_data[table_data$`Site Name` == Site, "aqmap_link"] |>
+        unlist() |>
+        unname()
+      htmltools::tags$a(href = s_name, target = "_blank", Site)
+    }),
+    aqmap_link = reactable::colDef(show = FALSE),
+    lng = reactable::colDef(show = FALSE),
+    lat = reactable::colDef(show = FALSE)
+  )
+
+  table <- pd |>
+    reactable(
+      data = _,
+      defaultSorted = "24hr PM2.5 Mean\n(ug/m3)",
+      defaultSortOrder = "desc",
+      columns = column_definitions
+    )
+
+  # Save data to csv for download
+  file_path <- "%s/pm2.5_monitor_sites_%s_%s.csv" |>
+    sprintf(
+      file.path(report_dir, data_dir),
+      monitor_group |>
+        stringr::str_to_lower() |>
+        stringr::str_replace_all(" ", "_"),
+      plot_timestamp
+    )
+  dl_button <- pd |>
+    make_download_button(data_dir = data_dir, file_path = file_path)
+
+  list(
+    html = table,
+    dl_button = dl_button
+  )
+}
+
 get_active_fire_data <- function() {
   fire_groups <- c("0 - 100 ha", "101 - 1000 ha", "> 1000ha")
   fire_states <- c("Other", "Under Control", "Being Held", "Out of Control")

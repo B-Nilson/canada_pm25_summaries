@@ -239,60 +239,14 @@ Below the map is a table summarising the data from the monitoring sites displaye
 table_data = make_map_table_data(summaries$overall, summaries$current)
 
 # Make tables
-tables = lapply(names(monitor_groups), \(m) {
-  if (m != names(monitor_groups)[3]) {
-    pd = table_data |>
-      subset(Monitor == m)
-  } else {
-    pd = table_data
-  }
-  reactable(
-    data = pd,
-    defaultSorted = "24hr PM2.5 Mean\n(ug/m3)",
-    defaultSortOrder = "desc",
-    columns = list(
-      'Site Name' = colDef(cell = \(Site, ...) {
-        s_name = table_data[table_data$`Site Name` == Site, "aqmap_link"] |>
-          unlist() |>
-          unname()
-        htmltools::tags$a(href = s_name, target = "_blank", Site)
-      }),
-      aqmap_link = colDef(show = FALSE),
-      lng = colDef(show = FALSE),
-      lat = colDef(show = FALSE)
+map_tables <- lapply(names(monitor_groups), \(monitor_group) {
+  table_data |>
+    make_map_table(
+      monitor_group = monitor_group,
+      report_dir = report_dir,
+      data_dir = data_dir,
+      plot_timestamp = plot_timestamp
     )
-  )
-}) |>
-  setNames(monitor_groups)
-
-# Make download buttons linked to csv copy of data in tables
-dl_buttons = lapply(names(monitor_groups), \(m) {
-  # Subset data if needed
-  if (m != names(monitor_groups)[3]) {
-    pd = table_data |>
-      subset(Monitor == m)
-  } else {
-    pd = table_data
-  }
-  # MAke data path
-  outdir = paste0(report_dir, "data/")
-  outdir2 = "./data/"
-  # Make data file name
-  file = "pm2.5_monitor_sites" |>
-    paste(
-      m |> stringr::str_to_lower() |> stringr::str_replace_all(" ", "_"),
-      max(obs$date) |> format("%Y-%m-%d_%HZ"),
-      sep = "_"
-    ) |>
-    paste0(".csv")
-  # Write data to csv
-  pd = pd |>
-    dplyr::select(-aqmap_link)
-  pd |>
-    setNames(names(pd) |> stringr::str_replace_all("\n", " ")) |>
-    data.table::fwrite(paste0(outdir, file), dateTimeAs = "write.csv")
-  # Return html for button linked to csv
-  dl_button_html(outdir2, file)
 }) |>
   setNames(monitor_groups)
 
@@ -374,8 +328,8 @@ plot_paths[["FEM and PA"]] |>
 |
 
 ```{r include = TRUE}
-dl_buttons[["FEM and PA"]]
-tables[["FEM and PA"]]
+map_tables[["FEM and PA"]]$dl_button
+map_tables[["FEM and PA"]]$html
 ```
 
 #### FEM Only
@@ -389,8 +343,8 @@ plot_paths[["FEM Only"]] |>
 |
 
 ```{r include = TRUE}
-dl_buttons[["FEM Only"]]
-tables[["FEM Only"]]
+map_tables[["FEM Only"]]$dl_button
+map_tables[["FEM Only"]]$html
 ```
 
 #### PA Only
@@ -404,8 +358,8 @@ plot_paths[["PA Only"]] |>
 |
 
 ```{r include = TRUE}
-dl_buttons[["PA Only"]]
-tables[["PA Only"]]
+map_tables[["PA Only"]]$dl_button
+map_tables[["PA Only"]]$html
 ```
 
 
