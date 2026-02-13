@@ -216,17 +216,17 @@ map_tables <- lapply(names(monitor_groups), \(monitor_group) {
   setNames(monitor_groups)
 
 # Make summary data for autmated text for this section
-very_high_fem_by_prov = summaries$aqhi_p_counts$by_prov |>
-  subset(FEM != 0 & aqhi_p_24hr == "Very High [100+]") |>
+very_high_fem_by_prov <- summaries$aqhi_p_counts$by_prov |>
+  subset(FEM != 0 & aqhi_p_24hr == "Very High") |>
   dplyr::arrange(desc(FEM))
-high_fem_by_prov = summaries$aqhi_p_counts$by_prov |>
-  subset(FEM != 0 & aqhi_p_24hr == "High [60-100)") |>
+high_fem_by_prov <- summaries$aqhi_p_counts$by_prov |>
+  subset(FEM != 0 & aqhi_p_24hr == "High") |>
   dplyr::arrange(desc(PA))
-very_high_pa_by_prov = summaries$aqhi_p_counts$by_prov |>
-  subset(PA != 0 & aqhi_p_24hr == "Very High [100+]") |>
+very_high_pa_by_prov <- summaries$aqhi_p_counts$by_prov |>
+  subset(PA != 0 & aqhi_p_24hr == "Very High") |>
   dplyr::arrange(desc(FEM))
-high_pa_by_prov = summaries$aqhi_p_counts$by_prov |>
-  subset(PA != 0 & aqhi_p_24hr == "High [60-100)") |>
+high_pa_by_prov <- summaries$aqhi_p_counts$by_prov |>
+  subset(PA != 0 & aqhi_p_24hr == "High") |>
   dplyr::arrange(desc(PA))
 
 ```

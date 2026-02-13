@@ -681,16 +681,16 @@ htmltools::save_html(map, plot2_path, libdir = "./libs")
 
 # Make summary data for autmated text for this section
 very_high_fem_by_prov = summaries$aqhi_p_counts$by_prov |>
-  subset(FEM != 0 & aqhi_p_24hr == "Very High [100+]") |>
+  subset(FEM != 0 & aqhi_p_24hr == "Very High") |>
   dplyr::arrange(desc(FEM))
 high_fem_by_prov = summaries$aqhi_p_counts$by_prov |>
-  subset(FEM != 0 & aqhi_p_24hr == "High [60-100)") |>
+  subset(FEM != 0 & aqhi_p_24hr == "High") |>
   dplyr::arrange(desc(PA))
 very_high_pa_by_prov = summaries$aqhi_p_counts$by_prov |>
-  subset(PA != 0 & aqhi_p_24hr == "Very High [100+]") |>
+  subset(PA != 0 & aqhi_p_24hr == "Very High") |>
   dplyr::arrange(desc(FEM))
 high_pa_by_prov = summaries$aqhi_p_counts$by_prov |>
-  subset(PA != 0 & aqhi_p_24hr == "High [60-100)") |>
+  subset(PA != 0 & aqhi_p_24hr == "High") |>
   dplyr::arrange(desc(PA))
 
 wd = summaries$worst_day |>
