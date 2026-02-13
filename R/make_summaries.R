@@ -61,6 +61,9 @@ make_summaries <- function(
         figure_dir = figure_dir,
         plot_timestamp = plot_timestamp
       )
+    
+    summaries$aqhi_p_counts <- summaries$overall |>
+      make_aqhi_p_count_summaries()
   }
   if (type == "monthly") {
     summaries$worst_day <- summaries$daily |>
@@ -313,4 +316,32 @@ make_worst_day_summary <- function(daily_summary) {
         ) |>
         paste0("%)"),
     )
+}
+
+make_aqhi_p_count_summaries <- function(overall_summary) {
+  placeholders <- unique(overall_summary$monitor) |> 
+    lapply(\(x) 0) |> 
+    setNames(unique(overall_summary$monitor))
+  aqhi_p_counts <- list()
+  aqhi_p_counts$by_prov <- overall_summary |>
+    dplyr::group_by(
+      aqhi_p_24hr = aqhi::AQHI_plus(pm25_mean)$risk,
+      prov_terr,
+      monitor
+    ) |>
+    dplyr::summarise(n_monitors = dplyr::n(), .groups = "drop") |>
+    tidyr::pivot_wider(names_from = "monitor", values_from = "n_monitors") |>
+    tidyr::complete(
+      aqhi_p_24hr = levels(aqhi_p_24hr) |> factor(levels = levels(aqhi_p_24hr)),
+      prov_terr = levels(prov_terr) |> factor(levels = levels(prov_terr)),
+      fill = placeholders
+    ) |>
+    dplyr::arrange(aqhi_p_24hr, prov_terr)
+
+  aqhi_p_counts$overall <- aqhi_p_counts$by_prov |>
+    dplyr::select(-prov_terr) |>
+    dplyr::group_by(aqhi_p_24hr) |>
+    dplyr::summarise(dplyr::across(dplyr::everything(), sum))
+
+  return(aqhi_p_counts)
 }
