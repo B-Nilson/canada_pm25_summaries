@@ -236,7 +236,8 @@ Below the map is a table summarising the data from the monitoring sites displaye
   as.list()
 
 # Make data for tables below maps
-table_data = make_map_table_data(summaries$overall, summaries$current)
+table_data <- summaries$overall |>
+  make_map_table_data()
 
 # Make tables
 map_tables <- lapply(names(monitor_groups), \(monitor_group) {

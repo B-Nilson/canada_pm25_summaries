@@ -838,8 +838,8 @@ reactable <- function(pagination = TRUE, defaultPageSize = 10, ...) {
     # showSortable = TRUE,
     defaultPageSize = defaultPageSize,
     highlight = TRUE,
-    defaultColDef = colDef(align = "center"),
-    theme = reactableTheme(
+    defaultColDef = reactable::colDef(align = "center"),
+    theme = reactable::reactableTheme(
       # Vertically center cells
       cellStyle = list(
         display = "flex",

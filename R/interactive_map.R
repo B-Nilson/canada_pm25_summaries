@@ -197,16 +197,13 @@ make_map_popup <- function(
     stringr::str_replace_all(">NA &mu;g m<sup>-3</sup><", ">-<")
 }
 
-
 make_map_table_data <- function(obs_summary) {
   obs_summary |>
     dplyr::mutate(
-      aqhi_p_cat_mean = aqhi_p(pm25_mean, use_risk = TRUE),
-      aqhi_p_cat_max = aqhi_p(pm25_max, use_risk = TRUE),
-      aqhi_p_cat_current = aqhi_p(pm25_current, use_risk = TRUE),
+      aqhi_p_cat_mean = aqhi::AQHI_plus(pm25_mean)$risk,
+      aqhi_p_cat_max = aqhi::AQHI_plus(pm25_max)$risk,
+      aqhi_p_cat_current = aqhi::AQHI_plus(pm25_current)$risk
     ) |>
-    dplyr::mutate(pm25_mean = round(pm25_mean, 1)) |>
-    dplyr::arrange(desc(pm25_mean)) |>
     dplyr::mutate(
       aqmap_link = paste0(
         "https://aqmap.ca/aqmap/#12/",
@@ -215,14 +212,13 @@ make_map_table_data <- function(obs_summary) {
         lng
       )
     ) |>
-    dplyr::ungroup() |>
     dplyr::select(
       "Site Name" = name,
       "Monitor" = monitor,
       "Prov./Terr." = prov_terr,
       "Forecast Zone" = fcst_zone,
       "Closest Community" = nearest_community,
-      "Dist. From Community\n(km)" = nc_dist_km_mean,
+      "Dist. From Community\n(km)" = nc_dist_km,
       "# Hours (/24) >/= 60 ug/m3" = n_hours_above_60,
       "Current PM2.5\n(ug/m3)" = pm25_current,
       "24hr PM2.5 Mean\n(ug/m3)" = pm25_mean,
@@ -231,7 +227,7 @@ make_map_table_data <- function(obs_summary) {
       lat,
       aqmap_link
     ) |>
-    dplyr::arrange(`Prov./Terr.`) |>
+    dplyr::arrange(dplyr::desc(`24hr PM2.5 Mean\n(ug/m3)`), `Prov./Terr.`) |>
     dplyr::filter(!duplicated(`Site Name`))
 }
 
