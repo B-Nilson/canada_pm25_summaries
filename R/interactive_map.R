@@ -1,3 +1,54 @@
+make_and_save_maps <- function(
+  overall_summary,
+  monitor_groups,
+  include_active_fires = FALSE,
+  report_dir,
+  plot_dir,
+  lib_dir = "libs"
+) {
+  map_data <- summaries$overall |>
+    make_map_data()
+
+  # Make paths to map files
+  plot_names <- "site_mean_map_%s_%s.html" |>
+    sprintf(
+      monitor_groups |>
+        stringr::str_to_lower() |>
+        stringr::str_replace_all(" ", "_"),
+      plot_timestamp
+    )
+  plot_paths <- report_dir |>
+    file.path(plot_dir, plot_names) |>
+    setNames(monitor_groups) |>
+    as.list()
+
+  # Make and save maps
+  monitor_groups |>
+    lapply(\(monitor_group) {
+      group_name <- names(monitor_groups)[monitor_groups == monitor_group]
+      pd <- map_data
+      if (monitor_group != "FEM and PA") {
+        pd <- pd |>
+          dplyr::filter(
+            monitor ==
+              ifelse(monitor_group != "FEM and PA", group_name, monitor)
+          )
+      }
+      pd |>
+        make_pm25_obs_map(
+          zone_summaries = summaries$by_zone,
+          include_active_fires = include_active_fires
+        ) |>
+        aqmapr::save_map(
+          save_to = plot_paths[[monitor_group]],
+          library_dir = lib_dir,
+          self_contained = FALSE
+        )
+    })
+
+  return(plot_paths)
+}
+
 make_pm25_obs_map <- function(
   pd,
   zone_summaries,

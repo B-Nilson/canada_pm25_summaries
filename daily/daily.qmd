@@ -188,44 +188,8 @@ summaries$donuts$paths$max_pa_only |>
 
 ```{r, maps}
 
-map_data <- summaries$overall |>
-  make_map_data()
-
-# Make paths to map files
-plot_names <- "site_mean_map_%s_%s.html" |>
-  sprintf(
-    monitor_groups |>
-      stringr::str_to_lower() |>
-      stringr::str_replace_all(" ", "_"),
-    plot_timestamp
-  )
-plot_paths <- report_dir |>
-  file.path("plots", plot_names) |>
-  setNames(monitor_groups) |>
-  as.list()
-
-# Make and save maps
-lapply(monitor_groups, \(monitor_group) {
-  group_name <- names(monitor_groups)[monitor_groups == monitor_group]
-  pd <- map_data
-  if (monitor_group != "FEM and PA") {
-    pd <- pd |>
-      dplyr::filter(
-        monitor == ifelse(monitor_group != "FEM and PA", group_name, monitor)
-      )
-  }
-  pd |>
-    make_pm25_obs_map(
-      zone_summaries = summaries$by_zone,
-      include_active_fires = FALSE
-    ) |>
-    aqmapr::save_map(
-      save_to = plot_paths[[monitor_group]],
-      library_dir = "./libs",
-      self_contained = FALSE
-    ) |>
-    invisible()
-})
+map_paths <- summaries$overall |> 
+  make_and_save_maps()
 
 # Define plot summary text (figure titles essentially)
 plot_texts <- "Here is an interactive map showing 24-hour mean PM<sub>2.5</sub> concentrations from monitoring sites (%s) in Canada for the past 24 hours. Canadian forecast zones are shown coloured by the mean 24-hour concentration of the monitors within the zone. Toggle layers displayed in the top right menu.
@@ -295,7 +259,7 @@ There was <strong>`r summaries$aqhi_p_counts$overall$FEM[3]` FEM monitors</stron
 #### FEM and PA
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths[["FEM and PA"]] |>
+map_paths[["FEM and PA"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_texts[["FEM and PA"]], iframe = TRUE)
 ```
@@ -310,7 +274,7 @@ map_tables[["FEM and PA"]]$html
 #### FEM Only
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths[["FEM Only"]] |>
+map_paths[["FEM Only"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_texts[["FEM Only"]], iframe = TRUE)
 ```
@@ -325,7 +289,7 @@ map_tables[["FEM Only"]]$html
 #### PA Only
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths[["PA Only"]] |>
+map_paths[["PA Only"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_texts[["PA Only"]], iframe = TRUE)
 ```
