@@ -503,7 +503,7 @@ $text
 " |>
       stringr::str_replace("\\$IMG", img) |>
       stringr::str_replace("\\$text", text) |>
-      HTML()
+      htmltools::HTML()
   )
 }
 
