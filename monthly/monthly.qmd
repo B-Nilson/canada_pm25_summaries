@@ -9,6 +9,7 @@ $(window).on('load', () => on_page_load("#analysis-of-past-month-of-pm2\\.5-obse
 source("R/report-functions.R")
 source("R/report-constants.R")
 report_dir <- report_dir |> file.path("monthly")
+report_dir_esc <- report_dir_esc |> file.path("daily")
 
 date_range <- report_dir |>
   get_report_start_end(type = "monthly", run_future = run_current_month)
@@ -298,13 +299,12 @@ All PM<sub>2.5</sub> data are sourced from the [UNBC AQmap](https://aqmap.ca/aqm
 
 # Define plot summary text (figure titles essentially)
 plot_text_template <- "Distribution of monthly mean concentrations at %s PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a monthly mean within that concentration range." |>
-  sprintf(monitor_groups) |>
-  as.list() |>
-  setNames(monitor_groups)
-plot_text = list(
+  sprintf(monitor_groups)
+plot_text <- list(
   mean = plot_text_template,
   max = plot_text_template |> stringr::str_replace_all(" mean ", " max ")
-)
+) |> 
+  lapply(\(x) as.list(x) |> setNames(monitor_groups))
 
 # Make summary data for autmated text for this section
 p <- c(pa = "PA", fem = "FEM") |>

@@ -9,6 +9,7 @@ $(window).on('load', () => on_page_load("#analysis-of-past-24-hours-of-pm2\\.5-o
 source("R/report-functions.R")
 source("R/report-constants.R")
 report_dir <- report_dir |> file.path("daily")
+report_dir_esc <- report_dir_esc |> file.path("daily")
 
 date_range <- report_dir |>
   get_report_start_end(type = "daily", run_future = run_current_day)
@@ -107,7 +108,8 @@ plot_text_template <- "Distribution of 24-hour mean concentrations at %s PM<sub>
 plot_text = list(
   mean = plot_text_template,
   max = plot_text_template |> stringr::str_replace_all(" mean ", " max ")
-)
+) |> 
+  lapply(\(x) as.list(x) |> setNames(monitor_groups))
 
 # Make summary data for autmated text for this section
 p <- c(pa = "PA", fem = "FEM") |>
