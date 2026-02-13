@@ -306,143 +306,20 @@ map_tables[["PA Only"]]$html
 
 ```{r site_boxplots}
 
-# Make data for boxplots
-pd = summaries$overall |>
-  dplyr::mutate(
-    monitor2 = ifelse(
-      monitor == "FEM",
-      monitor_groups[1],
-      ifelse(monitor == "PA", monitor_groups[2], monitor_groups[3])
-    )
-  ) |>
-  dplyr::bind_rows(
-    summaries$overall |> dplyr::mutate(monitor2 = monitor_groups[3])
-  ) |>
-  dplyr::mutate(aqhi_p_mean = aqhi_p(pm25_mean)) |>
-  dplyr::full_join(expand.grid(
-    prov_terr = unlist(prov_order),
-    monitor2 = monitor_groups
-  )) |>
-  dplyr::mutate(
-    pretty_prov = prov_terr |>
-      factor(names(prov_pretty), prov_pretty)
+boxplots <- summaries$overall |>
+  make_and_save_site_boxplots(
+    monitor_groups = monitor_groups,
+    date_range = date_range,
+    date_format = "%Y-%m-%d %H:%M (UTC)",
+    avg_text = "24-hour",
+    plot_timestamp = plot_timestamp,
+    report_dir = report_dir,
+    figure_dir = figure_dir,
+    lib_dir = lib_dir
   )
 
-# Create paths for plots
-plot_paths = paste0(
-  report_dir,
-  "plots/site_mean_boxplots_",
-  monitor_groups_cleaned,
-  '_',
-  format(date_range[2], "%F-%Hz"),
-  ".html"
-) |>
-  setNames(monitor_groups) |>
-  as.list()
-
-# Make and save plots
-.tmp = lapply(monitor_groups, \(m) {
-  pdd = pd |>
-    subset(monitor2 == m)
-
-  fills = 1:length(leg_ugm3[[1]]) |>
-    lapply(\(i) {
-      max_val = ceiling(max(pdd$pm25_mean, na.rm = TRUE) / 10) * 10
-
-      if (leg_ugm3$breaks[i] > max_val) {
-        return(NULL)
-      }
-      list(
-        type = "rect",
-        fillcolor = leg_ugm3$colours[i],
-        line = list(width = 0),
-        opacity = 1,
-        x0 = -0.5,
-        x1 = 12.5,
-        layer = 'below',
-        y0 = leg_ugm3$breaks[i],
-        y1 = c(leg_ugm3$breaks[-1], max_val)[i]
-      )
-    })
-
-  box = boxplot(pm25_mean ~ prov_terr, pdd, plot = FALSE)
-  pdd = pdd |>
-    dplyr::mutate(is_outlier = pm25_mean > box$stats[4, as.numeric(prov_terr)])
-  outliers = subset(pdd, is_outlier)
-
-  pp = pdd |>
-    plot_ly(y = ~ round(pm25_mean, 1), x = ~prov_terr) |>
-    add_boxplot(
-      name = "",
-      boxpoints = FALSE,
-      color = I('black'),
-      alpha = 0.2
-    ) |>
-    layout(
-      title = paste(
-        "Site Mean Distributions by Province/Territory for",
-        max(obs$date) |> format("%Y-%m-%d %H:%M (UTC)"),
-        "to",
-        max(obs$date) |> format("%Y-%m-%d %H:%M (UTC)")
-      ),
-      shapes = fills,
-      showlegend = FALSE,
-      xaxis = list(
-        title = "Province | Territory",
-        zeroline = TRUE,
-        showgrid = FALSE
-      ),
-      yaxis = list(
-        title = paste0("24-hour Site Mean PM2.5 (ug/m3; ", m, ")"),
-        zeroline = TRUE,
-        showgrid = FALSE
-      )
-    ) |>
-    add_markers(
-      data = outliers,
-      text = ~ paste0(
-        "<b>",
-        name,
-        "</b>",
-        "<br>",
-        monitor,
-        " Monitor",
-        "<br>24-hour mean: ",
-        round(pm25_mean, 1),
-        " ug/m3",
-        "<br>24-hour max: ",
-        round(pm25_max, 1),
-        " ug/m3",
-        "<br># hours >60 ug/m3: ",
-        n_hours_above_60,
-        " / ",
-        length(hours_to_summarise),
-        "<br># hours >100 ug/m3: ",
-        n_hours_above_100,
-        " / ",
-        length(hours_to_summarise),
-        "<br>Closest Community: ",
-        nearest_community,
-        " (~",
-        nc_dist_km_mean,
-        " km)",
-        "<br>Forecast Zone: ",
-        fcst_zone
-      ),
-      hoverinfo = 'text',
-      marker = list(
-        color = "rgb(107,174,214)",
-        line = list(color = "black", width = 1)
-      )
-    )
-
-  pp |>
-    htmlwidgets::saveWidget(
-      plot_paths[[m]],
-      libdir = "./libs",
-      selfcontained = FALSE
-    )
-})
+plot_paths <- boxplots$paths
+vals <- boxplots$summary_values
 
 # Define plot summary text (figure titles essentially)
 plot_texts = paste0(
@@ -453,66 +330,6 @@ plot_texts = paste0(
   as.list() |>
   setNames(monitor_groups)
 
-# Make summary data for autmated text for this section
-vals = list(
-  # Worst FEM site by MAX
-  pd |>
-    subset(monitor == "FEM") |>
-    dplyr::arrange(desc(pm25_max)) |>
-    head(1) |>
-    dplyr::ungroup() |>
-    dplyr::select(
-      M = name,
-      T = monitor,
-      D = nc_dist_km_mean,
-      C = nearest_community,
-      P = pretty_prov,
-      PM = pm25_max
-    ),
-  # Worst FEM site by MEAN
-  pd |>
-    subset(monitor == "FEM") |>
-    dplyr::arrange(desc(pm25_mean)) |>
-    head(1) |>
-    dplyr::ungroup() |>
-    dplyr::select(
-      M = name,
-      T = monitor,
-      D = nc_dist_km_mean,
-      C = nearest_community,
-      P = pretty_prov,
-      PM = pm25_mean
-    ),
-  # Worst PA site by MAX
-  pd |>
-    subset(monitor == "PA") |>
-    dplyr::arrange(desc(pm25_max)) |>
-    head(1) |>
-    dplyr::ungroup() |>
-    dplyr::select(
-      M = name,
-      T = monitor,
-      D = nc_dist_km_mean,
-      C = nearest_community,
-      P = pretty_prov,
-      PM = pm25_max
-    ),
-  # Worst PA site by MEAN
-  pd |>
-    subset(monitor == "PA") |>
-    dplyr::arrange(desc(pm25_mean)) |>
-    head(1) |>
-    dplyr::ungroup() |>
-    dplyr::select(
-      M = name,
-      T = monitor,
-      D = nc_dist_km_mean,
-      C = nearest_community,
-      P = pretty_prov,
-      PM = pm25_mean
-    )
-)
-
 ```
 
 ::: card
@@ -521,9 +338,9 @@ vals = list(
 <details>
 <summary>Click for an automated text summary.</summary>
 
-`r vals[[1]]$M` (a `r vals[[1]]$T` monitor located `r vals[[1]]$D` km from `r vals[[1]]$C`) in `r vals[[1]]$P` had the highest observed hourly PM<sub>2.5</sub> concentration in Canada from the FEM network in the past 24 hours (`r vals[[1]]$PM` &mu;g m<sup>-3</sup>). During this period, `r vals[[2]]$M` (a `r vals[[2]]$T` monitor located `r vals[[2]]$D` km from `r vals[[2]]$C`) in `r vals[[2]]$P` had the highest 24-hour mean in Canada from the FEM network (`r round(vals[[2]]$PM,1)`&mu;g m<sup>-3</sup>).
+`r vals$FEM[[1]]$M` (a `r vals$FEM[[1]]$T` monitor located `r vals$FEM[[1]]$D` km from `r vals$FEM[[1]]$C`) in `r vals$FEM[[1]]$P` had the highest observed hourly PM<sub>2.5</sub> concentration in Canada from the FEM network in the past 24 hours (`r vals$FEM[[1]]$PM` &mu;g m<sup>-3</sup>). During this period, `r vals$FEM[[2]]$M` (a `r vals$FEM[[2]]$T` monitor located `r vals$FEM[[2]]$D` km from `r vals$FEM[[2]]$C`) in `r vals$FEM[[2]]$P` had the highest 24-hour mean in Canada from the FEM network (`r round(vals$FEM[[2]]$PM,1)`&mu;g m<sup>-3</sup>).
 
-`r vals[[3]]$M` (a `r vals[[3]]$T` monitor located `r vals[[3]]$D` km from `r vals[[3]]$C`) in `r vals[[3]]$P` had the highest observed hourly PM<sub>2.5</sub> concentration in Canada from the PA network in the past 24 hours (`r vals[[3]]$PM` &mu;g m<sup>-3</sup>). During this period, `r vals[[4]]$M` (a `r vals[[4]]$T` monitor located `r vals[[4]]$D` km from `r vals[[4]]$C`) in `r vals[[4]]$P` had the highest 24-hour mean in Canada from the PA network (`r round(vals[[4]]$PM,1)`&mu;g m<sup>-3</sup>).
+`r vals$PA[[1]]$M` (a `r vals$PA[[1]]$T` monitor located `r vals$PA[[1]]$D` km from `r vals$PA[[1]]$C`) in `r vals$PA[[1]]$P` had the highest observed hourly PM<sub>2.5</sub> concentration in Canada from the PA network in the past 24 hours (`r vals$PA[[1]]$PM` &mu;g m<sup>-3</sup>). During this period, `r vals$PA[[2]]$M` (a `r vals$PA[[2]]$T` monitor located `r vals$PA[[2]]$D` km from `r vals$PA[[2]]$C`) in `r vals$PA[[2]]$P` had the highest 24-hour mean in Canada from the PA network (`r round(vals$PA[[2]]$PM,1)`&mu;g m<sup>-3</sup>).
   
 </details>
 
@@ -543,7 +360,7 @@ plot_paths[["FEM and PA"]] |>
 #### FEM Only
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths[["FEM Only"]] |>
+plot_paths[["FEM"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_texts[["FEM Only"]], iframe = TRUE)
 ```
@@ -551,7 +368,7 @@ plot_paths[["FEM Only"]] |>
 #### PA Only
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths[["PA Only"]] |>
+plot_paths[["PA"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_texts[["PA Only"]], iframe = TRUE)
 ```

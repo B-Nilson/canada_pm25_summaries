@@ -982,52 +982,21 @@ for (p in names(prov_pretty)) {
 
 ```{r site_boxplots}
 
-# Get data for site mean boxplots
-pd = summaries$overall |>
-  dplyr::mutate(
-    monitor2 = ifelse(
-      monitor == "FEM",
-      "FEM Only",
-      ifelse(monitor == "PA", "PA Only", "FEM and PA")
-    )
-  ) |>
-  dplyr::bind_rows(
-    summaries$overall |> dplyr::mutate(monitor2 = "FEM and PA")
-  ) |>
-  dplyr::mutate(aqhi_p_mean = aqhi_p(pm25_mean)) |>
-  dplyr::full_join(expand.grid(
-    prov_terr = unlist(prov_order),
-    monitor2 = monitor_groups,
-    date_max = unique(summaries$overall$date_max)
-  )) |>
-  dplyr::mutate(date = date_max) |>
-  dplyr::mutate(
-    pretty_prov = prov_terr |>
-      factor(names(prov_pretty), prov_pretty)
+boxplots <- summaries$overall |>
+  make_and_save_site_boxplots(
+    monitor_groups = monitor_groups,
+    date_range = date_range,
+    date_format = "%Y-%m-%d",
+    avg_text = "Monthly",
+    plot_timestamp = plot_timestamp,
+    report_dir = report_dir,
+    figure_dir = figure_dir,
+    lib_dir = lib_dir
   )
-# Make paths to files for saving plots
-plot_paths = paste0(
-  report_dir,
-  "plots/site_mean_boxplots_",
-  monitor_groups_cleaned,
-  '_',
-  output_date_fmt,
-  ".html"
-) |>
-  setNames(monitor_groups) |>
-  as.list()
-# MAke and save plots
-.tmp = lapply(monitor_groups, \(m) {
-  plot = pd |>
-    subset(monitor2 == m) |>
-    make_site_boxplots(m) |>
-    htmlwidgets::saveWidget(
-      plot_paths[[m]],
-      libdir = "./libs",
-      selfcontained = FALSE
-    )
-}) |>
-  setNames(c("FEM Only", "PA Only", "FEM and PA"))
+  
+plot_paths <- boxplots$paths
+vals <- boxplots$summary_values
+
 # Define text for below plots (figure title essentially)
 plot_texts = paste0(
   "Each boxplot summarises the distribution of monthly monitoring site (",
@@ -1037,66 +1006,6 @@ plot_texts = paste0(
   as.list() |>
   setNames(monitor_groups)
 
-# Make summary for automated text
-vals = list(
-  # Worst FEM site by MAX
-  pd |>
-    subset(monitor == "FEM") |>
-    dplyr::arrange(desc(pm25_max)) |>
-    head(1) |>
-    dplyr::ungroup() |>
-    dplyr::select(
-      M = name,
-      T = monitor,
-      D = nc_dist_km_mean,
-      C = nearest_community,
-      P = pretty_prov,
-      PM = pm25_max
-    ),
-  # Worst FEM site by MEAN
-  pd |>
-    subset(monitor == "FEM") |>
-    dplyr::arrange(desc(pm25_mean)) |>
-    head(1) |>
-    dplyr::ungroup() |>
-    dplyr::select(
-      M = name,
-      T = monitor,
-      D = nc_dist_km_mean,
-      C = nearest_community,
-      P = pretty_prov,
-      PM = pm25_mean
-    ),
-  # Worst PA site by MAX
-  pd |>
-    subset(monitor == "PA") |>
-    dplyr::arrange(desc(pm25_max)) |>
-    head(1) |>
-    dplyr::ungroup() |>
-    dplyr::select(
-      M = name,
-      T = monitor,
-      D = nc_dist_km_mean,
-      C = nearest_community,
-      P = pretty_prov,
-      PM = pm25_max
-    ),
-  # Worst PA site by MEAN
-  pd |>
-    subset(monitor == "PA") |>
-    dplyr::arrange(desc(pm25_mean)) |>
-    head(1) |>
-    dplyr::ungroup() |>
-    dplyr::select(
-      M = name,
-      T = monitor,
-      D = nc_dist_km_mean,
-      C = nearest_community,
-      P = pretty_prov,
-      PM = pm25_mean
-    )
-)
-
 ```
 
 ::: card
@@ -1105,9 +1014,9 @@ vals = list(
 <details>
 <summary>Click for an automated text summary.</summary>
 
-`r vals[[1]]$M` (a `r vals[[1]]$T` monitor located `r vals[[1]]$D` km from `r vals[[1]]$C`) in `r vals[[1]]$P` had the highest observed hourly PM<sub>2.5</sub> concentration in Canada from the FEM network for `r format(date_range[2],"%B %Y")` (`r vals[[1]]$PM` &mu;g m<sup>-3</sup>). During this period, `r vals[[2]]$M` (a `r vals[[2]]$T` monitor located `r vals[[2]]$D` km from `r vals[[2]]$C`) in `r vals[[2]]$P` had the highest 1-month mean in Canada from the FEM network (`r round(vals[[2]]$PM,1)`&mu;g m<sup>-3</sup>).
+`r vals$FEM[[1]]$M` (a `r vals$FEM[[1]]$T` monitor located `r vals$FEM[[1]]$D` km from `r vals$FEM[[1]]$C`) in `r vals$FEM[[1]]$P` had the highest observed hourly PM<sub>2.5</sub> concentration in Canada from the FEM network for `r format(date_range[2],"%B %Y")` (`r vals$FEM[[1]]$PM` &mu;g m<sup>-3</sup>). During this period, `r vals$FEM[[2]]$M` (a `r vals$FEM[[2]]$T` monitor located `r vals$FEM[[2]]$D` km from `r vals$FEM[[2]]$C`) in `r vals$FEM[[2]]$P` had the highest 1-month mean in Canada from the FEM network (`r round(vals$FEM[[2]]$PM,1)`&mu;g m<sup>-3</sup>).
 
-`r vals[[3]]$M` (a `r vals[[3]]$T` monitor located `r vals[[3]]$D` km from `r vals[[3]]$C`) in `r vals[[3]]$P` had the highest observed hourly PM<sub>2.5</sub> concentration in Canada from the PA network for `r format(date_range[2],"%B %Y")` (`r vals[[3]]$PM` &mu;g m<sup>-3</sup>). During this period, `r vals[[4]]$M` (a `r vals[[4]]$T` monitor located `r vals[[4]]$D` km from `r vals[[4]]$C`) in `r vals[[4]]$P` had the highest 1-month mean in Canada from the PA network (`r round(vals[[4]]$PM,1)`&mu;g m<sup>-3</sup>).
+`r vals$PA[[1]]$M` (a `r vals$PA[[1]]$T` monitor located `r vals$PA[[1]]$D` km from `r vals$PA[[1]]$C`) in `r vals$PA[[1]]$P` had the highest observed hourly PM<sub>2.5</sub> concentration in Canada from the PA network for `r format(date_range[2],"%B %Y")` (`r vals$PA[[1]]$PM` &mu;g m<sup>-3</sup>). During this period, `r vals$PA[[2]]$M` (a `r vals$PA[[2]]$T` monitor located `r vals$PA[[2]]$D` km from `r vals$PA[[2]]$C`) in `r vals$PA[[2]]$P` had the highest 1-month mean in Canada from the PA network (`r round(vals$PA[[2]]$PM,1)`&mu;g m<sup>-3</sup>).
   
 </details>
 
@@ -1127,7 +1036,7 @@ plot_paths[["FEM and PA"]] |>
 #### FEM Only
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths[["FEM Only"]] |>
+plot_paths[["FEM"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_texts[["FEM Only"]], iframe = TRUE)
 ```
@@ -1135,7 +1044,7 @@ plot_paths[["FEM Only"]] |>
 #### PA Only
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths[["PA Only"]] |>
+plot_paths[["PA"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_texts[["PA Only"]], iframe = TRUE)
 ```

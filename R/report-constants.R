@@ -25,6 +25,7 @@ report_dir = "./" # appended to with report type for each report (i.e ./daily)
 report_dir_esc = "\\./" # appended to with report type for each report (i.e ./daily)
 figure_dir <- "plots" # relative to report_dir for each type
 data_dir <- "data" # relative to report_dir for each type
+lib_dir <- "libs" # relative to report_dir for each type
 
 # Font(s) ----------
 
