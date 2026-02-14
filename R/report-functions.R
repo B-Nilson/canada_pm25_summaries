@@ -287,69 +287,71 @@ make_grid_data <- function(
     dplyr::pull(date) |>
     FUN2() |>
     unique()
-
+  out <- obs |>
+    dplyr::bind_rows(obs |> dplyr::mutate(monitor == "FEM and PA")) |>
+    dplyr::arrange(date)
   if (is.null(fcst_zones)) {
-    out <- obs |>
-      dplyr::bind_rows(obs |> dplyr::mutate(monitor == "FEM and PA")) |>
-      dplyr::arrange(date) |>
+    out <- out |>
       dplyr::group_by(
         y = prov_terr,
         x = FUN2(date) |> factor(time_order),
         monitor
       ) |>
       dplyr::summarise(
-        fill = FUN(pm25, na.rm = TRUE) |> aqhi_p(),
+        fill = FUN(pm25, na.rm = TRUE) |> aqhi::AQHI_plus(detailed = FALSE),
         .groups = "drop"
       ) |>
-      dplyr::full_join(
-        expand.grid(
-          y = names(prov_pretty),
-          monitor = names(monitor_groups),
-          x = time_order |> factor(time_order)
-        ),
-        by = c('y', 'x', 'monitor')
+      tidyr::complete(
+        y = levels(y) |> factor(levels = levels(y)),
+        monitor = monitor,
+        x = time_order |> factor(time_order)
       )
   } else {
     f <- \(y) {
       c("Not inside a zone", y[y != "Not inside a zone"])
     }
-    out <- obs |>
-      dplyr::bind_rows(obs |> dplyr::mutate(monitor == "FEM and PA")) |>
-      dplyr::arrange(date) |>
+    fcst_zones_clean <- fcst_zones |>
+      handyr::sf_as_df() |>
+      seperate_fcst_zone_provs() |>
+      dplyr::mutate(
+        prov_terr_full = prov_terr |>
+          factor(
+            levels = canadata::provinces_and_territories$abbreviation,
+            labels = levels(obs$prov_terr)
+          )
+      )
+    out <- out |>
       dplyr::group_by(
-        y = fcst_zone,
         x = FUN2(date) |> factor(time_order),
+        y = fcst_zone,
         z = prov_terr,
         monitor
       ) |>
       dplyr::summarise(
-        fill = FUN(pm25, na.rm = TRUE) |> aqhi_p(),
+        fill = FUN(pm25, na.rm = TRUE) |> aqhi::AQHI_plus(detailed = FALSE),
         .groups = "drop"
       ) |>
-      dplyr::full_join(
-        expand.grid(
-          y = fcst_zones$fcst_zone |> unique(),
-          monitor = names(monitor_groups),
-          x = time_order |> factor(time_order)
-        ) |>
-          dplyr::left_join(
-            fcst_zones |>
-              dplyr::select(y = fcst_zone, z = prov_terr) |>
-              dplyr::mutate(z = ifelse(z == "YT", "YK", z)),
-            by = "y"
-          ),
-        by = c('y', 'x', 'z', 'monitor')
+      tidyr::complete(
+        x = time_order |> factor(time_order),
+        y = fcst_zones$fcst_zone |>
+          unique(),
+        monitor
       ) |>
-      dplyr::group_by(z, y) |>
-      dplyr::mutate(all_missing = all(is.na(fill))) |>
-      dplyr::ungroup() |>
       dplyr::mutate(
-        y = factor(
-          y,
-          c(sort(y[!all_missing]), sort(y[all_missing])) |>
-            unique() |>
-            f()
-        )
+        z = y |>
+          dplyr::replace_values(
+            from = fcst_zones_clean$fcst_zone,
+            to = fcst_zones_clean$prov_terr_full
+          )
+      ) |>
+      dplyr::mutate(all_missing = all(is.na(fill)), .by = c(z, y)) |>
+      dplyr::mutate(
+        y = y |>
+          factor(
+            levels = c(sort(y[!all_missing]), sort(y[all_missing])) |>
+              unique() |>
+              f()
+          )
       )
   }
   return(out)

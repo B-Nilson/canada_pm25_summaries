@@ -378,29 +378,25 @@ plot_paths[["PA"]] |>
 ```{r grids_prov}
 
 # Make data for prov/terr grid plots
-grid_data = list(
-  median = make_grid_data(obs, median),
-  maximum = make_grid_data(obs, max)
-)
+grid_data <- list(median = median, maximum = max) |>
+  lapply(\(FUN) obs |> make_grid_data(FUN = FUN, type = "daily"))
 
 # Make paths to plot files
-plot_paths = report_dir |>
-  paste0(
-    "plots/prov_median-peak_hourly_grid_",
+plot_paths <- "%s/prov_median-peak_grid_%s_%s.png" |>
+  sprintf(
+    file.path(report_dir, figure_dir),
     monitor_groups_cleaned,
-    '_',
-    format(date_range[2], "%F-%Hz"),
-    ".png"
+    plot_timestamp
   ) |>
-  setNames(monitor_groups) |>
+  setNames(names(monitor_groups)) |>
   as.list()
 
 # Make and save plots
-.tmp = names(monitor_groups) |>
+names(monitor_groups) |>
   lapply(\(m) {
-    pth = plot_paths[[monitor_groups[names(monitor_groups) == m]]]
+    pth = plot_paths[[m]]
     pd = grid_data
-    if (m != monitor_groups[3]) {
+    if (m != "FEM and PA") {
       pd$median = subset(pd$median, monitor == m)
       pd$maximum = subset(pd$max, monitor == m)
     }
@@ -416,8 +412,8 @@ plot_paths = report_dir |>
     # Combine and save plots
     (ggs[[1]] + ggs[[2]]) |>
       ggsave(filename = pth, height = 4, width = 11, units = 'in', dpi = 300)
-  }) |>
-  setNames(monitor_groups)
+    invisible()
+  })
 
 # Define plot summary text (figure titles essentially)
 plot_texts = paste0(

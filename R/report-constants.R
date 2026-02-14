@@ -191,14 +191,19 @@ months_in_seasons = list(
 fcst_zones <- canadata::forecast_zones |>
   dplyr::select(prov_terrs, fcst_zone = name_en, fcst_zone_fr = name_fr)
 
+seperate_fcst_zone_provs <- function(fcst_zones) {
+  fcst_zones |>
+    dplyr::rename(prov_terr = prov_terrs) |>
+    tidyr::separate_longer_delim(cols = prov_terr, delim = ",") |>
+    dplyr::mutate(
+      prov_terr = prov_terr |>
+        factor(levels(canadata::provinces_and_territories$abbreviation))
+    )
+}
+
 fcst_zones_clean <- fcst_zones |>
   handyr::sf_as_df() |>
-  dplyr::select(prov_terr = prov_terrs, fcst_zone) |>
-  tidyr::separate_longer_delim(cols = prov_terr, delim = ",") |>
-  dplyr::mutate(
-    prov_terr = prov_terr |>
-      factor(levels(canadata::provinces_and_territories$abbreviation))
-  )
+  seperate_fcst_zone_provs()
 
 prov_terr_zone_counts <- fcst_zones_clean |>
   dplyr::summarise(n_zones = dplyr::n(), .by = prov_terr)
