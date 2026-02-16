@@ -382,59 +382,35 @@ grid_data <- list(median = median, maximum = max) |>
   lapply(\(FUN) obs |> make_grid_data(FUN = FUN, type = "daily"))
 
 # Make paths to plot files
-plot_paths <- "%s/prov_median-peak_grid_%s_%s.png" |>
-  sprintf(
-    file.path(report_dir, figure_dir),
-    monitor_groups_cleaned,
-    plot_timestamp
-  ) |>
-  setNames(names(monitor_groups)) |>
-  as.list()
-
-# Make and save plots
-names(monitor_groups) |>
-  lapply(\(m) {
-    pth = plot_paths[[m]]
-    pd = grid_data
-    if (m != "FEM and PA") {
-      pd$median = subset(pd$median, monitor == m)
-      pd$maximum = subset(pd$max, monitor == m)
-    }
-    # Make plots
-    ggs = lapply(names(pd), \(stat) {
-      pd[[stat]] |>
-        make_grid_plot(
-          xlab = "Hour of Day",
-          stat = stringr::str_to_title(stat),
-          caption = ifelse(stat == names(pd)[2], plot_captions[[m]], "")
-        )
-    })
-    # Combine and save plots
-    (ggs[[1]] + ggs[[2]]) |>
-      ggsave(filename = pth, height = 4, width = 11, units = 'in', dpi = 300)
-    invisible()
-  })
+plot_paths <- grid_data |> 
+  make_and_save_prov_terr_grids(
+    report_dir = report_dir,
+    figure_dir = figure_dir,
+    monitor_groups = monitor_groups,
+    plot_timestamp = plot_timestamp,
+    plot_captions = plot_captions
+  )
 
 # Define plot summary text (figure titles essentially)
-plot_texts = paste0(
-  "Median [Left] and maximum [Right] hourly PM<sub>2.5</sub> concentrations for all ",
-  names(monitor_groups),
-  " monitoring sites in each province/territory. The median is useful for identifying large scale impacts across the province/territory, while the maximum can be used to identify impacts in at least one area of the province/territory."
+plot_texts <- paste(
+  "Median and maximum hourly PM<sub>2.5</sub> concentrations",
+  "for all %s monitoring sites in each province/territory.",
+  "The median is useful for identifying large scale impacts across the province/territory,",
+  "while the maximum can be used to identify impacts in at least one area of the province/territory."
 ) |>
+  sprintf(names(monitor_groups)) |>
   setNames(monitor_groups) |>
   as.list()
 
 # Make summary data for autmated text for this section
-p = grid_data$median |>
-  dplyr::group_by(y) |>
-  dplyr::summarise(n = sum(as.numeric(fill) > 3, na.rm = TRUE)) |>
-  subset(n >= 3) |>
-  dplyr::arrange(desc(n))
-p2 = grid_data$maximum |>
-  dplyr::group_by(y) |>
-  dplyr::summarise(n = sum(as.numeric(fill) > 3, na.rm = TRUE)) |>
-  subset(n >= 3) |>
-  dplyr::arrange(desc(n))
+p <- grid_data |>
+  lapply(\(dat) {
+    dat |>
+      dplyr::group_by(y) |>
+      dplyr::summarise(n = sum(as.numeric(fill) > 3, na.rm = TRUE)) |>
+      subset(n >= 3) |>
+      dplyr::arrange(desc(n))
+  })
 
 ```
 
@@ -448,9 +424,9 @@ p2 = grid_data$maximum |>
 <details>
 <summary>Click for an automated text summary.</summary>
 
-`r join_list_sentence(p$y)` had a significant amount of locations which experienced elevated PM<sub>2.5</sub> concentrations  (> 30 &mu;g m<sup>-3</sup>) for at least 3 of the past 24 hours [see median plot]. 
+`r join_list_sentence(p$median$y)` had a significant amount of locations which experienced elevated PM<sub>2.5</sub> concentrations  (> 30 &mu;g m<sup>-3</sup>) for at least 3 of the past 24 hours [see median plot]. 
 
-`r join_list_sentence(p2$y)` had at least one location which experienced elevated PM<sub>2.5</sub> concentrations (> 30 &mu;g m<sup>-3</sup>) for at least 3 of the past 24 hours [see maximum plot]. 
+`r join_list_sentence(p$maximum$y)` had at least one location which experienced elevated PM<sub>2.5</sub> concentrations (> 30 &mu;g m<sup>-3</sup>) for at least 3 of the past 24 hours [see maximum plot]. 
 
 </details>
 
@@ -470,7 +446,7 @@ plot_paths[['FEM and PA']] |>
 ##### FEM Only
 
 ```{r grids_fem, include=TRUE, results = 'asis'}
-plot_paths[['FEM Only']] |>
+plot_paths[['FEM']] |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_texts[['FEM Only']])
 ```
@@ -478,7 +454,7 @@ plot_paths[['FEM Only']] |>
 ##### PA Only
 
 ```{r grids_pa, include=TRUE, results = 'asis'}
-plot_paths[['PA Only']] |>
+plot_paths[['PA']] |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(plot_texts[['PA Only']])
 ```
@@ -487,72 +463,32 @@ plot_paths[['PA Only']] |>
 
 ```{r grids_fcst, include= FALSE}
 
-# Make data for fcst_zone grid plots
-grid_data = make_grid_data(obs, median, type = "daily", fcst_zones)
+# Make data and save fcst_zone grid plots
+fcst_grid_data <- obs |>
+  dplyr::mutate(monitor = "FEM and PA") |>
+  make_grid_data(FUN = median, type = "daily", fcst_zones = fcst_zones)
 
-# Make paths to plot files
-plot_paths = paste0(
-  report_dir,
-  "plots/zone_median_hourly_grid_",
-  unlist(prov_order),
-  '_',
-  format(date_range[2], "%F-%Hz"),
-  ".png"
-) |>
-  setNames(unlist(prov_order)) |>
-  as.list()
-
-# Make and save plots
-plots = lapply(unlist(prov_order), \(p) {
-  pth = plot_paths[[p]]
-  pd = grid_data |>
-    subset(as.character(z) == p) |>
-    dplyr::arrange(y)
-  pd |>
-    make_grid_plot(
-      xlab = "Hour of Day",
-      ylab = paste(p, "Forecast Zone"),
-      stat = "Median",
-      small_text = TRUE,
-      caption = plot_captions$`FEM and PA`
-    ) |>
-    ggsave(filename = pth, height = 7, width = 11, units = 'in', dpi = 300)
-}) |>
-  setNames(unlist(prov_order))
+plot_paths <- fcst_grid_data |>
+  make_and_save_fcst_zone_grids(
+    report_dir = report_dir,
+    figure_dir = figure_dir,
+    plot_timestamp = plot_timestamp,
+    plot_caption = plot_captions$`FEM and PA`
+  )
 
 # Define plot summary text (figure titles essentially)
-plot_texts = paste0(
-  "Hourly median PM<sub>2.5</sub> concentrations for all monitors (FEM and PA) within each forecast zone for ",
-  unlist(prov_order),
-  ". A white cell indicates there was no data for that hour from any monitor within that zone. Zones are grouped into those with and those without data and are sorted alphabetically."
+plot_texts <- paste(
+  "Hourly median PM<sub>2.5</sub> concentrations for all monitors (FEM and PA) within each forecast zone for %s.",
+  "A white cell indicates there was no data for that hour from any monitor within that zone.",
+  "Zones are grouped into those with and those without data and are sorted alphabetically."
 ) |>
-  setNames(unlist(prov_order)) |>
+  sprintf(prov_order) |>
+  setNames(prov_order) |>
   as.list()
 
 # Make summary data for automated text for this section
-.tmp = grid_data |>
-  subset(y != "Not inside a zone") |>
-  dplyr::group_by(z, y) |>
-  dplyr::summarise(n = sum(as.numeric(fill) > 3)) |>
-  subset(n >= 3) |>
-  dplyr::arrange(factor(z, unlist(prov_order)), desc(n))
-
-if (nrow(.tmp) == 0) {
-  text = ""
-} else {
-  text = sapply(unique(.tmp$z), \(p) {
-    paste0(
-      "- ",
-      p,
-      ": ",
-      .tmp |>
-        dplyr::filter(z == p) |>
-        dplyr::pull(y) |>
-        join_list_sentence(oxford = TRUE)
-    )
-  }) |>
-    paste(collapse = "\n\n")
-}
+text <- fcst_grid_data |>
+  make_grid_summary_text()
 
 ```
 

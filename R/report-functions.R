@@ -4,6 +4,8 @@ source("R/handle_old_reports.R")
 source("R/make_summaries.R")
 source("R/aqhi_donut_plots.R")
 source("R/interactive_map.R")
+source("R/site_boxplots.R")
+source("R/aqhi_grid_plots.R")
 
 make_hourly_seq <- function(date_range) {
   date_range |>
@@ -289,7 +291,14 @@ make_grid_data <- function(
     unique()
   out <- obs |>
     dplyr::bind_rows(obs |> dplyr::mutate(monitor == "FEM and PA")) |>
-    dplyr::arrange(date)
+    dplyr::arrange(date) |>
+    dplyr::mutate(
+      prov_terr = prov_terr |>
+        factor(
+          levels = levels(prov_terr),
+          labels = canadata::provinces_and_territories$abbreviation
+        )
+    )
   if (is.null(fcst_zones)) {
     out <- out |>
       dplyr::group_by(
@@ -312,14 +321,7 @@ make_grid_data <- function(
     }
     fcst_zones_clean <- fcst_zones |>
       handyr::sf_as_df() |>
-      seperate_fcst_zone_provs() |>
-      dplyr::mutate(
-        prov_terr_full = prov_terr |>
-          factor(
-            levels = canadata::provinces_and_territories$abbreviation,
-            labels = levels(obs$prov_terr)
-          )
-      )
+      seperate_fcst_zone_provs()
     out <- out |>
       dplyr::group_by(
         x = FUN2(date) |> factor(time_order),
@@ -332,19 +334,17 @@ make_grid_data <- function(
         .groups = "drop"
       ) |>
       tidyr::complete(
+        monitor,
         x = time_order |> factor(time_order),
-        y = fcst_zones$fcst_zone |>
-          unique(),
-        monitor
+        tidyr::nesting(
+          y = fcst_zones_clean$fcst_zone,
+          z = fcst_zones_clean$prov_terr
+        )
       ) |>
       dplyr::mutate(
-        z = y |>
-          dplyr::replace_values(
-            from = fcst_zones_clean$fcst_zone,
-            to = fcst_zones_clean$prov_terr_full
-          )
+        all_missing = all(is.na(fill)), .by = c(z, y),
+        y = y |> dplyr::replace_values(NA ~ "Not inside a zone")
       ) |>
-      dplyr::mutate(all_missing = all(is.na(fill)), .by = c(z, y)) |>
       dplyr::mutate(
         y = y |>
           factor(
@@ -356,7 +356,6 @@ make_grid_data <- function(
   }
   return(out)
 }
-
 
 format_count_summary <- function(
   dat,
@@ -518,15 +517,17 @@ make_grid_plot <- function(
   small_text = FALSE,
   x = "discrete"
 ) {
+  aqhi_values <- c(1:10, "+")
+  aqhi_colours <- aqhi::get_aqhi_colours(aqhi_values)
   gg <- plot_data |>
     ggplot2::ggplot(ggplot2::aes(x = x, y = y, fill = fill)) +
     ggplot2::geom_tile(colour = "black") +
     ggplot2::scale_y_discrete(expand = ggplot2::expansion(0)) +
     ggplot2::scale_fill_manual(
-      values = leg_ugm3$colours |> setNames(c(1:10, "+")),
-      breaks = c(1:10, "+"),
+      values = aqhi_colours |> setNames(c(1:10, "+")),
+      breaks = aqhi_values,
       drop = FALSE,
-      na.value = NA,
+      na.value = "white",
       labels = c(paste(0:9 * 10, 1:10 * 10, sep = " - "), ">100")
     ) +
     ggpubr::theme_pubr(border = TRUE) +
