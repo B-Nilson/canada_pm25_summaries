@@ -31,7 +31,7 @@ make_and_save_prov_terr_grids <- function(
           plot_caption = plot_captions[[monitor_group]]
         ) |>
         ggplot2::ggsave(
-          filename = plot_paths[[m]],
+          filename = plot_paths[[monitor_group]],
           height = fig_dims$h,
           width = fig_dims$w,
           units = fig_dims$u,
@@ -260,7 +260,7 @@ make_grid_data <- function(
 }
 
 make_grid_summary_text <- function(grid_data) {
-  grid_data |>
+  text <- grid_data |>
     subset(y != "Not inside a zone") |>
     dplyr::summarise(n = sum(as.numeric(fill) > 3), .by = c(z, y)) |>
     subset(n >= 3) |>
