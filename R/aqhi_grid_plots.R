@@ -50,26 +50,22 @@ make_and_save_fcst_zone_grids <- function(
   plot_timestamp,
   xlab = "Hour of Day",
   plot_caption = "",
-  fig_dims = list(h = 7, w = 11, u = 'in')
+  fig_dims = list(h = 7, w = 11, u = 'in'),
+  provinces_n_territories
 ) {
-  prov_order <- canadata::provinces_and_territories$name_en |>
-    as.character() |>
-    dplyr::replace_values("Quebec" ~ "Québec") |> # TODO: remove once database in cync with canadata
-    setNames(canadata::provinces_and_territories$abbreviation) |>
-    as.list()
   # Make paths to plot files
   plot_paths <- "%s/zone_median_grid_%s_%s.png" |>
     sprintf(
       file.path(report_dir, figure_dir),
-      names(prov_order),
+      provinces_n_territories,
       plot_timestamp
     ) |>
-    setNames(names(prov_order)) |>
+    setNames(provinces_n_territories) |>
     as.list()
 
   # Make and save plots
-  lapply(names(prov_order), \(prov_abbr) {
-    prov_name <- prov_order[[prov_abbr]]
+  lapply(names(provinces_n_territories), \(prov_name) {
+    prov_abbr <- provinces_n_territories[[prov_name]]
     grid_data |>
       subset(as.character(z) == prov_abbr) |>
       make_fcst_zone_grids(
@@ -268,7 +264,7 @@ make_grid_summary_text <- function(grid_data) {
     subset(y != "Not inside a zone") |>
     dplyr::summarise(n = sum(as.numeric(fill) > 3), .by = c(z, y)) |>
     subset(n >= 3) |>
-    dplyr::arrange(factor(z, prov_order), desc(n))
+    dplyr::arrange(z, desc(n))
 
   if (nrow(text) == 0) {
     ""

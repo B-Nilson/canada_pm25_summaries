@@ -17,7 +17,8 @@ load_report_data <- function(
   fem_tables = list(obs = "fem_obs", meta = "fem_meta"),
   lcm_tables = list(obs = "pa_obs", meta = "pa_meta"),
   meta_cols,
-  cache_path = "index_obs.rds"
+  cache_path = "index_obs.rds",
+  provinces_n_territories
 ) {
   if (is.null(db)) {
     db <- handyr::on_error(
@@ -52,12 +53,10 @@ load_report_data <- function(
       meta_cols = meta_cols
     )
 
-  pt_order <- levels(canadata::provinces_and_territories$name_en) |>
-    dplyr::replace_values("Quebec" ~ "Québec") # TODO: remove once col in database matches canadata
   obs <- fem_report_data_query |>
     dplyr::union_all(lcm_report_data_query) |>
     dplyr::collect() |>
-    dplyr::mutate(prov_terr = prov_terr |> factor(levels = pt_order)) |>
+    dplyr::mutate(prov_terr = prov_terr |> factor(levels = provinces_n_territories)) |>
     # Infill Date Gaps
     dplyr::group_by(dplyr::pick(dplyr::all_of(c("monitor", meta_cols)))) |>
     tidyr::complete(date = make_hourly_seq(date_range)) |>

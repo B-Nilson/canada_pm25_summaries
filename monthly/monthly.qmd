@@ -31,7 +31,8 @@ plot_captions <- date_range |>
 obs <- date_range |>
   load_report_data(
     meta_cols = meta_cols,
-    cache_path = file.path(report_dir, "index_obs.rds") # used when db not available
+    cache_path = file.path(report_dir, "index_obs.rds"), # used when db not available
+    provinces_n_territories = provinces_n_territories
   )
 
 summaries <- obs |>
@@ -863,18 +864,18 @@ plot_paths <- fcst_grid_data |>
     figure_dir = figure_dir,
     plot_timestamp = plot_timestamp,
     xlab = grid_xlab,
-    plot_caption = plot_captions$`FEM and PA`
+    plot_caption = plot_captions$`FEM and PA`,
+    provinces_n_territories = provinces_n_territories
   )
 
 # Define plot summary text (figure titles essentially)
-prov_order <- canadata::provinces_and_territories$abbreviation
 plot_texts <- paste(
   "Daily median PM<sub>2.5</sub> concentrations for all monitors (FEM and PA) within each forecast zone for %s.",
   "A white cell indicates there was no data for that day from any monitor within that zone.",
   "Zones are grouped into those with and those without data and are sorted alphabetically."
 ) |>
-  sprintf(prov_order) |>
-  setNames(prov_order) |>
+  sprintf(provinces_n_territories) |>
+  setNames(provinces_n_territories) |>
   as.list()
 
 # Make summary data for automated text for this section

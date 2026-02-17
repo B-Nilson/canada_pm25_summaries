@@ -165,21 +165,11 @@ prov_order <- list(
   Territories = c("YK", "NT", "NU")
 )
 
-prov_pretty <- list(
-  BC = "British Columbia",
-  AB = "Alberta",
-  SK = "Saskatchewan",
-  MB = "Manitoba",
-  ON = "Ontario",
-  QC = "Québec",
-  NS = "Nova Scotia",
-  NB = "New Brunswick",
-  NL = "Newfoundland and Labrador",
-  PE = "Prince Edward Island",
-  YK = "Yukon",
-  NT = "Northwest Territories",
-  NU = "Nunavut"
-)
+provinces_n_territories <- canadata::provinces_and_territories$abbreviation |>
+  as.character() |>
+  dplyr::replace_values("Quebec" ~ "Québec") |> # TODO: remove once database in cync with canadata
+  setNames(canadata::provinces_and_territories$name_en) |>
+  as.list()
 
 months_in_seasons = list(
   "Summer" = 5:10,
