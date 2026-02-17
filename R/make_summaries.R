@@ -61,7 +61,7 @@ make_summaries <- function(
         figure_dir = figure_dir,
         plot_timestamp = plot_timestamp
       )
-    
+
     summaries$aqhi_p_counts <- summaries$overall |>
       make_aqhi_p_count_summaries()
   }
@@ -319,8 +319,8 @@ make_worst_day_summary <- function(daily_summary) {
 }
 
 make_aqhi_p_count_summaries <- function(overall_summary) {
-  placeholders <- unique(overall_summary$monitor) |> 
-    lapply(\(x) 0) |> 
+  placeholders <- unique(overall_summary$monitor) |>
+    lapply(\(x) 0) |>
     setNames(unique(overall_summary$monitor))
   aqhi_p_counts <- list()
   aqhi_p_counts$by_prov <- overall_summary |>

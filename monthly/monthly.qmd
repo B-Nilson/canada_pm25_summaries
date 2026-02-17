@@ -303,7 +303,7 @@ plot_text_template <- "Distribution of monthly mean concentrations at %s PM<sub>
 plot_text <- list(
   mean = plot_text_template,
   max = plot_text_template |> stringr::str_replace_all(" mean ", " max ")
-) |> 
+) |>
   lapply(\(x) as.list(x) |> setNames(monitor_groups))
 
 # Make summary data for autmated text for this section
@@ -930,7 +930,7 @@ boxplots <- summaries$overall |>
     figure_dir = figure_dir,
     lib_dir = lib_dir
   )
-  
+
 plot_paths <- boxplots$paths
 vals <- boxplots$summary_values
 

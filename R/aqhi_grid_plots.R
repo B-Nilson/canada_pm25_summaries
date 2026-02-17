@@ -247,11 +247,12 @@ make_grid_data <- function(
         )
       ) |>
       dplyr::mutate(
-        all_missing = all(is.na(fill)), .by = c(z, y),
-        y = y |> dplyr::replace_values(NA ~ "Not inside a zone")
+        all_missing = all(is.na(fill)),
+        .by = c(z, y),
       ) |>
       dplyr::mutate(
         y = y |>
+          dplyr::replace_values(NA ~ "Not inside a zone") |>
           factor(
             levels = c(sort(y[!all_missing]), sort(y[all_missing])) |>
               unique() |>
