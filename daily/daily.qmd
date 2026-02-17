@@ -382,12 +382,13 @@ grid_data <- list(median = median, maximum = max) |>
   lapply(\(FUN) obs |> make_grid_data(FUN = FUN, type = "daily"))
 
 # Make paths to plot files
-plot_paths <- grid_data |> 
+plot_paths <- grid_data |>
   make_and_save_prov_terr_grids(
     report_dir = report_dir,
     figure_dir = figure_dir,
     monitor_groups = monitor_groups,
     plot_timestamp = plot_timestamp,
+    xlab = "Hour of Day",
     plot_captions = plot_captions
   )
 
@@ -473,10 +474,12 @@ plot_paths <- fcst_grid_data |>
     report_dir = report_dir,
     figure_dir = figure_dir,
     plot_timestamp = plot_timestamp,
+    xlab = "Hour of Day",
     plot_caption = plot_captions$`FEM and PA`
   )
 
 # Define plot summary text (figure titles essentially)
+prov_order <- canadata::provinces_and_territories$abbreviation
 plot_texts <- paste(
   "Hourly median PM<sub>2.5</sub> concentrations for all monitors (FEM and PA) within each forecast zone for %s.",
   "A white cell indicates there was no data for that hour from any monitor within that zone.",

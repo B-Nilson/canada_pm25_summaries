@@ -4,6 +4,7 @@ make_and_save_prov_terr_grids <- function(
   figure_dir,
   monitor_groups,
   plot_timestamp,
+  xlab = "Hour of Day",
   plot_captions,
   fig_dims = list(h = 4, w = 11, u = 'in')
 ) {
@@ -26,6 +27,7 @@ make_and_save_prov_terr_grids <- function(
       grid_data |>
         make_prov_terr_grids(
           monitor_group = monitor_group,
+          xlab = xlab,
           plot_caption = plot_captions[[monitor_group]]
         ) |>
         ggplot2::ggsave(
@@ -46,6 +48,7 @@ make_and_save_fcst_zone_grids <- function(
   report_dir,
   figure_dir,
   plot_timestamp,
+  xlab = "Hour of Day",
   plot_caption = "",
   fig_dims = list(h = 7, w = 11, u = 'in')
 ) {
@@ -55,7 +58,7 @@ make_and_save_fcst_zone_grids <- function(
     setNames(canadata::provinces_and_territories$abbreviation) |>
     as.list()
   # Make paths to plot files
-  plot_paths <- "%s/zone_median_hourly_grid_%s_%s.png" |>
+  plot_paths <- "%s/zone_median_grid_%s_%s.png" |>
     sprintf(
       file.path(report_dir, figure_dir),
       names(prov_order),
@@ -71,6 +74,7 @@ make_and_save_fcst_zone_grids <- function(
       subset(as.character(z) == prov_abbr) |>
       make_fcst_zone_grids(
         prov_abbr = prov_abbr,
+        xlab = xlab,
         plot_caption = plot_caption
       ) |>
       ggplot2::ggsave(
@@ -88,6 +92,7 @@ make_and_save_fcst_zone_grids <- function(
 make_prov_terr_grids <- function(
   grid_data,
   monitor_group,
+  xlab = "Hour of Day",
   plot_caption = ""
 ) {
   stats <- names(grid_data)
@@ -99,7 +104,7 @@ make_prov_terr_grids <- function(
         dplyr::filter(
           monitor == monitor_group | monitor_group == "FEM and PA"
         ) |>
-        make_grid_plot(xlab = "Hour of Day", stat = "", caption = caption) +
+        make_grid_plot(xlab = xlab, stat = "", caption = caption) +
         ggplot2::labs(title = stat |> stringr::str_to_title())
       if (!is_last_stat) {
         plot <- plot + ggplot2::theme(legend.position = "none")
@@ -112,12 +117,13 @@ make_prov_terr_grids <- function(
 make_fcst_zone_grids <- function(
   grid_data,
   prov_abbr = "BC",
+  xlab = "Hour of Day",
   plot_caption = ""
 ) {
   grid_data |>
     dplyr::arrange(y) |>
     make_grid_plot(
-      xlab = "Hour of Day",
+      xlab = xlab,
       ylab = paste(prov_abbr, "Forecast Zone"),
       stat = "Median",
       small_text = TRUE,
