@@ -188,8 +188,14 @@ summaries$donuts$paths$max_pa_only |>
 
 ```{r, maps}
 
-map_paths <- summaries$overall |> 
-  make_and_save_maps()
+map_paths <- summaries$overall |>
+  make_and_save_maps(
+    monitor_groups = monitor_groups,
+    report_dir = report_dir,
+    plot_dir = figure_dir,
+    lib_dir = lib_dir,
+    include_active_fires = FALSE
+  )
 
 # Define plot summary text (figure titles essentially)
 plot_texts <- "Here is an interactive map showing 24-hour mean PM<sub>2.5</sub> concentrations from monitoring sites (%s) in Canada for the past 24 hours. Canadian forecast zones are shown coloured by the mean 24-hour concentration of the monitors within the zone. Toggle layers displayed in the top right menu.
