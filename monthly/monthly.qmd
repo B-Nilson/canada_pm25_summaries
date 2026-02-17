@@ -903,13 +903,13 @@ The following forecast regions experienced elevated PM<sub>2.5</sub> concentrati
 
 ```{r include = TRUE, results="asis"}
 
-for (p in names(prov_pretty)) {
-  pp = prov_pretty[[p]]
-  cat("##### ", pp, "\n")
+for (pt_name in names(provinces_n_territories)) {
+  pt_abbr <- provinces_n_territories[[pt_name]]
+  cat("##### ", pt_abbr, "\n")
   cat(
-    plot_paths[[p]] |>
+    plot_paths[[pt_abbr]] |>
       stringr::str_replace(report_dir_esc, "./") |>
-      plot_card(plot_texts[[p]]),
+      plot_card(plot_texts[[pt_abbr]]),
     "\n"
   )
 }

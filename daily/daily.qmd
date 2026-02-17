@@ -521,7 +521,7 @@ The following forecast regions experienced elevated PM<sub>2.5</sub> concentrati
 
 ```{r, include = TRUE, results="asis"}
 
-for (pt_abbr in provinces_n_territories) {
+for (pt_name in names(provinces_n_territories)) {
   pt_abbr <- provinces_n_territories[[pt_name]]
   cat("##### ", pt_abbr, "\n")
   cat(
