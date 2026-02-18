@@ -56,7 +56,9 @@ load_report_data <- function(
   obs <- fem_report_data_query |>
     dplyr::union_all(lcm_report_data_query) |>
     dplyr::collect() |>
-    dplyr::mutate(prov_terr = prov_terr |> factor(levels = provinces_n_territories)) |>
+    dplyr::mutate(
+      prov_terr = prov_terr |> factor(levels = provinces_n_territories)
+    ) |>
     # Infill Date Gaps
     dplyr::group_by(dplyr::pick(dplyr::all_of(c("monitor", meta_cols)))) |>
     tidyr::complete(date = make_hourly_seq(date_range)) |>

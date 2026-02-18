@@ -13,7 +13,7 @@ for (output_dir in output_dirs) {
       to = output_dir,
       recursive = TRUE,
       overwrite = TRUE
-    ) |> 
+    ) |>
       invisible()
   }
 }
