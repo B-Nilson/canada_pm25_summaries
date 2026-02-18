@@ -91,7 +91,7 @@ All PM<sub>2.5</sub> data are sourced from the [UNBC AQmap](https://aqmap.ca/aqm
 </div>
 </div>
 
-`r cat(loading_div)`
+`r loading_div`
 
 ## Analysis of Past 6-months of PM<sub>2.5</sub> Observations {.tabset .tabset-dropdown style="display:none;"}
 
