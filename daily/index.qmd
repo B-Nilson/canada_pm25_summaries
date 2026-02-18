@@ -77,8 +77,9 @@ old_report_dropdown <- report_dir |>
 
 ## Overview {.unlisted .unnumbered}
 
-<div class="card">
-<div class="card-body">
+:::: card
+
+::: card-body
 
 This report is a summary of the **fine particulate matter (PM<sub>2.5</sub>)** observation data in Canada for the **past 24 hours** from the regulatory **Federal Equivalent Method (FEM)** monitors and the network of low-cost monitors from **PurpleAir (PA)**. It is in beta stage and being actively developed. Significant changes may occur without warning. This report is automatically updated at 00 UTC and 12 UTC every day.
 
@@ -87,8 +88,8 @@ This report is a summary of the **fine particulate matter (PM<sub>2.5</sub>)** o
 For any concerns, questions, or feedback regarding this report or the data within it, please contact brayden.nilson@ec.gc.ca
 
 <details>
-
 <summary>Click here for more details.</summary>
+
 **PM<sub>2.5</sub> is a major constituent of wildfire smoke** and has significant health risks associated with acute and chronic exposure. **FEM monitors are the gold-standard** for real-time data quality for PM<sub>2.5</sub>; however installations are limited by capital and maintenance costs. **PA monitors are less accurate** than their FEM counterparts, but are **much less cost prohibitive** allowing large numbers to be installed. FEM monitors provide **great** data (in **limited areas**), but PA monitors provide **good** data (in **many areas**), and are very useful as "smoke detectors" during wildfire smoke events.
 
 All PM<sub>2.5</sub> data are sourced from the [UNBC AQmap](https://aqmap.ca/aqmap) data repository.
@@ -97,8 +98,11 @@ All PM<sub>2.5</sub> data are sourced from the [UNBC AQmap](https://aqmap.ca/aqm
 
 - Data from the PA network originate from the [PurpleAir API](https://api.purpleair.com/), and a rigorous automated QA/QC method is applied to ensure the best available data are used. The [UNBC/ECCC bias correction](https://amt.copernicus.org/articles/15/3315/2022/) is applied to all PA data to improve comparability with FEM values.
 
-</div>
-</div>
+</details>
+
+:::
+
+::::
 
 `r cat(loading_div)`
 
@@ -131,7 +135,8 @@ p <- c(pa = "PA", fem = "FEM") |>
 
 ```
 
-::: card
+:::: card
+
 ::: card-body
 
 <details>
@@ -146,7 +151,8 @@ There are <strong>`r sum(p$fem$n)` FEM sites</strong> and <strong>`r sum(p$pa$n)
 </details>
 
 :::
-:::
+
+::::
 
 *Select which observation monitors to view using the following tabs*
 
@@ -245,7 +251,8 @@ high_pa_by_prov <- summaries$aqhi_p_counts$by_prov |>
 
 ```
 
-::: card
+:::: card
+
 ::: card-body
 
 <details>
@@ -266,7 +273,8 @@ There was <strong>`r summaries$aqhi_p_counts$overall$FEM[3]` FEM monitors</stron
 </details>
 
 :::
-:::
+
+::::
 
 *Select which observation monitors to view using the following tabs*
 
@@ -346,7 +354,8 @@ plot_texts = paste0(
 
 ```
 
-::: card
+:::: card
+
 ::: card-body
 
 <details>
@@ -359,7 +368,8 @@ plot_texts = paste0(
 </details>
 
 :::
-:::
+
+::::
 
 *Select which observation monitors to view using the following tabs*
 
@@ -433,7 +443,8 @@ p <- grid_data |>
 
 #### Province Level {.tabset}
 
-::: card
+:::: card
+
 ::: card-body
 
 <details>
@@ -446,7 +457,8 @@ p <- grid_data |>
 </details>
 
 :::
-:::
+
+::::
 
 *Select which observation monitors to view using the following tabs*
 
@@ -509,7 +521,8 @@ text <- fcst_grid_data |>
 
 ```
 
-::: card
+:::: card
+
 ::: card-body
 
 <details>
@@ -522,7 +535,8 @@ The following forecast regions experienced elevated PM<sub>2.5</sub> concentrati
 </details>
 
 :::
-:::
+
+::::
 
 *Select which province/territory to view using the following tabs*
 
@@ -647,7 +661,8 @@ vals <- list(
 )
 ```
 
-::: card
+:::: card
+
 ::: card-body
 
 <details>
@@ -660,9 +675,10 @@ vals <- list(
 </details>
 
 :::
-:::
 
-::: card
+::::
+
+:::: card
 
 ::: {.card-img-top .p-2}
 
@@ -673,7 +689,6 @@ table
 
 ```
 
-
 :::
 
 ::: card-body
@@ -681,8 +696,7 @@ table
 Canadian communities with at least 1 nearby PM<sub>2.5</sub> monitor reporting PM<sub>2.5</sub> concentrations in the past 24 hours. The table is interactive, filterable, and has multiple pages. If you click the link on a community name it will take you to that community on [AQmap](https://aqmap.ca/).
 
 :::
-
-:::
+::::
 
 
 ##

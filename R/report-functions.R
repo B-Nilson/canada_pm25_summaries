@@ -414,19 +414,23 @@ plot_card <- function(
   }
   cat(
     "
-<div class='card'>
+    
+::::: card
+  
 $IMG
-<div class='card-body'>
-
-<div class='card-text'>
+  
+:::: card-body
+  
+::: card-text
 
 $text
 
-</div>
+:::
 
-</div>
+::::
 
-</div>
+:::::
+
 " |>
       stringr::str_replace("\\$IMG", img) |>
       stringr::str_replace("\\$text", text) |>
