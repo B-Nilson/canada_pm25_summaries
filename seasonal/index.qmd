@@ -77,16 +77,7 @@ This report is a summary of the **fine particulate matter (PM<sub>2.5</sub>)** o
 
 For any concerns, questions, or feedback regarding this report or the data within it, please contact brayden.nilson@ec.gc.ca
 
-<details>
-
-<summary>Click here for more details.</summary>
-**PM<sub>2.5</sub> is a major constituent of wildfire smoke** and has significant health risks associated with acute and chronic exposure. **FEM monitors are the gold-standard** for real-time data quality for PM<sub>2.5</sub>; however installations are limited by capital and maintenance costs. **PA monitors are less accurate** than their FEM counterparts, but are **much less cost prohibitive** allowing large numbers to be installed. FEM monitors provide **great** data (in **limited areas**), but PA monitors provide **good** data (in **many areas**), and are very useful as "smoke detectors" during wildfire smoke events.
-
-All PM<sub>2.5</sub> data are sourced from the [UNBC AQmap](https://aqmap.ca/aqmap) data repository.
-
-- Data from the FEM network originate from [AirNow](https://www.airnow.gov/about-airnow/), and are NOT VALIDATED. No QA/QC is applied after retrieval from AirNow, and official values may differ from those presented here.
-
-- Data from the PA network originate from the [PurpleAir API](https://api.purpleair.com/), and a rigorous automated QA/QC method is applied to ensure the best available data are used. The [UNBC/ECCC bias correction](https://amt.copernicus.org/articles/15/3315/2022/) is applied to all PA data to improve comparability with FEM values.
+`r report_details`
 
 </div>
 </div>
