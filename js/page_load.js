@@ -1,5 +1,4 @@
 function on_page_load(header_class, icons) {
-    set_reactable_search_placeholder("search...");
     insert_primary_tab_icons(icons);
     //hide_loading_screen(header_class); // TODO: remove if not needed for other reports
 };
@@ -19,10 +18,6 @@ function make_primary_tab_icons(icon_path) {
     icon.style.width = "40px";
     icon.style.marginRight = "5px";
     return icon;
-}
-
-function set_reactable_search_placeholder(text = 'search...') {
-    $('.rt-filter').placeholder = text;
 }
 
 function hide_loading_screen(header_class) {
