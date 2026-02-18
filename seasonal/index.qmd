@@ -93,11 +93,11 @@ All PM<sub>2.5</sub> data are sourced from the [UNBC AQmap](https://aqmap.ca/aqm
 
 `r loading_div`
 
-## Analysis of Past 6-months of PM<sub>2.5</sub> Observations {.tabset .tabset-dropdown style="display:none;"}
+## Analysis of Past 6-months of PM<sub>2.5</sub> Observations {.panel-tabset .tabset-dropdown style="display:none;"}
 
 *Select your question from the following dropdown menu*
 
-### <big><strong>Where/when did we have observations?</strong></big> {.tabset}
+### <big><strong>Where/when did we have observations?</strong></big> {.panel-tabset}
 
 ```{r}
 # Define dimensions for output figures
@@ -370,7 +370,7 @@ plot_path |>
 table
 ```
 
-### <big><strong>How was this season overall?</strong></big> {.tabset}
+### <big><strong>How was this season overall?</strong></big> {.panel-tabset}
 
 ```{r}
 # Define dimensions for output figures
@@ -733,7 +733,7 @@ plot_paths$ts |>
 table
 ```
 
-### <big><strong>When/where did events occur?</strong></big> {.tabset}
+### <big><strong>When/where did events occur?</strong></big> {.panel-tabset}
 
 ```{r }
 # Define dimensions for output figures
@@ -1099,7 +1099,7 @@ plot_paths$median |>
 table
 ```
 
-### <big><strong>What were the worst events like?</strong></big> {.tabset}
+### <big><strong>What were the worst events like?</strong></big> {.panel-tabset}
 
 ```{r }
 # Define dimensions for output figures
@@ -1549,7 +1549,7 @@ for (p in names(prov_pretty)) {
 
 ```
 
-### <big><strong>Which communities [with data] were impacted?</strong></big> {.tabset}
+### <big><strong>Which communities [with data] were impacted?</strong></big> {.panel-tabset}
 
 ```{r }
 # Define dimensions for output figures

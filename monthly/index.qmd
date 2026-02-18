@@ -286,10 +286,10 @@ All PM<sub>2.5</sub> data are sourced from the [UNBC AQmap](https://aqmap.ca/aqm
 
 `r loading_div`
 
-## Analysis of Past Month of PM<sub>2.5</sub> Observations {.tabset .tabset-dropdown style="display: none;"}
+## Analysis of Past Month of PM<sub>2.5</sub> Observations {.panel-tabset .tabset-dropdown style="display: none;"}
 *Select your question from the following dropdown menu*
 
-### <big><strong>How many observation sites at each risk level?</strong></big> {.tabset}
+### <big><strong>How many observation sites at each risk level?</strong></big> {.panel-tabset}
 
 ```{r prov_donuts}
 
@@ -375,7 +375,7 @@ summaries$donuts$paths$max_pa_only |>
   plot_card(plot_text$max$`PA Only`)
 ```
 
-### <big><strong>Who had access to nearby observations?</strong></big> {.tabset}
+### <big><strong>Who had access to nearby observations?</strong></big> {.panel-tabset}
 
 ```{r coverage_charts}
 fig_dims = list(h = 7, w = 9, u = 'in')
@@ -620,7 +620,7 @@ coverage_dl
 coverage_table
 ```
 
-### <big><strong>Where and when were PM<sub>2.5</sub> concentrations high?</strong></big>{.tabset}
+### <big><strong>Where and when were PM<sub>2.5</sub> concentrations high?</strong></big>{.panel-tabset}
 
 ```{r, maps}
 
@@ -756,7 +756,7 @@ plot2_path |>
   plot_card(plot2_text, iframe = TRUE, plot2_title, iframe_height = 625)
 ```
 
-### <big><strong>Where and when did PM<sub>2.5</sub> events occur?</strong></big> {.tabset}
+### <big><strong>Where and when did PM<sub>2.5</sub> events occur?</strong></big> {.panel-tabset}
 
 ```{r grids_prov}
 
@@ -801,7 +801,7 @@ p <- grid_data |>
 
 *Select which what scale to view using the following tabs*
 
-#### Province Level {.tabset}
+#### Province Level {.panel-tabset}
 
 ::: card
 ::: card-body
@@ -844,7 +844,7 @@ plot_paths[['PA']] |>
   plot_card(plot_texts[['PA Only']])
 ```
 
-#### Region Level {.tabset}
+#### Region Level {.panel-tabset}
 
 ```{r grids_fcst, include= FALSE}
 
@@ -911,7 +911,7 @@ for (pt_name in names(provinces_n_territories)) {
 
 ```
 
-### <big><strong>Which sites had the highest concentrations?</strong></big> {.tabset}
+### <big><strong>Which sites had the highest concentrations?</strong></big> {.panel-tabset}
 
 ```{r site_boxplots}
 
@@ -982,7 +982,7 @@ plot_paths[["PA"]] |>
   plot_card(plot_texts[["PA Only"]], iframe = TRUE)
 ```
 
-### <big><strong>Which communities [with data] had very high PM<sub>2.5</sub>?</strong></big> {.tabset}
+### <big><strong>Which communities [with data] had very high PM<sub>2.5</sub>?</strong></big> {.panel-tabset}
 
 ```{r community_boxplots}
 
@@ -1125,7 +1125,7 @@ plot_paths[["PA Only"]] |>
   plot_card(plot_texts[["PA Only"]], iframe = TRUE)
 ```
 
-### <big><strong>What was the worst day this month?</strong></big>{.tabset}
+### <big><strong>What was the worst day this month?</strong></big>{.panel-tabset}
 
 ```{r worst_day_tables}
 # Make download link and table for province level
