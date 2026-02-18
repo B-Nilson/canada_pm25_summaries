@@ -1,0 +1,41 @@
+Title: Automated Canada PM2.5 Summary Reports
+Description: 
+    Daily, monthly, and seasonal (summer-half/winter-half) summaries of fine particulate matter (PM2.5) 
+    observations from Canadian regulartory (FEM) and PurpleAir (PA) monitors.
+Imports:
+    aqhi,
+    aqmapr,
+    canadata,
+    data.table,
+    DBI,
+    dbplyr,
+    dplyr,
+    extrafont,
+    forcats,
+    ggpattern,
+    ggplot2,
+    ggpubr,
+    ggtext,
+    handyr,
+    htmltools,
+    htmlwidgets,
+    leaflet,
+    leaflet.extras2,
+    leafsync,
+    lubridate,
+    mapview,
+    patchwork,
+    plotly,
+    reactable,
+    renv,
+    rmarkdown,
+    RPostgres,
+    scales,
+    sf,
+    stringr,
+    tidyr
+Remotes:
+    github::B-Nilson/aqhi
+    github::B-Nilson/aqmapr
+    github::B-Nilson/canadata
+    github::B-Nilson/handyr
