@@ -450,14 +450,14 @@ coverage_table = reactable(
   data = td,
   pagination = FALSE,
   columns = list(
-    pop_fnic = colDef("Count"),
-    p_pop_fnic = colDef("Percentage"),
-    pop_total = colDef("Count"),
-    p_pop_total = colDef("Percentage"),
-    pop_rural = colDef("Count"),
-    p_pop_rural = colDef("Percentage"),
-    pop_urban = colDef("Count"),
-    p_pop_urban = colDef("Percentage")
+    pop_fnic = reactable::colDef("Count"),
+    p_pop_fnic = reactable::colDef("Percentage"),
+    pop_total = reactable::colDef("Count"),
+    p_pop_total = reactable::colDef("Percentage"),
+    pop_rural = reactable::colDef("Count"),
+    p_pop_rural = reactable::colDef("Percentage"),
+    pop_urban = reactable::colDef("Count"),
+    p_pop_urban = reactable::colDef("Percentage")
   ),
   columnGroups = list(
     colGroup(

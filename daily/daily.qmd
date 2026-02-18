@@ -574,11 +574,11 @@ table_data <- summaries$community |>
 
 # Make table
 columns <- list(
-  'Name' = colDef(cell = \(com) {
+  'Name' = reactable::colDef(cell = \(com) {
     url = table_data[table_data$Name == com, "aqmap_link"]
     htmltools::tags$a(href = url, target = "_blank", com)
   }),
-  aqmap_link = colDef(show = FALSE)
+  aqmap_link = reactable::colDef(show = FALSE)
 )
 col_groups <- list(
   colGroup(

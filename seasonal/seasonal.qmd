@@ -269,25 +269,25 @@ table = reactable(
   data = table_data,
   defaultPageSize = 13,
   columns = list(
-    `Mean Completeness (%)` = colDef(
+    `Mean Completeness (%)` = reactable::colDef(
       header = with_tooltip(
         "Mean Completeness (%)",
         "Average % of hours w/ valid data for all sites in the province/territory."
       )
     ),
-    `Mean Flag Rate (%)` = colDef(
+    `Mean Flag Rate (%)` = reactable::colDef(
       header = with_tooltip(
         "Mean Flag Rate (%)",
         "Average % of hours flagged as invalid for all sites in the province/territory."
       )
     ),
-    FEM = colDef(
+    FEM = reactable::colDef(
       header = with_tooltip(
         "FEM",
         "NAPS Regulatory 'Federal Equivelant Method' monitors (gold standard for observations)."
       )
     ),
-    PA = colDef(
+    PA = reactable::colDef(
       header = with_tooltip(
         "PA",
         "PurpleAir low-cost PM<sub>2.5</sub> monitors."
@@ -295,9 +295,9 @@ table = reactable(
     )
   ),
   columnGroups = list(
-    colGroup(name = "", columns = c("Prov./Terr.")),
-    colGroup(name = "Monitor Counts", columns = c("FEM", "PA")),
-    colGroup(
+    reactable::colGroup(name = "", columns = c("Prov./Terr.")),
+    reactable::colGroup(name = "Monitor Counts", columns = c("FEM", "PA")),
+    reactable::colGroup(
       name = "Data Availability",
       columns = c("Mean Completeness (%)", "Mean Flag Rate (%)")
     )
@@ -585,59 +585,59 @@ table = reactable(data = table_data, defaultPageSize = 13,
             columns = list(
               `
 Mean
-` = colDef(
+` = reactable::colDef(
                 header = with_tooltip("Mean", "Average of the forecast zone seasonal mean PM2.5 concentrations within each province/territory")),
               `
 Max
-` = colDef(
+` = reactable::colDef(
                 header = with_tooltip("Max", "Maximum of the forecast zone seasonal mean PM2.5 concentrations within each province/territory")),
               `
 98
 th
 Percentile
-` = colDef(
+` = reactable::colDef(
                 header = with_tooltip("98th Percentile", "98th Percentile of the forecast zone seasonal mean PM2.5 concentrations within each province/territory")),
               `
 Mean
 Hours >= 60
-` = colDef(
+` = reactable::colDef(
                 header = with_tooltip("Mean Hours >= 60", "Average of the forecast zone seasonal counts of hourly PM2.5 concentrations of 60 ug/mm3 or greater (High - Very High risk) within each province/territory")),
               `
 Mean
 Hours >= 100
-` = colDef(
+` = reactable::colDef(
                 header = with_tooltip("Mean Hours >= 100", "Average of the forecast zone seasonal counts of hourly PM2.5 concentrations of 100 ug/mm3 or greater (Very High risk) within each province/territory")),
               `
 Count
-` = colDef(
+` = reactable::colDef(
                 header = with_tooltip("Count", "Total number of elevated PM2.5 events detected within the province/territory")),
               `
 Mean
 Count
-` = colDef(
+` = reactable::colDef(
                 header = with_tooltip("Mean Count", "Average of the number of elevated PM2.5 events detected within each forecast zone in the province/territory")),
               `
 Zones
 w / Events
-` = colDef(
+` = reactable::colDef(
                 header = with_tooltip("Zones w/ Events", "Count of the number of forecast zones with at least one elevated PM2.5 event")),
               `
 Mean
 Duration(days)
-` = colDef(
+` = reactable::colDef(
                 header = with_tooltip("Mean Duration (days)", "Average duration of elevated PM2.5 events this season in the province/territory")),
               `
 Max
 Duration(days)
-` = colDef(
+` = reactable::colDef(
                 header = with_tooltip("Max Duration (days)", "Maximum duration of elevated PM2.5 events this season in the province/territory"))
             ),
             columnGroups = list(
-              colGroup(name = "", columns = c("Prov./Terr.")),
-              colGroup(name = "Forecast Zone Mean PM2.5", 
+              reactable::colGroup(name = "", columns = c("Prov./Terr.")),
+              reactable::colGroup(name = "Forecast Zone Mean PM2.5", 
                        columns = c("Mean", "Max", "98th Percentile",
                                    "Mean Hours >= 60", "Mean Hours >= 100")),
-              colGroup(name = "Forecast Zone PM2.5 Events", 
+              reactable::colGroup(name = "Forecast Zone PM2.5 Events", 
                        columns = c("Count", "Zones w/ Events","Mean Count", "Mean Duration (days)",
                                    "Max Duration (days)"))
             )
@@ -927,13 +927,13 @@ table = reactable(
   data = table_data,
   defaultPageSize = 10,
   columns = list(
-    Start = colDef(
+    Start = reactable::colDef(
       format = colFormat(date = TRUE, locales = "en-CA"),
       cell = \(value, index) {
         format(value, "%b. %d")
       }
     ),
-    End = colDef(
+    End = reactable::colDef(
       format = colFormat(date = TRUE, locales = "en-CA"),
       cell = \(value, index) {
         format(value, "%b. %d")
@@ -1768,16 +1768,16 @@ table = reactable(
   data = t_data,
   defaultPageSize = 10,
   # columns = list(
-  #   `Mean` = colDef(header = with_tooltip("Mean", "Average of the forecast zone seasonal mean PM2.5 concentrations within each province/territory")),
+  #   `Mean` = reactable::colDef(header = with_tooltip("Mean", "Average of the forecast zone seasonal mean PM2.5 concentrations within each province/territory")),
   # ),
   columnGroups = list(
-    colGroup(name = "Location", columns = c("Community", "Prov./Terr.")),
-    colGroup(name = "PM2.5 Monitors", columns = c("# of FEMs", "# of PAs")),
-    colGroup(
+    reactable::colGroup(name = "Location", columns = c("Community", "Prov./Terr.")),
+    reactable::colGroup(name = "PM2.5 Monitors", columns = c("# of FEMs", "# of PAs")),
+    reactable::colGroup(
       name = "Hours",
       columns = c("With Obs. (Any)", "Above 60 (High)", "Above 100 (V. High)")
     ),
-    colGroup(
+    reactable::colGroup(
       name = "PM2.5 Concentration (ug/m3)",
       columns = c("Min.", "Max.", "Mean")
     )
