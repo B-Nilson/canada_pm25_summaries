@@ -379,7 +379,7 @@ For any concerns, questions, or feedback regarding this report or the data withi
 
 ## Analysis of Past 24-Hours of PM<sub>2.5</sub> Observations {style="display:none;"}
 
-::::::: {.panel-tabset .tabset-dropdown style="display:none;"}
+::: {.panel-tabset .tabset-dropdown style="display:none;"}
 
 *Select your question from the following dropdown menu*
 
@@ -389,7 +389,7 @@ For any concerns, questions, or feedback regarding this report or the data withi
 
 :::: card
 
-::: card-body
+::::: card-body
 
 <details>
 <summary>Click for an automated text summary.</summary>
@@ -402,11 +402,13 @@ There are <strong>`r sum(prov_donuts_text$p$fem$n)` FEM sites</strong> and <stro
   
 </details>
 
-:::
+:::::
 
 ::::
 
 *Select which observation monitors to view using the following tabs*
+
+:::: panel-tabset
 
 #### FEM and PA
 
@@ -456,13 +458,13 @@ summaries$donuts$paths$max_pa_only |>
   cat()
 ```
 
-::::::
+::::
 
 ### <big><strong>Where were PM<sub>2.5</sub> concentrations high?</strong></big>
 
 :::: card
 
-::: card-body
+::::: card-body
 
 <details>
 <summary>Click for an automated text summary.</summary>
@@ -481,13 +483,13 @@ There was <strong>`r summaries$aqhi_p_counts$overall$FEM[3]` FEM monitors</stron
 
 </details>
 
-:::
+:::::
 
 ::::
 
 *Select which observation monitors to view using the following tabs*
 
-:::::: panel-tabset
+:::: panel-tabset
 
 #### FEM and PA
 
@@ -537,13 +539,13 @@ map_tables[["PA Only"]]$dl_button
 map_tables[["PA Only"]]$html
 ```
 
-::::::
+::::
 
 ### <big><strong>Which sites had the highest concentrations?</strong></big>
 
 :::: card
 
-::: card-body
+::::: card-body
 
 <details>
 <summary>Click for an automated text summary.</summary>
@@ -568,13 +570,13 @@ had the highest 24-hour mean in Canada from the PA network (`r round(boxplot_val
   
 </details>
 
-:::
+:::::
 
 ::::
 
 *Select which observation monitors to view using the following tabs*
 
-:::::: panel-tabset
+:::: panel-tabset
 
 #### FEM and PA
 
@@ -603,19 +605,19 @@ boxplot_paths[["PA"]] |>
   cat()
 ```
 
-::::::
+::::
 
 ### <big><strong>Where and when did PM<sub>2.5</sub> events occur?</strong></big>
 
 *Select which what scale to view using the following tabs*
 
-:::::: panel-tabset
+:::: panel-tabset
 
 #### Province Level {.panel-tabset}
 
-:::: card
+::::: card
 
-::: card-body
+:::::: card-body
 
 <details>
 <summary>Click for an automated text summary.</summary>
@@ -630,9 +632,9 @@ for at least 3 of the past 24 hours [see maximum plot].
 
 </details>
 
-:::
+::::::
 
-::::
+:::::
 
 *Select which observation monitors to view using the following tabs*
 
@@ -669,9 +671,9 @@ prov_grid_paths[['PA']] |>
 
 #### Region Level 
 
-:::: card
+::::: card
 
-::: card-body
+:::::: card-body
 
 <details>
 <summary>Click for an automated text summary.</summary>
@@ -682,9 +684,9 @@ The following forecast regions experienced elevated PM<sub>2.5</sub> concentrati
   
 </details>
 
-:::
+::::::
 
-::::
+:::::
 
 *Select which province/territory to view using the following tabs*
 
@@ -697,23 +699,23 @@ provinces_n_territories |>
     card <- fcst_grid_paths[[pt_abbr]] |>
       stringr::str_replace(report_dir_esc, "./") |>
       plot_card(fcst_grid_texts[[pt_abbr]])
-    "## %s %s" |>
+    "## %s\n%s" |>
       sprintf(pt_abbr, card)
   }) |>
-  paste(collapse = "") |> 
+  paste(collapse = "\n") |> 
   cat()
 
 ```
 
 :::::
 
-::::::
+::::
 
 ### <big><strong>Which communities (with data) were impacted?</strong></big>
 
 :::: card
 
-::: card-body
+::::: card-body
 
 <details>
 <summary>Click for an automated text summary.</summary>
@@ -735,13 +737,13 @@ where at least one monitor exceeded 60 &mu;g m<sup>-3</sup>.
   
 </details>
 
-:::
+:::::
 
 ::::
 
 :::: card
 
-::: {.card-img-top .p-2}
+::::: {.card-img-top .p-2}
 
 ```{r include=TRUE}
 
@@ -750,17 +752,17 @@ community_table
 
 ```
 
-:::
+:::::
 
-::: card-body
+::::: card-body
 
 Canadian communities with at least 1 nearby PM<sub>2.5</sub> monitor reporting PM<sub>2.5</sub> concentrations in the past 24 hours. The table is interactive, filterable, and has multiple pages. If you click the link on a community name it will take you to that community on [AQmap](https://aqmap.ca/).
 
-:::
+:::::
 
 ::::
 
-:::::::
+:::
 
 ##
 <center><h4 id="footer" style="display:none">----- \*BETA PRODUCT\* -----</h4></center>

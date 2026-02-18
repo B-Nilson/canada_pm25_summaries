@@ -413,21 +413,21 @@ plot_card <- function(
     )
   }
     "
-::::: card
+::: card
   
 $IMG
   
 :::: card-body
   
-::: card-text
+::::: card-text
 
 $text
 
-:::
+:::::
 
 ::::
 
-:::::
+:::
 " |>
       stringr::str_replace("\\$IMG", img) |>
       stringr::str_replace("\\$text", text)
