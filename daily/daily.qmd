@@ -551,97 +551,83 @@ for (pt_name in names(provinces_n_territories)) {
 ```{r community_summary, include = TRUE}
 
 # Make data for table
-table_data = summaries$community |>
-  dplyr::arrange(desc(pm25_24hr_mean)) |>
-  dplyr::mutate(aqmap_link = make_aqmap_link(nc_lat, nc_lng, 12, "EN")) |>
-  dplyr::mutate(fcst_zone = iconv(fcst_zone, to = "ASCII//TRANSLIT")) |>
-  dplyr::ungroup() |>
+table_data <- summaries$community |>
+  dplyr::arrange(desc(pm25_mean_network_mean_comm_mean)) |>
+  dplyr::mutate(
+    aqmap_link = nc_lat |>
+      make_aqmap_link(lng = nc_lng, zoom = 12, lang = "EN")
+  ) |>
   dplyr::select(
     "Name" = nearest_community,
     "Prov./Terr." = prov_terr,
     "Forecast Zone" = fcst_zone,
     "# of Monitors" = n_monitors,
-    "Max Distance (km)" = max_dist,
-    "24hr Mean (μg/m3)" = pm25_24hr_mean,
-    "24hr Max (μg/m3)" = pm25_24hr_max,
-    "Current (μg/m3)" = pm25_current_mean,
+    "Max Distance (km)" = nc_dist_km_network_max_comm_max,
+    "24hr Mean (μg/m3)" = pm25_mean_network_mean_comm_mean,
+    "24hr Max (μg/m3)" = pm25_max_network_max_comm_max,
+    "Current (μg/m3)" = pm25_current_network_mean_comm_mean,
     # "# Hours\nabove 30 μg/m3"= n_hours_above_30_max,
-    "# Hours\nabove 60 μg/m3" = n_hours_above_60_max,
-    "# Hours\nabove 100 μg/m3" = n_hours_above_100_max,
+    "# Hours\nabove 60 μg/m3" = n_hours_above_60_network_max_comm_max,
+    "# Hours\nabove 100 μg/m3" = n_hours_above_100_network_max_comm_max,
     aqmap_link
-  ) |>
-  as.data.frame() |>
-  # dplyr::select(3,1:2,4,5,7:13,15,16) |>
-  subset(!duplicated(Name))
+  )
 
 # Make table
-table = reactable(
-  data = table_data |>
-    dplyr::arrange(desc("24hr Mean (μg/m3)")),
-  #groupBy = c("Prov./Terr."),
-  defaultSorted = c("# Hours\nabove 100 μg/m3", "24hr Mean (μg/m3)"),
-  defaultSortOrder = "desc",
-
-  columns = list(
-    'Name' = colDef(cell = \(com) {
-      url = table_data[table_data$Name == com, "aqmap_link"]
-      htmltools::tags$a(href = url, target = "_blank", com)
-    }),
-    aqmap_link = colDef(show = FALSE)
+columns <- list(
+  'Name' = colDef(cell = \(com) {
+    url = table_data[table_data$Name == com, "aqmap_link"]
+    htmltools::tags$a(href = url, target = "_blank", com)
+  }),
+  aqmap_link = colDef(show = FALSE)
+)
+col_groups <- list(
+  colGroup(
+    name = "Community Details",
+    columns = c("Name", "Prov./Terr.", "Forecast Zone")
   ),
-  columnGroups = list(
-    colGroup(
-      name = "Community Details",
-      columns = c("Name", "Prov./Terr.", "Forecast Zone")
-    ),
-    colGroup(
-      name = "PM2.5 Monitors",
-      columns = c("# of Monitors", "Max Distance (km)")
-    ),
-    colGroup(
-      name = "PM2.5 Observations",
-      columns = c(
-        "24hr Mean (μg/m3)",
-        "24hr Max (μg/m3)",
-        "Current (μg/m3)", #"# Hours\nabove 30 μg/m3",
-        "# Hours\nabove 60 μg/m3",
-        "# Hours\nabove 100 μg/m3"
-      )
+  colGroup(
+    name = "PM2.5 Monitors",
+    columns = c("# of Monitors", "Max Distance (km)")
+  ),
+  colGroup(
+    name = "PM2.5 Observations",
+    columns = c(
+      "24hr Mean (μg/m3)",
+      "24hr Max (μg/m3)",
+      "Current (μg/m3)", #"# Hours\nabove 30 μg/m3",
+      "# Hours\nabove 60 μg/m3",
+      "# Hours\nabove 100 μg/m3"
     )
   )
 )
 
-# Write out data to CSV
-file = "high_pm2.5_communities_" |>
-  paste0(
-    max(obs$date) |>
-      format("%Y-%m-%d_%HZ")
-  ) |>
-  paste0(".csv")
-table_data = table_data |>
-  dplyr::select(-aqmap_link)
-table_data |>
-  setNames(names(table_data) |> stringr::str_replace_all("\n", " ")) |>
-  data.table::fwrite(
-    paste0(paste0(report_dir, "data/"), file),
-    dateTimeAs = "write.csv"
+table <- table_data |>
+  dplyr::arrange(desc("24hr Mean (μg/m3)")) |>
+  reactable(
+    data = _,
+    defaultSorted = c("# Hours\nabove 100 μg/m3", "24hr Mean (μg/m3)"),
+    defaultSortOrder = "desc",
+    columns = columns,
+    columnGroups = col_groups
   )
 
-# Make download button linked to this csv
-dl = dl_button_html("./data/", file)
+# Write out data to CSV and make download button linked to it
+file_path <- "%s/%s/community_summary_%s.csv" |>
+  sprintf(report_dir, data_dir, plot_timestamp)
+dl <- table_data |>
+  make_download_button(data_dir = data_dir, file_path = file_path)
 
 # Make summary data for automated text for this section
-pd = summaries$community |>
-  dplyr::ungroup() |>
+pd <- summaries$community |>
   dplyr::select(
     P = prov_terr,
     C = nearest_community,
     N = n_monitors,
-    D = max_dist,
-    PM1 = pm25_24hr_mean,
-    PM2 = pm25_24hr_max,
-    H1 = n_hours_above_100_max,
-    H2 = n_hours_above_60_max
+    D = nc_dist_km_network_max_comm_max,
+    PM1 = pm25_mean_network_mean_comm_mean,
+    PM2 = pm25_max_network_max_comm_max,
+    H1 = n_hours_above_100_network_max_comm_max,
+    H2 = n_hours_above_60_network_max_comm_max
   ) |>
   dplyr::mutate(
     NFEM = N |>
@@ -653,7 +639,7 @@ pd = summaries$community |>
       stringr::str_remove("PA: ") |>
       handyr::swap(NA, with = "0")
   )
-vals = list(
+vals <- list(
   pd |>
     dplyr::arrange(desc(PM2)) |>
     head(1),
