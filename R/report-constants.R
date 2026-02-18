@@ -139,6 +139,15 @@ municipal_classes <- c(
 
 # Misc -----
 
+loading_div <- '
+<div id="loading" style="text-align:center;display: flex; align-items: center; justify-content: center; height: 250px;">
+  <div>
+    <p>Loading, please wait...</p>
+    <p><img id="loading-image" src="index_files/icons/loading.gif" alt="Loading..." /></p>
+  </div>
+</div>
+'
+
 # Define legend breaks and colours from AQHI+ scale
 leg_ugm3 <- data.frame(
   breaks = 0:10 * 10,

@@ -100,12 +100,7 @@ All PM<sub>2.5</sub> data are sourced from the [UNBC AQmap](https://aqmap.ca/aqm
 </div>
 </div>
 
-<div id="loading" style="text-align:center;display: flex; align-items: center; justify-content: center; height: 250px;">
-<div>
-  <p>Loading, please wait...</p>
-  <p><img id="loading-image" src="index_files/icons/loading.gif" alt="Loading..." /></p>
-</div>
-</div>
+`r cat(loading_div)`
 
 ## Analysis of Past 24-Hours of PM<sub>2.5</sub> Observations {.tabset .tabset-dropdown style="display:none;"}
 
