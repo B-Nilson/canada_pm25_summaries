@@ -17,10 +17,13 @@
   margin: auto;
 }
 
+html {
+  background-color: #F5F5F5;
+}
+
 body {
   margin:auto;
-  max-width: 1400px;
-  background-color: #F5F5F5;
+  max-width: 80rem;
 }
 
 .container-fluid{
@@ -87,14 +90,11 @@ p, summary, details {
   margin-bottom: 0.5rem !important;
 }
 
-.tabset-dropdown > .nav-tabs:hover{
-  background-color: #73d2e52e;
-  cursor: pointer;
-}
 .nav-tabs>li>a{
   text-decoration: none;
   cursor: pointer !important;
 }
+
 .nav, .nav-tabs, .active{
   cursor: pointer;
 }
