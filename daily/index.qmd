@@ -1,17 +1,23 @@
-<meta name="viewport" content="width=device-width, initial-scale=1">
+---
+format:
+  html:
+    include-in-header: 
+      - text: |
+          <script src="https://code.jquery.com/jquery-4.0.0.min.js"></script>
+          <script>
+            var main_header = "#analysis-of-past-24-hours-of-pm2\\.5-observations";
+            var icons = [
+                "icons8-doughnut-chart-64.png",
+                "icons8-map-64.png",
+                "icons8-vertical-timeline-64.png",
+                "icons8-data-sheet-64.png",
+                "icons8-grid-64.png"
+            ].map((f_name) => "index_files/icons/" + f_name);
+            $(document).ready(() => on_page_load(main_header, icons));
+          </script>
+---
 
-```{js onpageload}
-var icon_dir = "index_files/icons/";
-var icons = [
-  icon_dir + "icons8-doughnut-chart-64.png",
-  icon_dir + "icons8-map-64.png",
-  icon_dir + "icons8-vertical-timeline-64.png",
-  icon_dir + "icons8-data-sheet-64.png",
-  icon_dir + "icons8-grid-64.png"
-];
-var main_header = "#analysis-of-past-24-hours-of-pm2\\.5-observations";
-document.onload(() => on_page_load(main_header, icons));  
-```
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 ```{r setup}
 
