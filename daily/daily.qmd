@@ -43,6 +43,18 @@ summaries <- obs |>
     plot_timestamp = plot_timestamp
   )
 
+max_date <- obs$date |> base::max()
+subtitle_date <- list(
+  utc = max_date |>
+    format("%Y-%m-%d %H UTC"),
+  vancouver = max_date |>
+    lubridate::with_tz("America/Vancouver") |>
+    format("%Y-%m-%d %I %p"),
+  halifax = max_date |>
+    lubridate::with_tz("America/Halifax") |>
+    format("%Y-%m-%d %I %p")
+)
+
 ```
 
 ```{r handleOldReports, include= FALSE, echo= FALSE}
@@ -58,8 +70,8 @@ old_report_dropdown <- report_dir |>
 
 <center><h4>----- \*BETA PRODUCT\* -----</h4></center>
 <center><h1>Canadian PM<sub>2.5</sub> Observations 24-hour Summary</h1></center>
-<center><h3>Non-validated Data - <mark class="bg-info">`r max(obs$date) |> format("%Y-%m-%d %H UTC")`</mark></center>
-<center><h4>`r max(obs$date) |> lubridate::with_tz('America/Vancouver') |>format("%b %d, %I %p")` in Vancouver --- `r max(obs$date) |> lubridate::with_tz('America/Halifax') |>format("%b %d, %I %p")` in Halifax</h4></center>
+<center><h3>Non-validated Data - <mark class="bg-info">`r subtitle_date$utc`</mark></center>
+<center><h4>`r subtitle_date$vancouver` in Vancouver --- `r subtitle_date$halifax` in Halifax</h4></center>
 
 |  
 
