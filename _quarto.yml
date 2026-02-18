@@ -21,7 +21,7 @@ format:
     embed-resources: false
     output-file: index.html
     lib-dir: libs
-    pre-render: R/pre_render.R
+    post-render: R/post_render.R
     include-in-header:
       - text: |
           <script src="index_files/js/page_load.js"></script>
