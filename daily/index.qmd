@@ -379,10 +379,9 @@ For any concerns, questions, or feedback regarding this report or the data withi
 
 ## Analysis of Past 24-Hours of PM<sub>2.5</sub> Observations {style="display:none;"}
 
+*Select your question from the following tabs*
 
-*Select your question from the following dropdown menu*
-
-::: {.panel-tabset .tabset-dropdown style="display:none;"}
+::: panel-tabset
 
 ## <big><strong>How many observation sites at each risk level?</strong></big>
 
