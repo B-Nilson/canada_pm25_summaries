@@ -1,7 +1,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 ```{js onpageload}
-$(window).on('load', () => on_page_load("#analysis-of-past-24-hours-of-pm2\\.5-observations"));  
+var icon_dir = "index_files/icons/";
+var icons = [
+  icon_dir + "icons8-doughnut-chart-64.png",
+  icon_dir + "icons8-map-64.png",
+  icon_dir + "icons8-vertical-timeline-64.png",
+  icon_dir + "icons8-data-sheet-64.png",
+  icon_dir + "icons8-grid-64.png"
+];
+var main_header = "#analysis-of-past-24-hours-of-pm2\\.5-observations";
+document.onload(() => on_page_load(main_header, icons));  
 ```
 
 ```{r setup}
@@ -383,7 +392,7 @@ For any concerns, questions, or feedback regarding this report or the data withi
 
 *Select your question from the following tabs*
 
-::: panel-tabset
+::: {.panel-tabset .primary-tabset}
 
 ## <big><strong>How many observation sites at each risk level?</strong></big>
 

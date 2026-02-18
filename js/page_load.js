@@ -1,26 +1,34 @@
-function on_page_load(header_text) {
-    // Set placeholder text for table filters
-    $(".rt-filter").attr("placeholder", "search...")
-    // Hide loading div and show rest of report
-    $('#loading').hide();
-    $('.section.level2')[1].style.display = "block"
-    $('#footer')[0].style.display = "block";
-    // Define icons for section dropdowns
-    var icons = [
-        "index_files/icons/icons8-doughnut-chart-64.png",
-        "index_files/icons/icons8-map-64.png",
-        "index_files/icons/icons8-vertical-timeline-64.png",
-        "index_files/icons/icons8-data-sheet-64.png",
-        "index_files/icons/icons8-grid-64.png"
-    ]
-    // Insert icons in dropdowns ! will break if Analysis header changes...
-    for (var i = 1; i <= icons.length; i++) {
-        var sel = header_text + " > ul > li:nth-child(" + i + ") > a";
-        var elem = document.querySelector(sel);
-        var img = document.createElement("img");
-        img.setAttribute("src", icons[i - 1]);
-        img.style.width = "40px";
-        img.style.marginRight = "5px";
-        elem.prepend(img);
-    }
+function on_page_load(header_class, icons) {
+    set_reactable_search_placeholder("search...");
+    insert_dropdown_icons(icons);
+    hide_loading_screen(header_class);
 };
+
+function insert_dropdown_icons(icons) {
+    let dropdown_class = ".primary-tabset";
+    for (var i = 1; i <= icons.length; i++) {
+        let icon = make_dropdown_icons(icons[i - 1]);
+        let dropdown_entry = $(dropdown_class).parentElement.children[0].children[i - 1].children[0];
+        dropdown_entry.prepend(icon);
+    }
+}
+
+function make_dropdown_icons(icon_path) {
+    var icon = document.createElement("img");
+    icon.setAttribute("src", icon_path);
+    icon.style.width = "40px";
+    icon.style.marginRight = "5px";
+    return icon;
+}
+
+function set_reactable_search_placeholder(text = 'search...') {
+    $('.rt-filter').placeholder = text;
+}
+
+function hide_loading_screen(header_class) {
+    let dropdown_class = ".primary-tabset";
+    $('#loading').hidden = true;
+    $(header_class).hidden = false;
+    $(dropdown_class).hidden = false;
+    $('#footer').hidden = false;
+}
