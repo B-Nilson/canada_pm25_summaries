@@ -1,7 +1,7 @@
 function on_page_load(header_class, icons) {
     set_reactable_search_placeholder("search...");
     insert_dropdown_icons(icons);
-    hide_loading_screen(header_class);
+    //hide_loading_screen(header_class); // TODO: remove if not needed for other reports
 };
 
 function insert_dropdown_icons(icons) {

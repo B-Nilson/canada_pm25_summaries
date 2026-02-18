@@ -392,9 +392,7 @@ For any concerns, questions, or feedback regarding this report or the data withi
 
 ::::
 
-`r loading_div`
-
-## Analysis of Past 24-Hours of PM<sub>2.5</sub> Observations {style="display:none;"}
+## Analysis of Past 24-Hours of PM<sub>2.5</sub> Observations
 
 *Select your question from the following tabs*
 
@@ -780,4 +778,4 @@ Canadian communities with at least 1 nearby PM<sub>2.5</sub> monitor reporting P
 :::
 
 ##
-<center><h4 id="footer" style="display:none">----- \*BETA PRODUCT\* -----</h4></center>
+<center><h4 id="footer">----- \*BETA PRODUCT\* -----</h4></center>
