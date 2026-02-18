@@ -1,6 +1,6 @@
 project:
   title: "canada_pm25_summaries"
-
+  execute-dir: project
 
 title: ""
 
