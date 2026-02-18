@@ -413,13 +413,15 @@ There are <strong>`r sum(prov_donuts_text$p$fem$n)` FEM sites</strong> and <stro
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$mean_fem_and_pa |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$mean$`FEM and PA`)
+  plot_card(prov_donuts_text$mean$`FEM and PA`) |> 
+  cat()
 ```
 
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$max_fem_and_pa |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$max$`FEM and PA`)
+  plot_card(prov_donuts_text$max$`FEM and PA`) |> 
+  cat()
 ```
 
 #### FEM Only
@@ -427,13 +429,15 @@ summaries$donuts$paths$max_fem_and_pa |>
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$mean_fem_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$mean$`FEM Only`)
+  plot_card(prov_donuts_text$mean$`FEM Only`) |> 
+  cat()
 ```
 
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$max_fem_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$max$`FEM Only`)
+  plot_card(prov_donuts_text$max$`FEM Only`) |> 
+  cat()
 ```
 
 #### PA Only
@@ -441,13 +445,15 @@ summaries$donuts$paths$max_fem_only |>
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$mean_pa_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$mean$`PA Only`)
+  plot_card(prov_donuts_text$mean$`PA Only`) |> 
+  cat()
 ```
 
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$max_pa_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$max$`PA Only`)
+  plot_card(prov_donuts_text$max$`PA Only`) |> 
+  cat()
 ```
 
 ::::::
@@ -488,7 +494,8 @@ There was <strong>`r summaries$aqhi_p_counts$overall$FEM[3]` FEM monitors</stron
 ```{r include=TRUE, results = 'asis'}
 map_paths[["FEM and PA"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(map_texts[["FEM and PA"]], iframe = TRUE)
+  plot_card(map_texts[["FEM and PA"]], iframe = TRUE) |> 
+  cat()
 ```
 
 |
@@ -503,7 +510,8 @@ map_tables[["FEM and PA"]]$html
 ```{r include=TRUE, results = 'asis'}
 map_paths[["FEM Only"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(map_texts[["FEM Only"]], iframe = TRUE)
+  plot_card(map_texts[["FEM Only"]], iframe = TRUE) |> 
+  cat()
 ```
 
 |
@@ -518,7 +526,8 @@ map_tables[["FEM Only"]]$html
 ```{r include=TRUE, results = 'asis'}
 map_paths[["PA Only"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(map_texts[["PA Only"]], iframe = TRUE)
+  plot_card(map_texts[["PA Only"]], iframe = TRUE) |> 
+  cat()
 ```
 
 |
@@ -572,7 +581,8 @@ had the highest 24-hour mean in Canada from the PA network (`r round(boxplot_val
 ```{r include=TRUE, results = 'asis'}
 boxplot_paths[["FEM and PA"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(boxplot_texts[["FEM and PA"]], iframe = TRUE)
+  plot_card(boxplot_texts[["FEM and PA"]], iframe = TRUE) |> 
+  cat()
 ```
 
 #### FEM Only
@@ -580,7 +590,8 @@ boxplot_paths[["FEM and PA"]] |>
 ```{r include=TRUE, results = 'asis'}
 boxplot_paths[["FEM"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(boxplot_texts[["FEM Only"]], iframe = TRUE)
+  plot_card(boxplot_texts[["FEM Only"]], iframe = TRUE) |> 
+  cat()
 ```
 
 #### PA Only
@@ -588,7 +599,8 @@ boxplot_paths[["FEM"]] |>
 ```{r include=TRUE, results = 'asis'}
 boxplot_paths[["PA"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(boxplot_texts[["PA Only"]], iframe = TRUE)
+  plot_card(boxplot_texts[["PA Only"]], iframe = TRUE) |> 
+  cat()
 ```
 
 ::::::
@@ -631,7 +643,8 @@ for at least 3 of the past 24 hours [see maximum plot].
 ```{r grids_both, include=TRUE, results = 'asis'}
 prov_grid_paths[['FEM and PA']] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_grid_texts[['FEM and PA']])
+  plot_card(prov_grid_texts[['FEM and PA']]) |> 
+  cat()
 ```
 
 ## FEM Only
@@ -639,7 +652,8 @@ prov_grid_paths[['FEM and PA']] |>
 ```{r grids_fem, include=TRUE, results = 'asis'}
 prov_grid_paths[['FEM']] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_grid_texts[['FEM Only']])
+  plot_card(prov_grid_texts[['FEM Only']]) |> 
+  cat()
 ```
 
 ## PA Only
@@ -647,7 +661,8 @@ prov_grid_paths[['FEM']] |>
 ```{r grids_pa, include=TRUE, results = 'asis'}
 prov_grid_paths[['PA']] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_grid_texts[['PA Only']])
+  plot_card(prov_grid_texts[['PA Only']]) |> 
+  cat()
 ```
 
 :::::
@@ -677,16 +692,16 @@ The following forecast regions experienced elevated PM<sub>2.5</sub> concentrati
 
 ```{r, include = TRUE, results="asis"}
 
-for (pt_name in names(provinces_n_territories)) {
-  pt_abbr <- provinces_n_territories[[pt_name]]
-  cat("##### ", pt_abbr, "\n")
-  cat(
-    fcst_grid_paths[[pt_abbr]] |>
+provinces_n_territories |>
+  sapply(\(pt_abbr) {
+    card <- fcst_grid_paths[[pt_abbr]] |>
       stringr::str_replace(report_dir_esc, "./") |>
-      plot_card(fcst_grid_texts[[pt_abbr]]),
-    "\n"
-  )
-}
+      plot_card(fcst_grid_texts[[pt_abbr]])
+    "## %s %s" |>
+      sprintf(pt_abbr, card)
+  }) |>
+  paste(collapse = "") |> 
+  cat()
 
 ```
 

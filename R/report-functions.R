@@ -412,9 +412,7 @@ plot_card <- function(
       img
     )
   }
-  cat(
     "
-    
 ::::: card
   
 $IMG
@@ -430,12 +428,9 @@ $text
 ::::
 
 :::::
-
 " |>
       stringr::str_replace("\\$IMG", img) |>
-      stringr::str_replace("\\$text", text) |>
-      htmltools::HTML()
-  )
+      stringr::str_replace("\\$text", text)
 }
 
 make_sync_map <- function(
