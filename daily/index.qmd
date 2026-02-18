@@ -689,24 +689,24 @@ The following forecast regions experienced elevated PM<sub>2.5</sub> concentrati
 
 *Select which province/territory to view using the following tabs*
 
-::::: panel-tabset
-
 ```{r, include = TRUE, results="asis"}
 
-provinces_n_territories |>
+chunks <- provinces_n_territories |>
   sapply(\(pt_abbr) {
     card <- fcst_grid_paths[[pt_abbr]] |>
       stringr::str_replace(report_dir_esc, "./") |>
       plot_card(fcst_grid_texts[[pt_abbr]])
     "## %s\n%s" |>
       sprintf(pt_abbr, card)
-  }) |>
-  paste(collapse = "\n") |> 
+  })
+  
+":::::::: panel-tabset
+%s
+::::::::" |> 
+  sprintf(paste(chunks, collapse = "\n")) |>
   cat()
 
 ```
-
-:::::
 
 ::::
 
