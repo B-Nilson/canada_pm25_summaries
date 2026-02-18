@@ -7,6 +7,19 @@ source("R/interactive_map.R")
 source("R/site_boxplots.R")
 source("R/aqhi_grid_plots.R")
 
+make_aqmap_link <- function(lat, lng, zoom = 12, lang = "EN") {
+  paste0(
+    "https://aqmap.ca/aqmap/",
+    tolower(lang),
+    "/#",
+    zoom,
+    "/",
+    lat,
+    "/",
+    lng
+  )
+}
+
 make_hourly_seq <- function(date_range) {
   date_range |>
     handyr::as_interval() |>
