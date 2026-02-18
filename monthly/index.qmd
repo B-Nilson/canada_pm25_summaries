@@ -1,8 +1,29 @@
-<meta name="viewport" content="width=device-width, initial-scale=1">
+---
+format:
+  html:
+    include-in-header: 
+      - text: |
+          <script src="https://code.jquery.com/jquery-4.0.0.min.js"></script>
+          <script>
+            var main_header = "#analysis-of-past-month-of-pm2\\.5-observations";
+            $(main_header).hide();
+            $("#footer").hide();
+            $(main_header + " > .panel-tabset .primary-tabset").hide();
+            var icons = [
+              'icons8-doughnut-chart-64.png',
+              'icons8-vertical-timeline-64.png',
+              'icons8-map-64.png',
+              'icons8-data-sheet-64.png',
+              'icons8-vertical-timeline-64.png',
+              'icons8-vertical-timeline-64.png',
+              'icons8-grid-64.png',
+              'icons8-grid-64.png'
+            ].map((f_name) => "index_files/icons/" + f_name);
+            $(document).ready(() => on_page_load(main_header, icons));
+          </script>
+---
 
-```{js onpageload}
-$(window).on('load', () => on_page_load("#analysis-of-past-month-of-pm2\\.5-observations"));  
-```
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 ```{r setup}
 
