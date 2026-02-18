@@ -941,8 +941,8 @@ table = reactable(
     )
   ),
   columnGroups = list(
-    colGroup(name = "Location", columns = c("Prov./Terr.", "Forecast Zone")),
-    colGroup(
+    reactable::colGroup(name = "Location", columns = c("Prov./Terr.", "Forecast Zone")),
+    reactable::colGroup(
       name = "Event Timeline",
       columns = c(
         "Start",
@@ -951,8 +951,8 @@ table = reactable(
         # "Rank (Zone)", "Rank (Prov/Terr)"
       )
     ),
-    colGroup(name = "PM2.5 Monitors", columns = c("# of FEMs", "# of PAs")),
-    colGroup(
+    reactable::colGroup(name = "PM2.5 Monitors", columns = c("# of FEMs", "# of PAs")),
+    reactable::colGroup(
       name = "PM2.5 Concentration (ug/m3)",
       columns = c("Min.", "Max.", "Mean", "Mean * Duration")
     )

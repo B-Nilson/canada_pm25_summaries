@@ -460,19 +460,19 @@ coverage_table = reactable(
     p_pop_urban = reactable::colDef("Percentage")
   ),
   columnGroups = list(
-    colGroup(
+    reactable::colGroup(
       name = "FN & Inuit Communities",
       columns = c("pop_fnic", "p_pop_fnic")
     ),
-    colGroup(
+    reactable::colGroup(
       name = "Total Pop. (2016)",
       columns = c("pop_total", "p_pop_total")
     ),
-    colGroup(
+    reactable::colGroup(
       name = "Urban Pop. (2016)",
       columns = c("pop_urban", "p_pop_urban")
     ),
-    colGroup(
+    reactable::colGroup(
       name = "Rural Pop. (2016)",
       columns = c("pop_rural", "p_pop_rural")
     )
@@ -1154,7 +1154,7 @@ table = reactable(
   defaultSorted = "Mean of Site Means",
   defaultSortOrder = "desc",
   columnGroups = list(
-    colGroup(
+    reactable::colGroup(
       name = "PM2.5 Concentration (ug/m3)",
       columns = c(
         "Min of Site Means",
@@ -1229,7 +1229,7 @@ table2 = reactable(
   defaultSortOrder = "desc",
   pagination = FALSE,
   columnGroups = list(
-    colGroup(
+    reactable::colGroup(
       name = "Daily Site Mean PM2.5 Concentration (ug/m3)",
       columns = c("Min of Sites", "Mean of Sites", "Max of Sites")
     )

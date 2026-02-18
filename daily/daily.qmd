@@ -581,15 +581,15 @@ columns <- list(
   aqmap_link = reactable::colDef(show = FALSE)
 )
 col_groups <- list(
-  colGroup(
+  reactable::colGroup(
     name = "Community Details",
     columns = c("Name", "Prov./Terr.", "Forecast Zone")
   ),
-  colGroup(
+  reactable::colGroup(
     name = "PM2.5 Monitors",
     columns = c("# of Monitors", "Max Distance (km)")
   ),
-  colGroup(
+  reactable::colGroup(
     name = "PM2.5 Observations",
     columns = c(
       "24hr Mean (μg/m3)",
