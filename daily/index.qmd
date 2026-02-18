@@ -379,13 +379,12 @@ For any concerns, questions, or feedback regarding this report or the data withi
 
 ## Analysis of Past 24-Hours of PM<sub>2.5</sub> Observations {style="display:none;"}
 
-::: {.panel-tabset .tabset-dropdown style="display:none;"}
 
 *Select your question from the following dropdown menu*
 
-### <big><strong>How many observation sites at each risk level?</strong></big>
+::: {.panel-tabset .tabset-dropdown style="display:none;"}
 
-:::::: panel-tabset
+## <big><strong>How many observation sites at each risk level?</strong></big>
 
 :::: card
 
@@ -410,7 +409,7 @@ There are <strong>`r sum(prov_donuts_text$p$fem$n)` FEM sites</strong> and <stro
 
 :::: panel-tabset
 
-#### FEM and PA
+## FEM and PA
 
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$mean_fem_and_pa |>
@@ -426,7 +425,7 @@ summaries$donuts$paths$max_fem_and_pa |>
   cat()
 ```
 
-#### FEM Only
+## FEM Only
 
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$mean_fem_only |>
@@ -442,7 +441,7 @@ summaries$donuts$paths$max_fem_only |>
   cat()
 ```
 
-#### PA Only
+## PA Only
 
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$mean_pa_only |>
@@ -460,7 +459,7 @@ summaries$donuts$paths$max_pa_only |>
 
 ::::
 
-### <big><strong>Where were PM<sub>2.5</sub> concentrations high?</strong></big>
+## <big><strong>Where were PM<sub>2.5</sub> concentrations high?</strong></big>
 
 :::: card
 
@@ -491,7 +490,7 @@ There was <strong>`r summaries$aqhi_p_counts$overall$FEM[3]` FEM monitors</stron
 
 :::: panel-tabset
 
-#### FEM and PA
+## FEM and PA
 
 ```{r include=TRUE, results = 'asis'}
 map_paths[["FEM and PA"]] |>
@@ -507,7 +506,7 @@ map_tables[["FEM and PA"]]$dl_button
 map_tables[["FEM and PA"]]$html
 ```
 
-#### FEM Only
+## FEM Only
 
 ```{r include=TRUE, results = 'asis'}
 map_paths[["FEM Only"]] |>
@@ -523,7 +522,7 @@ map_tables[["FEM Only"]]$dl_button
 map_tables[["FEM Only"]]$html
 ```
 
-#### PA Only
+## PA Only
 
 ```{r include=TRUE, results = 'asis'}
 map_paths[["PA Only"]] |>
@@ -541,7 +540,7 @@ map_tables[["PA Only"]]$html
 
 ::::
 
-### <big><strong>Which sites had the highest concentrations?</strong></big>
+## <big><strong>Which sites had the highest concentrations?</strong></big>
 
 :::: card
 
@@ -578,7 +577,7 @@ had the highest 24-hour mean in Canada from the PA network (`r round(boxplot_val
 
 :::: panel-tabset
 
-#### FEM and PA
+## FEM and PA
 
 ```{r include=TRUE, results = 'asis'}
 boxplot_paths[["FEM and PA"]] |>
@@ -587,7 +586,7 @@ boxplot_paths[["FEM and PA"]] |>
   cat()
 ```
 
-#### FEM Only
+## FEM Only
 
 ```{r include=TRUE, results = 'asis'}
 boxplot_paths[["FEM"]] |>
@@ -596,7 +595,7 @@ boxplot_paths[["FEM"]] |>
   cat()
 ```
 
-#### PA Only
+## PA Only
 
 ```{r include=TRUE, results = 'asis'}
 boxplot_paths[["PA"]] |>
@@ -607,13 +606,13 @@ boxplot_paths[["PA"]] |>
 
 ::::
 
-### <big><strong>Where and when did PM<sub>2.5</sub> events occur?</strong></big>
+## <big><strong>Where and when did PM<sub>2.5</sub> events occur?</strong></big>
 
 *Select which what scale to view using the following tabs*
 
 :::: panel-tabset
 
-#### Province Level {.panel-tabset}
+## Province Level
 
 ::::: card
 
@@ -640,7 +639,7 @@ for at least 3 of the past 24 hours [see maximum plot].
 
 ::::: panel-tabset
 
-#### FEM and PA
+## FEM and PA
 
 ```{r grids_both, include=TRUE, results = 'asis'}
 prov_grid_paths[['FEM and PA']] |>
@@ -669,7 +668,7 @@ prov_grid_paths[['PA']] |>
 
 :::::
 
-#### Region Level 
+## Region Level 
 
 ::::: card
 
@@ -711,7 +710,7 @@ provinces_n_territories |>
 
 ::::
 
-### <big><strong>Which communities (with data) were impacted?</strong></big>
+## <big><strong>Which communities (with data) were impacted?</strong></big>
 
 :::: card
 
