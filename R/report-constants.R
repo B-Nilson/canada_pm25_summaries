@@ -146,7 +146,8 @@ loading_div <- '
     <p><img id="loading-image" src="index_files/icons/loading.gif" alt="Loading..." /></p>
   </div>
 </div>
-'
+' |>
+  htmltools::HTML()
 
 report_details <- '
 <details>
