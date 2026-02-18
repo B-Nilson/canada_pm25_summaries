@@ -7,11 +7,11 @@ function on_page_load(header_text) {
     $('#footer')[0].style.display = "block";
     // Define icons for section dropdowns
     var icons = [
-        "./icons/icons8-doughnut-chart-64.png",
-        "./icons/icons8-map-64.png",
-        "./icons/icons8-vertical-timeline-64.png",
-        "./icons/icons8-data-sheet-64.png",
-        "./icons/icons8-grid-64.png"
+        "index_files/icons/icons8-doughnut-chart-64.png",
+        "index_files/icons/icons8-map-64.png",
+        "index_files/icons/icons8-vertical-timeline-64.png",
+        "index_files/icons/icons8-data-sheet-64.png",
+        "index_files/icons/icons8-grid-64.png"
     ]
     // Insert icons in dropdowns ! will break if Analysis header changes...
     for (var i = 1; i <= icons.length; i++) {

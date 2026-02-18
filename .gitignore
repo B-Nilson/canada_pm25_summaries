@@ -7,3 +7,8 @@
 *.rds
 plots/
 data/
+/.quarto/
+**/*.quarto_ipynb
+index_files/
+index.html
+historic
