@@ -179,7 +179,7 @@ months_in_seasons = list(
 # Forecast Zones ---
 
 fcst_zones <- canadata::forecast_zones |>
-  dplyr::select(prov_terrs, fcst_zone = name_en, fcst_zone_fr = name_fr)
+  dplyr::select(prov_terrs, fcst_zone = name_en, fcst_zone_fr = name_fr, geometry)
 
 seperate_fcst_zone_provs <- function(fcst_zones) {
   fcst_zones |>
