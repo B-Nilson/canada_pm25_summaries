@@ -18,7 +18,6 @@ format:
   html: 
     page-layout: full
     css: "index_files/css/report_stylesheet.css"
-    template: report_template.html
     embed-resources: false
     output-file: index.html
     lib-dir: libs

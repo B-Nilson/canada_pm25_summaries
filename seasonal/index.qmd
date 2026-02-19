@@ -1,3 +1,9 @@
+---
+format:
+  html:
+    pagetitle: "Seasonal Canada PM<sub>2.5</sub> Summary"
+---
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 ```{js onpageload}

@@ -1,6 +1,7 @@
 ---
 format:
   html:
+    pagetitle: "Monthly Canada PM<sub>2.5</sub> Summary"
     include-in-header: 
       - text: |
           <script src="https://code.jquery.com/jquery-4.0.0.min.js"></script>
