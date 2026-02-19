@@ -278,21 +278,7 @@ old_report_dropdown <- report_dir |>
 
 ## Overview {.unlisted .unnumbered}
 
-::: card
-
-::: card-body
-
-`r report_overview |> sprintf("month", "month at 00:00 UTC")`
-
-`r old_report_dropdown`
-
-`r contact_details`
-
-`r report_details`
-
-:::
-
-:::
+`r build_overview_card(type = "monthly", report_dropdown = old_report_dropdown, contact_email = contact_email)`
 
 `r loading_div`
 

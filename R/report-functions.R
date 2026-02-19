@@ -6,6 +6,7 @@ source("R/aqhi_donut_plots.R")
 source("R/interactive_map.R")
 source("R/site_boxplots.R")
 source("R/aqhi_grid_plots.R")
+source("R/build_report_text.R")
 
 make_aqmap_link <- function(lat, lng, zoom = 12, lang = "EN") {
   paste0(

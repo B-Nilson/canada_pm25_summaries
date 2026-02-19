@@ -73,19 +73,7 @@ old_report_dropdown <- report_dir |>
 
 ## Overview {.unlisted .unnumbered}
 
-<div class="card">
-<div class="card-body">
-
-`r report_overview |> sprintf("6 months", "May and November at 00:00 UTC")`
-
-`r old_report_dropdown`
-
-`r contact_details`
-
-`r report_details`
-
-</div>
-</div>
+`r build_overview_card(type = "seasonal", report_dropdown = old_report_dropdown, contact_email = contact_email)`
 
 `r loading_div`
 

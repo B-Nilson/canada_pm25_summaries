@@ -376,21 +376,7 @@ old_report_dropdown <- report_dir |>
 
 ## Overview {.unlisted .unnumbered}
 
-:::: card
-
-::: card-body
-
-`r report_overview |> sprintf("24 hours", "day at 00:00 UTC and 12:00 UTC")`
-
-`r knitr::asis_output(old_report_dropdown)`
-
-`r contact_details`
-
-`r knitr::asis_output(report_details)`
-
-:::
-
-::::
+`r build_overview_card(type = "daily", report_dropdown = old_report_dropdown, contact_email = contact_email)`
 
 ## Analysis of Past 24-Hours of PM<sub>2.5</sub> Observations
 
