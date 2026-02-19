@@ -57,7 +57,11 @@ load_report_data <- function(
     dplyr::union_all(lcm_report_data_query) |>
     dplyr::collect() |>
     dplyr::mutate(
-      prov_terr = prov_terr |> factor(levels = provinces_n_territories)
+      prov_terr = prov_terr |> factor(levels = provinces_n_territories),
+      dplyr::across(
+        dplyr::starts_with(c("pm25", "temperature", "rh")),
+        \(x) round(x, digits = 1)
+      )
     ) |>
     # Infill Date Gaps
     dplyr::group_by(dplyr::pick(dplyr::all_of(c("monitor", meta_cols)))) |>
