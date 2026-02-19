@@ -19,6 +19,7 @@ Imports:
     handyr,
     htmltools,
     htmlwidgets,
+    knitr,
     leaflet,
     leaflet.extras2,
     leafsync,

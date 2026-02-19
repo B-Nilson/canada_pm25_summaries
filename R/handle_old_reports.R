@@ -68,8 +68,7 @@ make_old_reports_dropdown <- function(
     sprintf(report_paths, report_names) |>
     paste(collapse = "\n    ")
 
-  '
-<div class="dropdown">
+  '<div class="dropdown">
   <button class="btn dropdown-toggle" type="button" \
     style="font-weight:bold;" id="dropdownMenuButton" \
     data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -84,8 +83,7 @@ make_old_reports_dropdown <- function(
       button_label,
       dropdown_label,
       dropdown_entries
-    ) |>
-    htmltools::HTML()
+    )
 }
 
 parse_report_name <- function(report_name, type) {
