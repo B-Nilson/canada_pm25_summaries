@@ -69,9 +69,8 @@ make_old_reports_dropdown <- function(
     paste(collapse = "\n    ")
 
   '<div class="dropdown">
-  <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton" \
-    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-      %s
+  <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown">
+    %s
   </button>
   <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
     <h6 class="dropdown-header">%s</h6>
