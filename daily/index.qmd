@@ -437,13 +437,13 @@ summaries$donuts$paths$max_pa_only |>
 <details>
 <summary>Click for an automated text summary.</summary>
 
-There was <strong>`r summaries$aqhi_p_counts$overall$FEM[4]` FEM monitors</strong> and <strong>`r summaries$aqhi_p_counts$overall$PA[4]` PA monitors</strong> in Canada with a 24-hour mean PM<sub>2.5</sub> concentration <strong>exceeding 100 &mu;g m<sup>-3</sup></strong>
+There was <strong>`r summaries$aqhi_p_counts$overall$FEM[4]` FEM monitors</strong> and <strong>`r summaries$aqhi_p_counts$overall$PA[4]` PA monitors</strong> in Canada with a 24-hour mean PM<sub>2.5</sub> concentration <strong>exceeding 100 {{< pm_units >}}</strong>
 
 `r paste0(ifelse(nrow(very_high_fem_by_prov), "* ",""), format_count_summary(very_high_fem_by_prov,"FEM","exceeding 100"))`
 
 `r paste0(ifelse(nrow(very_high_pa_by_prov), "* ",""), format_count_summary(very_high_pa_by_prov,"PA","exceeding 100"))`
 
-There was <strong>`r summaries$aqhi_p_counts$overall$FEM[3]` FEM monitors</strong> and <strong>`r summaries$aqhi_p_counts$overall$PA[3]` PA monitors</strong> in Canada with a 24-hour mean PM<sub>2.5</sub> concentration <strong>between 60 and 100 &mu;g m<sup>-3</sup></strong>
+There was <strong>`r summaries$aqhi_p_counts$overall$FEM[3]` FEM monitors</strong> and <strong>`r summaries$aqhi_p_counts$overall$PA[3]` PA monitors</strong> in Canada with a 24-hour mean PM<sub>2.5</sub> concentration <strong>between 60 and 100 {{< pm_units >}}</strong>
 
 `r paste0(ifelse(nrow(high_fem_by_prov), "* ",""),format_count_summary(high_fem_by_prov,"FEM","between 60 and 100"))`
 
@@ -521,20 +521,20 @@ map_tables[["PA Only"]]$html
 `r boxplot_vals$FEM[[1]]$M` (a `r boxplot_vals$FEM[[1]]$T` monitor
 located `r boxplot_vals$FEM[[1]]$D` km from `r boxplot_vals$FEM[[1]]$C`)
 in `r boxplot_vals$FEM[[1]]$P` had the highest observed hourly PM<sub>2.5</sub>
-concentration in Canada from the FEM network in the past 24 hours (`r boxplot_vals$FEM[[1]]$PM` &mu;g m<sup>-3</sup>).
+concentration in Canada from the FEM network in the past 24 hours (`r boxplot_vals$FEM[[1]]$PM` {{< pm_units >}}).
 During this period, `r boxplot_vals$FEM[[2]]$M`
 (a `r boxplot_vals$FEM[[2]]$T` monitor located `r boxplot_vals$FEM[[2]]$D` km
 from `r boxplot_vals$FEM[[2]]$C`) in `r boxplot_vals$FEM[[2]]$P`
-had the highest 24-hour mean in Canada from the FEM network (`r round(boxplot_vals$FEM[[2]]$PM,1)`&mu;g m<sup>-3</sup>).
+had the highest 24-hour mean in Canada from the FEM network (`r round(boxplot_vals$FEM[[2]]$PM,1)`{{< pm_units >}}).
 
 `r boxplot_vals$PA[[1]]$M` (a `r boxplot_vals$PA[[1]]$T` monitor
 located `r boxplot_vals$PA[[1]]$D` km from `r boxplot_vals$PA[[1]]$C`)
 in `r boxplot_vals$PA[[1]]$P` had the highest observed hourly PM<sub>2.5</sub>
-concentration in Canada from the PA network in the past 24 hours (`r boxplot_vals$PA[[1]]$PM` &mu;g m<sup>-3</sup>).
+concentration in Canada from the PA network in the past 24 hours (`r boxplot_vals$PA[[1]]$PM` {{< pm_units >}}).
 During this period, `r boxplot_vals$PA[[2]]$M`
 (a `r boxplot_vals$PA[[2]]$T` monitor located `r boxplot_vals$PA[[2]]$D` km
 from `r boxplot_vals$PA[[2]]$C`) in `r boxplot_vals$PA[[2]]$P`
-had the highest 24-hour mean in Canada from the PA network (`r round(boxplot_vals$PA[[2]]$PM,1)`&mu;g m<sup>-3</sup>).
+had the highest 24-hour mean in Canada from the PA network (`r round(boxplot_vals$PA[[2]]$PM,1)`{{< pm_units >}}).
   
 </details>
 
@@ -591,11 +591,11 @@ boxplot_paths[["PA"]] |>
 <summary>Click for an automated text summary.</summary>
 
 `r join_list_sentence(prov_grid_texts$p$median$y)` had a significant amount of locations
-which experienced elevated PM<sub>2.5</sub> concentrations  (> 30 &mu;g m<sup>-3</sup>)
+which experienced elevated PM<sub>2.5</sub> concentrations  (> 30 {{< pm_units >}})
 for at least 3 of the past 24 hours [see median plot]. 
 
 `r join_list_sentence(prov_grid_texts$p$maximum$y)` had at least one location
-which experienced elevated PM<sub>2.5</sub> concentrations (> 30 &mu;g m<sup>-3</sup>)
+which experienced elevated PM<sub>2.5</sub> concentrations (> 30 {{< pm_units >}})
 for at least 3 of the past 24 hours [see maximum plot]. 
 
 </details>
@@ -646,7 +646,7 @@ prov_grid_paths[['PA']] |>
 <details>
 <summary>Click for an automated text summary.</summary>
 
-The following forecast regions experienced elevated PM<sub>2.5</sub> concentrations  (> 30 &mu;g m<sup>-3</sup>) for at least 3 of the past 24 hours:
+The following forecast regions experienced elevated PM<sub>2.5</sub> concentrations  (> 30 {{< pm_units >}}) for at least 3 of the past 24 hours:
 
 `r fcst_grid_texts$text`
   
@@ -691,17 +691,17 @@ chunks <- provinces_n_territories |>
 `r community_table_vals[[1]]$C` (a community in `r community_table_vals[[1]]$P`
 with `r community_table_vals[[1]]$NFEM` FEM and `r community_table_vals[[1]]$NPA` PA monitors
 within at least `r community_table_vals[[1]]$D` km) had the highest observed hourly PM<sub>2.5</sub> concentration
-in Canada in the past 24 hours (`r community_table_vals[[1]]$PM2` &mu;g m<sup>-3</sup>). 
+in Canada in the past 24 hours (`r community_table_vals[[1]]$PM2` {{< pm_units >}}). 
 During this period, `r community_table_vals[[2]]$C` (a community in `r community_table_vals[[2]]$P` 
 with `r community_table_vals[[2]]$NFEM` FEM and `r community_table_vals[[2]]$NPA` PA monitors
 within at least `r community_table_vals[[2]]$D` km) had the highest 24-hour mean in Canada
-(`r round(community_table_vals[[2]]$PM1,1)` &mu;g m<sup>-3</sup>).
+(`r round(community_table_vals[[2]]$PM1,1)` {{< pm_units >}}).
 
 `r community_table_vals[[3]]$C` (a community in `r community_table_vals[[3]]$P`
 with `r community_table_vals[[3]]$NFEM` FEM and `r community_table_vals[[3]]$NPA` PA monitors
 within at least `r community_table_vals[[3]]$D` km)  had `r community_table_vals[[3]]$H1` hours
-where at least one monitor exceeded 100 &mu;g m<sup>-3</sup> and `r community_table_vals[[3]]$H2` hours
-where at least one monitor exceeded 60 &mu;g m<sup>-3</sup>.
+where at least one monitor exceeded 100 {{< pm_units >}} and `r community_table_vals[[3]]$H2` hours
+where at least one monitor exceeded 60 {{< pm_units >}}.
   
 </details>
 
