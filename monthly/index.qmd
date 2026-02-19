@@ -282,7 +282,7 @@ old_report_dropdown <- report_dir |>
 
 ::: card-body
 
-This report is a summary of the **fine particulate matter (PM<sub>2.5</sub>)** observation data in Canada for the **past 1 month** from the regulatory **Federal Equivalent Method (FEM)** monitors and the network of low-cost monitors from **PurpleAir (PA)**. It is in beta stage and being actively developed. Significant changes may occur without warning. This report is automatically updated at the end of every month. 
+This report is a summary of the **fine particulate matter (PM<sub>2.5</sub>)** observation data in Canada for the **past 1 month** from the regulatory **Federal Equivalent Method (FEM)** monitors and the network of low-cost monitors from **PurpleAir (PA)**. This report is automatically updated at the end of every month. 
 
 `r old_report_dropdown`
 
