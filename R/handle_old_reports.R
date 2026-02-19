@@ -93,17 +93,24 @@ parse_report_name <- function(report_name, type) {
     drpdwn_date_fmt <- type |>
       dplyr::recode_values(
         from = c("daily", "monthly"),
-        to = c("%Y %b %d (%p)", "%B %Y")
+        to = c("%Y %b %d (%H)", "%B %Y")
       )
 
+    past_day <- type == "daily" & stringr::str_detect(report_name, "-night$")
     reports_parsed <- report_name |>
       stringr::str_remove("\\.html") |>
-      stringr::str_replace("-a$", " 00") |>
-      stringr::str_replace("-b$", " 12") |>
+      stringr::str_replace("-day$", " 23") |>
+      stringr::str_replace("-night$", " 11") |>
       lubridate::parse_date_time(date_fmt) -
-      lubridate::hours(ifelse(type == "daily", 1, 0))
+      lubridate::days(ifelse(past_day, 1, 0))
     reports_parsed <- reports_parsed |>
       format(drpdwn_date_fmt)
+
+    if (type == "daily") {
+      reports_parsed <- reports_parsed |>
+        stringr::str_replace("\\(11\\)$", "(night)") |>
+        stringr::str_replace("\\(23\\)$", "(day)")
+    }
   } else {
     reports_parsed <- report_name |>
       stringr::str_replace("-", " ") |>

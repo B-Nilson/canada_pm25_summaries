@@ -269,8 +269,7 @@ old_report_dropdown <- report_dir |>
 
 ```
 
-<center><h1>Canadian PM<sub>2.5</sub> Observations Monthly Summary</h1></center>
-<center><h3>Non-validated Data - <mark class="bg-info">`r max(obs$date) |> format("%B %Y")`</mark> Report</h3></center>
+`r build_header(type = "monthly", date_range = date_range)`
 
 `r if(run_future_month) paste0("<center><h4>**WARNING - This report is incomplete. It only contains data up to ",max(obs$date) |> format("%B %d"),"**</h4></center>") |> HTML()`
 

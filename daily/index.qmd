@@ -60,16 +60,6 @@ summaries <- obs |>
   )
 
 max_date <- obs$date |> base::max()
-subtitle_date <- list(
-  utc = max_date |>
-    format("%Y-%m-%d %H UTC"),
-  vancouver = max_date |>
-    lubridate::with_tz("America/Vancouver") |>
-    format("%Y-%m-%d %I %p"),
-  halifax = max_date |>
-    lubridate::with_tz("America/Halifax") |>
-    format("%Y-%m-%d %I %p")
-)
 
 ```
 
@@ -368,11 +358,7 @@ old_report_dropdown <- report_dir |>
 
 <!-- Report Start -->
 
-<center><h1>Canadian PM<sub>2.5</sub> Observations 24-hour Summary</h1></center>
-<center><h3>Non-validated Data - <mark class="bg-info">`r subtitle_date$utc`</mark></center>
-<center><h4>`r subtitle_date$vancouver` in Vancouver --- `r subtitle_date$halifax` in Halifax</h4></center>
-
-|  
+`r build_header(type = "daily", date_range = date_range)`
 
 ## Overview {.unlisted .unnumbered}
 

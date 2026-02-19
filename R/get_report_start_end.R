@@ -79,7 +79,7 @@ get_last_report_date <- function(
   index_exists = FALSE
 ) {
   report_patterns <- list(
-    daily = "[a,b]\\.html$",
+    daily = "(day)|(night)\\.html$",
     monthly = "\\d\\.html$",
     seasonal = "Summer\\.html|Winter\\.html"
   )
@@ -111,8 +111,8 @@ get_last_report_date <- function(
 
   dplyr::case_when(
     type == "daily" ~ last_report_name |>
-      stringr::str_replace("-b$", " 23") |>
-      stringr::str_replace("-a$", " 11") |>
+      stringr::str_replace("-day$", " 23") |>
+      stringr::str_replace("-night$", " 11") |>
       lubridate::ymd_h(),
     type == "monthly" ~ last_report_name |>
       lubridate::ym() |>

@@ -8,6 +8,29 @@ source("R/site_boxplots.R")
 source("R/aqhi_grid_plots.R")
 source("R/build_report_text.R")
 
+# Convert strptime pattern to regex, escaping special (regex) characters as needed
+# i.e. "%Y%m%d%H%M%S" -> "\\d{4}\\d{2}\\d{2}\\d{2}\\d{2}\\d{2}"
+strptime_to_regex <- function(strptime_pattern) {
+  handled <- c("%Y", "%m", "%d", "%H", "%M", "%S", "%F", "%T")
+  components <- strptime_pattern |>
+    stringr::str_extract_all("%\\w") |>
+    unlist()
+  is_handled <- components %in% handled
+  if (!all(is_handled)) {
+    stop(
+      "pattern contains unhandled components:",
+      paste(components[!is_handled], collapse = ", ")
+    )
+  }
+
+  strptime_pattern |>
+    stringr::str_escape() |>
+    stringr::str_replace_all("%F", "%Y-%m-%d") |>
+    stringr::str_replace_all("%T", "%H:%M:%S") |>
+    stringr::str_replace_all("%Y", "\\\\d{4}") |>
+    stringr::str_replace_all("%m|%d|%H|%M|%S", "\\\\d{2}")
+}
+
 make_aqmap_link <- function(lat, lng, zoom = 12, lang = "EN") {
   paste0(
     "https://aqmap.ca/aqmap/",
@@ -238,12 +261,15 @@ get_report_name <- function(
     type == "daily" ~ "%Y-%m-%d %H",
     type %in% c("monthly", "seasonal") ~ "%Y-%m"
   )
-  report_name <- max_date |> format(date_fmt)
 
   if (type == "daily") {
-    report_name <- report_name |>
-      stringr::str_replace(" 11$", "-a") |>
-      stringr::str_replace(" 23$", "-b")
+    report_name <- (max_date - lubridate::days(1))  |> 
+      lubridate::ceiling_date("12 hours")|>
+      format(date_fmt) |>
+      stringr::str_replace(" 00$", "-day") |>
+      stringr::str_replace(" 12$", "-night")
+  } else if (type == "monthly") {
+    report_name <- max_date |> format(date_fmt)
   } else if (type == "seasonal") {
     report_name <- max_date |>
       get_season(months_in_seasons = months_in_seasons)
@@ -262,10 +288,8 @@ get_previous_report_name <- function(
 ) {
   if (type == "daily") {
     period <- lubridate::hours(12)
-    drpdwn_date_fmt <- "%Y %b %d (%p)"
   } else if (type == "monthly") {
     period <- lubridate::days(32)
-    drpdwn_date_fmt <- "%B %Y"
   } else if (type == "seasonal") {
     period <- lubridate::days(183)
   } else {

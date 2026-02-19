@@ -65,9 +65,7 @@ old_report_dropdown <- report_dir |>
 
 ```
 
-<center><h1>Canadian PM<sub>2.5</sub> Observations Seasonal Summary</h1></center>
-<center><h3>Non-validated Data - <mark class="bg-info">`r report_season`</mark></h3></center>
-<center><h3>`r format(date_range[1],"%B %Y")` to `r format(date_range[2],"%B %Y")`</h3></center>
+`r build_header(type = "seasonal", date_range = date_range, months_in_seasons = months_in_seasons)`
 
 |  
 
