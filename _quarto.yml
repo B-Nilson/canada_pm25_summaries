@@ -22,6 +22,7 @@ format:
     output-file: index.html
     lib-dir: libs
     post-render: R/post_render.R
+    mainfont: Inter, sans-serif
     include-in-header:
       - text: |
           <link rel="preconnect" href="https://rsms.me/">
