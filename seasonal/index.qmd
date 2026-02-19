@@ -76,7 +76,7 @@ old_report_dropdown <- report_dir |>
 <div class="card">
 <div class="card-body">
 
-This report is a summary of the **fine particulate matter (PM<sub>2.5</sub>)** observation data in Canada for the **past 6 months** from the regulatory **Federal Equivalent Method (FEM)** monitors and the network of low-cost monitors from **PurpleAir (PA)**.
+`r report_overview |> sprintf("6 months", "May and November at 00:00 UTC")`
 
 `r old_report_dropdown`
 

@@ -380,7 +380,7 @@ old_report_dropdown <- report_dir |>
 
 ::: card-body
 
-This report is a summary of the **fine particulate matter (PM<sub>2.5</sub>)** observation data in Canada for the **past 24 hours** from the regulatory **Federal Equivalent Method (FEM)** monitors and the network of low-cost monitors from **PurpleAir (PA)**. This report is automatically updated at 00 UTC and 12 UTC every day.
+`r report_overview |> sprintf("24 hours", "day at 00:00 UTC and 12:00 UTC")`
 
 `r knitr::asis_output(old_report_dropdown)`
 

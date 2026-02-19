@@ -149,6 +149,11 @@ loading_div <- '
 ' |>
   htmltools::HTML()
 
+report_overview <- 'This automated report is a summary of the **fine particulate matter (PM<sub>2.5</sub>)** observation data in Canada
+for the **past %s** from the regulatory **Federal Equivalent Method (FEM)** monitors
+and the network of low-cost monitors from **PurpleAir (PA)**.
+This report is automatically updated every %s.'
+
 report_details <- '
 <details>
 <summary>Click here for more details.</summary>
