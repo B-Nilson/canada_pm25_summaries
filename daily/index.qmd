@@ -368,7 +368,6 @@ old_report_dropdown <- report_dir |>
 
 <!-- Report Start -->
 
-<center><h4>----- \*BETA PRODUCT\* -----</h4></center>
 <center><h1>Canadian PM<sub>2.5</sub> Observations 24-hour Summary</h1></center>
 <center><h3>Non-validated Data - <mark class="bg-info">`r subtitle_date$utc`</mark></center>
 <center><h4>`r subtitle_date$vancouver` in Vancouver --- `r subtitle_date$halifax` in Halifax</h4></center>

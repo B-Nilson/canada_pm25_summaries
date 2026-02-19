@@ -270,7 +270,6 @@ old_report_dropdown <- report_dir |>
 
 ```
 
-<center><h4>----- \*BETA PRODUCT\* -----</h4></center>
 <center><h1>Canadian PM<sub>2.5</sub> Observations Monthly Summary</h1></center>
 <center><h3>Non-validated Data - <mark class="bg-info">`r max(obs$date) |> format("%B %Y")`</mark> Report</h3></center>
 
