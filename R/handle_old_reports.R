@@ -68,8 +68,6 @@ make_old_reports_dropdown <- function(
     sprintf(report_paths, report_names) |>
     paste(collapse = "\n    ")
 
-  menu_style <- "max-height:210px; overflow-y:auto;"
-
   '
 <div class="dropdown">
   <button class="btn dropdown-toggle" type="button" \
@@ -77,7 +75,7 @@ make_old_reports_dropdown <- function(
     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
       %s
   </button>
-  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="%s">
+  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
     <li><h6 class="dropdown-header">%s</h6></li>
     %s
   </div>
@@ -85,7 +83,6 @@ make_old_reports_dropdown <- function(
     sprintf(
       button_label,
       dropdown_label,
-      menu_style,
       dropdown_entries
     ) |>
     htmltools::HTML()
