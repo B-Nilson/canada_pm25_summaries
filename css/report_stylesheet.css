@@ -103,3 +103,7 @@ p, summary, details {
   max-height: 210px; 
   overflow-y: auto;
 }
+
+#dropdownMenuButton{
+  font-weight: bold;
+}
