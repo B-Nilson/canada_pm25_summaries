@@ -177,6 +177,10 @@ report_details <- '
 ' |>
   htmltools::HTML()
 
+contact_email <- "brayden.nilson@ec.gc.ca"
+contact_details <- "For any concerns, questions, or feedback regarding this report or the data within it, please contact %s" |> 
+  sprintf(contact_email)
+
 # Define legend breaks and colours from AQHI+ scale
 leg_ugm3 <- data.frame(
   breaks = 0:10 * 10,

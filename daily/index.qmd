@@ -384,7 +384,7 @@ This report is a summary of the **fine particulate matter (PM<sub>2.5</sub>)** o
 
 `r knitr::asis_output(old_report_dropdown)`
 
-For any concerns, questions, or feedback regarding this report or the data within it, please contact brayden.nilson@ec.gc.ca
+`r contact_details`
 
 `r knitr::asis_output(report_details)`
 
