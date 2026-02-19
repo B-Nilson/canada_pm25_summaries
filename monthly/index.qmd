@@ -8,7 +8,6 @@ format:
           <script>
             var main_header = "#analysis-of-past-month-of-pm2\\.5-observations";
             $(main_header).hide();
-            $("#footer").hide();
             $(main_header + " > .panel-tabset .primary-tabset").hide();
             var icons = [
               'icons8-doughnut-chart-64.png',
@@ -270,7 +269,6 @@ old_report_dropdown <- report_dir |>
 
 ```
 
-<center><h4>----- \*BETA PRODUCT\* -----</h4></center>
 <center><h1>Canadian PM<sub>2.5</sub> Observations Monthly Summary</h1></center>
 <center><h3>Non-validated Data - <mark class="bg-info">`r max(obs$date) |> format("%B %Y")`</mark> Report</h3></center>
 
@@ -284,7 +282,7 @@ old_report_dropdown <- report_dir |>
 
 ::: card-body
 
-This report is a summary of the **fine particulate matter (PM<sub>2.5</sub>)** observation data in Canada for the **past 1 month** from the regulatory **Federal Equivalent Method (FEM)** monitors and the network of low-cost monitors from **PurpleAir (PA)**. It is in beta stage and being actively developed. Significant changes may occur without warning. This report is automatically updated at the end of every month. 
+This report is a summary of the **fine particulate matter (PM<sub>2.5</sub>)** observation data in Canada for the **past 1 month** from the regulatory **Federal Equivalent Method (FEM)** monitors and the network of low-cost monitors from **PurpleAir (PA)**. This report is automatically updated at the end of every month. 
 
 `r old_report_dropdown`
 
@@ -1425,4 +1423,3 @@ Summary of the PM<sub>2.5</sub> concentration data within each Canadian forecast
 :::
 
 ##
-<center><h4 id="footer" style="display:none">----- \*BETA PRODUCT\* -----</h4></center>

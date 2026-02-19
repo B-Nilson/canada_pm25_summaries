@@ -368,7 +368,6 @@ old_report_dropdown <- report_dir |>
 
 <!-- Report Start -->
 
-<center><h4>----- \*BETA PRODUCT\* -----</h4></center>
 <center><h1>Canadian PM<sub>2.5</sub> Observations 24-hour Summary</h1></center>
 <center><h3>Non-validated Data - <mark class="bg-info">`r subtitle_date$utc`</mark></center>
 <center><h4>`r subtitle_date$vancouver` in Vancouver --- `r subtitle_date$halifax` in Halifax</h4></center>
@@ -381,7 +380,7 @@ old_report_dropdown <- report_dir |>
 
 ::: card-body
 
-This report is a summary of the **fine particulate matter (PM<sub>2.5</sub>)** observation data in Canada for the **past 24 hours** from the regulatory **Federal Equivalent Method (FEM)** monitors and the network of low-cost monitors from **PurpleAir (PA)**. It is in beta stage and being actively developed. Significant changes may occur without warning. This report is automatically updated at 00 UTC and 12 UTC every day.
+This report is a summary of the **fine particulate matter (PM<sub>2.5</sub>)** observation data in Canada for the **past 24 hours** from the regulatory **Federal Equivalent Method (FEM)** monitors and the network of low-cost monitors from **PurpleAir (PA)**. This report is automatically updated at 00 UTC and 12 UTC every day.
 
 `r knitr::asis_output(old_report_dropdown)`
 
@@ -779,4 +778,3 @@ Canadian communities with at least 1 nearby PM<sub>2.5</sub> monitor reporting P
 :::
 
 ##
-<center><h4 id="footer">----- \*BETA PRODUCT\* -----</h4></center>
