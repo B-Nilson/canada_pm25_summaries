@@ -380,7 +380,7 @@ old_report_dropdown <- report_dir |>
 
 ## Analysis of Past 24-Hours of PM<sub>2.5</sub> Observations
 
-*Select your question from the following tabs*
+`r tab_explainers$primary_tabs`
 
 ::: {.panel-tabset .primary-tabset}
 
@@ -405,7 +405,7 @@ There are <strong>`r sum(prov_donuts_text$p$fem$n)` FEM sites</strong> and <stro
 
 ::::
 
-*Select which observation monitors to view using the following tabs*
+`r tab_explainers$network_tabs`
 
 :::: panel-tabset
 
@@ -486,7 +486,7 @@ There was <strong>`r summaries$aqhi_p_counts$overall$FEM[3]` FEM monitors</stron
 
 ::::
 
-*Select which observation monitors to view using the following tabs*
+`r tab_explainers$network_tabs`
 
 :::: panel-tabset
 
@@ -573,7 +573,7 @@ had the highest 24-hour mean in Canada from the PA network (`r round(boxplot_val
 
 ::::
 
-*Select which observation monitors to view using the following tabs*
+`r tab_explainers$network_tabs`
 
 :::: panel-tabset
 
@@ -608,7 +608,7 @@ boxplot_paths[["PA"]] |>
 
 ## <big><strong>Where and when did PM<sub>2.5</sub> events occur?</strong></big>
 
-*Select which what scale to view using the following tabs*
+`r tab_explainers$scale_tabs`
 
 :::: panel-tabset
 
@@ -635,7 +635,7 @@ for at least 3 of the past 24 hours [see maximum plot].
 
 :::::
 
-*Select which observation monitors to view using the following tabs*
+`r tab_explainers$network_tabs`
 
 ::::: panel-tabset
 
@@ -687,7 +687,7 @@ The following forecast regions experienced elevated PM<sub>2.5</sub> concentrati
 
 :::::
 
-*Select which province/territory to view using the following tabs*
+`r tab_explainers$prov_terr_tabs`
 
 ```{r, include = TRUE, results="asis"}
 

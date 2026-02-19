@@ -79,7 +79,7 @@ old_report_dropdown <- report_dir |>
 
 ## Analysis of Past 6-months of PM<sub>2.5</sub> Observations {.panel-tabset .tabset-dropdown style="display:none;"}
 
-*Select your question from the following dropdown menu*
+`r tab_explainers$primary_tabs`
 
 ### <big><strong>Where/when did we have observations?</strong></big> {.panel-tabset}
 
@@ -336,7 +336,7 @@ The network of FEM monitors in Canada changed by `r text$tot$change[3]` this sea
 :::
 :::
 
-*Select which summary to view using the following tabs*
+`r tab_explainers$summary_tabs`
 
 #### Daily Monitor Counts
 
@@ -680,7 +680,7 @@ The worst impacts this season occurred in `r text$daily2$prov_terr[1]`, `r text$
 :::
 :::
 
-*Select which summary to view using the following tabs*
+`r tab_explainers$summary_tabs`
 
 #### Seasonal Zone Mean
 
@@ -1055,7 +1055,7 @@ for(t in texts){
 :::
 :::
 
-*Select which summary to view using the following tabs*
+`r tab_explainers$summary_tabs`
 
 #### Peak Events (Zone Maximum)
 
@@ -1516,7 +1516,7 @@ for(t in texts){
 :::
 :::
 
-*Select which province/territory to view using the following tabs*
+`r tab_explainers$prov_terr_tabs`
 
 ```{r include = TRUE, results="asis"}
 
@@ -1843,7 +1843,7 @@ text$provs_over_60 = paste0(
 :::
 :::
 
-*Select which summary to view using the following tabs*
+`r tab_explainers$summary_tabs`
 
 #### Hours > 100 (V. High)
 

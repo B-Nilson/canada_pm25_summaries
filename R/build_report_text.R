@@ -73,3 +73,12 @@ This report is automatically updated every %s.'
 
   template |> sprintf(overview_content) |> knitr::asis_output()
 }
+
+tab_explainers <- list(
+  primary_tabs = "*Select your question from the following tabs*",
+  network_tabs = "*Select which observation monitors to view using the following tabs*",
+  scale_tabs = "*Select what scale/resolution to view using the following tabs*",
+  prov_terr_tabs = "*Select which province/territory to view using the following tabs*",
+  summary_tabs = "*Select which summary to view using the following tabs*"
+) |>
+  lapply(knitr::asis_output)
