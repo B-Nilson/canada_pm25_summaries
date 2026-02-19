@@ -72,7 +72,7 @@ make_old_reports_dropdown <- function(
 <div class="dropdown">
   <button class="btn dropdown-toggle" type="button" \
     style="font-weight:bold;" id="dropdownMenuButton" \
-    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
       %s
   </button>
   <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
