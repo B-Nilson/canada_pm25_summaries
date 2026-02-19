@@ -372,24 +372,7 @@ old_report_dropdown <- report_dir |>
 
 ## <big><strong>How many observation sites at each risk level?</strong></big>
 
-:::: card
-
-::::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-There are <strong>`r sum(prov_donuts_text$p$fem$n)` FEM sites</strong> and <strong>`r sum(prov_donuts_text$p$pa$n)` PA sites</strong> currently reporting PM<sub>2.5</sub> in Canada. <strong>
-
-- `r prov_donuts_text$p$fem$p[4]`%</strong> of the FEM sites in Canada have a 24-hour mean exceeding 100 &mu;g m<sup>-3</sup>, <strong> `r prov_donuts_text$p$fem$p[3]`%</strong> are between 60 and 100 &mu;g m<sup>-3</sup>, and <strong> `r prov_donuts_text$p$fem$p[2]`%</strong> are between 30 and 60 &mu;g m<sup>-3</sup>.<strong> 
-
-- `r prov_donuts_text$p$pa$p[4]`%</strong> of the PA sites in Canada have a 24-hour mean exceeding 100 &mu;g m<sup>-3</sup>, <strong> `r prov_donuts_text$p$pa$p[3]`%</strong> are between 60 and 100 &mu;g m<sup>-3</sup>, and <strong> `r prov_donuts_text$p$pa$p[2]`%</strong> are between 30 and 60 &mu;g m<sup>-3</sup>.
-  
-</details>
-
-:::::
-
-::::
+`r build_prov_donut_summary(prov_donuts_text, type = "daily")`
 
 `r tab_explainers$network_tabs`
 

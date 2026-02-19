@@ -292,14 +292,14 @@ old_report_dropdown <- report_dir |>
 # Define plot summary text (figure titles essentially)
 plot_text_template <- "Distribution of monthly mean concentrations at %s PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a monthly mean within that concentration range." |>
   sprintf(monitor_groups)
-plot_text <- list(
+prov_donuts_text <- list(
   mean = plot_text_template,
   max = plot_text_template |> stringr::str_replace_all(" mean ", " max ")
 ) |>
   lapply(\(x) as.list(x) |> setNames(monitor_groups))
 
 # Make summary data for autmated text for this section
-p <- c(pa = "PA", fem = "FEM") |>
+prov_donuts_text$p <- c(pa = "PA", fem = "FEM") |>
   lapply(\(network) {
     summaries$donuts$data$mean |>
       dplyr::filter(monitor == network) |>
@@ -310,22 +310,7 @@ p <- c(pa = "PA", fem = "FEM") |>
 
 ```
 
-::: card
-::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-There was <strong>`r sum(p$fem$n)` FEM sites</strong> and <strong>`r sum(p$pa$n)` PA sites</strong> reporting PM<sub>2.5</sub> in Canada in `r format(date_range[2], "%B %Y")`. <strong>
-
-- `r  p$fem$p[4]`%</strong> of the FEM sites had a 1-month mean exceeding 100 &mu;g m<sup>-3</sup>, <strong> `r p$fem$p[3]`%</strong> were between 60 and 100 &mu;g m<sup>-3</sup>, and <strong> `r p$fem$p[2]`%</strong> were between 30 and 60 &mu;g m<sup>-3</sup>.<strong> 
-
-- `r p$pa$p[4]`%</strong> of the PA sites in Canada had a 1-month mean exceeding 100 &mu;g m<sup>-3</sup>, <strong> `r p$pa$p[3]`%</strong> were between 60 and 100 &mu;g m<sup>-3</sup>, and <strong> `r p$pa$p[2]`%</strong> were between 30 and 60 &mu;g m<sup>-3</sup>.
-  
-</details>
-
-:::
-:::
+`r build_prov_donut_summary(prov_donuts_text, type = "monthly")`
 
 `r tab_explainers$network_tabs`
 
@@ -334,13 +319,13 @@ There was <strong>`r sum(p$fem$n)` FEM sites</strong> and <strong>`r sum(p$pa$n)
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$mean_fem_and_pa |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_text$mean$`FEM and PA`)
+  plot_card(prov_donuts_text$mean$`FEM and PA`)
 ```
 
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$max_fem_and_pa |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_text$max$`FEM and PA`)
+  plot_card(prov_donuts_text$max$`FEM and PA`)
 ```
 
 #### FEM Only
@@ -348,13 +333,13 @@ summaries$donuts$paths$max_fem_and_pa |>
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$mean_fem_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_text$mean$`FEM Only`)
+  plot_card(prov_donuts_text$mean$`FEM Only`)
 ```
 
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$max_fem_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_text$max$`FEM Only`)
+  plot_card(prov_donuts_text$max$`FEM Only`)
 ```
 
 #### PA Only
@@ -362,13 +347,13 @@ summaries$donuts$paths$max_fem_only |>
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$mean_pa_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_text$mean$`PA Only`)
+  plot_card(prov_donuts_text$mean$`PA Only`)
 ```
 
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$max_pa_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_text$max$`PA Only`)
+  plot_card(prov_donuts_text$max$`PA Only`)
 ```
 
 ### <big><strong>Who had access to nearby observations?</strong></big> {.panel-tabset}

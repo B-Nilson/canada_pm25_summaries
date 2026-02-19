@@ -142,3 +142,48 @@ tab_explainers <- list(
   summary_tabs = "*Select which summary to view using the following tabs*"
 ) |>
   lapply(knitr::asis_output)
+
+build_prov_donut_summary <- function(
+  prov_donuts_text,
+  type = c("daily", "monthly")[1]
+) {
+  average_text <- list(daily = "24-hour", monthly = "1-month")[[type]]
+
+  template <- ':::: card
+
+::::: card-body
+
+<details>
+<summary>Click for an automated text summary.</summary>
+
+There was <strong>%s FEM sites</strong> and <strong>%s PA sites</strong> reporting PM<sub>2.5</sub> in Canada for this report. 
+
+- <strong>%s</strong> of the FEM sites in Canada have a %s mean exceeding 100 {{< pm_units >}},
+<strong>%s</strong> are between 60 and 100 {{< pm_units >}},
+and <strong>%s</strong> are between 30 and 60 {{< pm_units >}}. 
+
+- <strong>%s</strong> of the PA sites in Canada have a %s mean exceeding 100 {{< pm_units >}},
+<strong>%s</strong> are between 60 and 100 {{< pm_units >}},
+and <strong>%s</strong> are between 30 and 60 {{< pm_units >}}.
+  
+</details>
+
+:::::
+
+::::'
+
+  template |>
+    sprintf(
+      sum(prov_donuts_text$p$fem$n),
+      sum(prov_donuts_text$p$pa$n),
+      prov_donuts_text$p$fem$p[4] |> paste0("%"),
+      average_text,
+      prov_donuts_text$p$fem$p[3] |> paste0("%"),
+      prov_donuts_text$p$fem$p[2] |> paste0("%"),
+      prov_donuts_text$p$pa$p[4] |> paste0("%"),
+      average_text,
+      prov_donuts_text$p$pa$p[3] |> paste0("%"),
+      prov_donuts_text$p$pa$p[2] |> paste0("%")
+    ) |>
+    knitr::asis_output()
+}
