@@ -24,4 +24,6 @@ format:
     post-render: R/post_render.R
     include-in-header:
       - text: |
+          <link rel="preconnect" href="https://rsms.me/">
+          <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
           <script src="index_files/js/page_load.js"></script>
