@@ -1884,4 +1884,3 @@ table
 ```
 
 ##
-<center><h4 id="footer" style="display:none">----- \*BETA PRODUCT\* -----</h4></center>

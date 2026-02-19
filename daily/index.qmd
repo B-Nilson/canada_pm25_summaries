@@ -778,4 +778,3 @@ Canadian communities with at least 1 nearby PM<sub>2.5</sub> monitor reporting P
 :::
 
 ##
-<center><h4 id="footer">----- \*BETA PRODUCT\* -----</h4></center>

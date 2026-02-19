@@ -8,7 +8,6 @@ format:
           <script>
             var main_header = "#analysis-of-past-month-of-pm2\\.5-observations";
             $(main_header).hide();
-            $("#footer").hide();
             $(main_header + " > .panel-tabset .primary-tabset").hide();
             var icons = [
               'icons8-doughnut-chart-64.png',
@@ -1424,4 +1423,3 @@ Summary of the PM<sub>2.5</sub> concentration data within each Canadian forecast
 :::
 
 ##
-<center><h4 id="footer" style="display:none">----- \*BETA PRODUCT\* -----</h4></center>

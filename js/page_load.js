@@ -25,5 +25,4 @@ function hide_loading_screen(header_class) {
     $('#loading').hidden = true;
     $(header_class).hidden = false;
     $(dropdown_class).hidden = false;
-    $('#footer').hidden = false;
 }
