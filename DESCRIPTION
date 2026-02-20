@@ -16,6 +16,7 @@ Imports:
     ggplot2,
     ggpubr,
     ggtext,
+    gt,
     handyr,
     htmltools,
     htmlwidgets,
@@ -27,7 +28,7 @@ Imports:
     mapview,
     patchwork,
     plotly,
-    reactable,
+    prismatic,
     renv,
     rmarkdown,
     RPostgres,
@@ -36,7 +37,7 @@ Imports:
     stringr,
     tidyr
 Remotes:
-    github::B-Nilson/aqhi
-    github::B-Nilson/aqmapr
-    github::B-Nilson/canadata
+    github::B-Nilson/aqhi,
+    github::B-Nilson/aqmapr,
+    github::B-Nilson/canadata,
     github::B-Nilson/handyr

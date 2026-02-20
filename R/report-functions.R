@@ -7,6 +7,7 @@ source("R/aqhi_donut_plots.R")
 source("R/interactive_map.R")
 source("R/site_boxplots.R")
 source("R/aqhi_grid_plots.R")
+source("R/make_community_table.R")
 source("R/build_report_text.R")
 
 # Convert strptime pattern to regex, escaping special (regex) characters as needed
@@ -643,30 +644,6 @@ make_community_boxplots <- function(pd, m = "FEM and PA") {
 
 
 # Tables ------
-
-reactable <- function(pagination = TRUE, defaultPageSize = 10, ...) {
-  reactable::reactable(
-    ...,
-    filterable = TRUE,
-    resizable = TRUE,
-    bordered = TRUE,
-    striped = TRUE,
-    compact = TRUE,
-    pagination = pagination,
-    # showSortable = TRUE,
-    defaultPageSize = defaultPageSize,
-    highlight = TRUE,
-    defaultColDef = reactable::colDef(align = "center"),
-    theme = reactable::reactableTheme(
-      # Vertically center cells
-      cellStyle = list(
-        display = "flex",
-        flexDirection = "column",
-        justifyContent = "center"
-      )
-    )
-  )
-}
 
 dl_button_html <- function(outdir, file) {
   paste0(

@@ -25,7 +25,6 @@ format:
 source("R/report-functions.R")
 source("R/report-constants.R")
 report_dir <- report_dir |> file.path("daily")
-report_dir_esc <- report_dir_esc |> file.path("daily")
 
 date_range <- report_dir |>
   get_report_start_end(type = "daily", run_future = run_current_day)
@@ -107,33 +106,23 @@ Below the map is a table summarising the data from the monitoring sites displaye
   setNames(monitor_groups) |>
   as.list()
 
-# Make data for tables below maps
-table_data <- summaries$overall |>
-  make_map_table_data()
-
-# Make tables
-map_tables <- lapply(names(monitor_groups), \(monitor_group) {
-  map_table <- table_data |>
-    make_map_table(
-      monitor_group = monitor_group,
+# Make and save tables
+overall_summary_tables <- lapply(names(monitor_groups), \(monitor_group) {
+  summaries$overall |>
+    dplyr::filter(monitor == monitor_group | monitor_group == "FEM and PA") |>
+    make_overall_summary_table(
       report_dir = report_dir,
+      monitor_group = monitor_group,
       data_dir = data_dir,
+      figure_dir = figure_dir,
       plot_timestamp = plot_timestamp
     )
-  table_path <- "%s/%s_map_table_%s.html" |>
-    sprintf(
-      report_dir |> file.path(figure_dir),
-      monitor_groups_cleaned[[monitor_group]],
-      plot_timestamp
-    )
-  map_table$html |> htmlwidgets::saveWidget(table_path)
-  map_table$path <- table_path
-  return(map_table)
 }) |>
   setNames(monitor_groups)
 
-map_table_buttons <- map_tables |> lapply(\(x) x$dl_button)
-map_tables <- map_tables |> lapply(\(x) x$path)
+overall_summary_table_buttons <- overall_summary_tables |>
+  lapply(\(x) x$dl_button)
+overall_summary_tables <- overall_summary_tables |> lapply(\(x) x$path)
 
 ```
 
@@ -226,72 +215,26 @@ fcst_grid_texts <- paste(
 
 ```{r community_summary, include = TRUE}
 
-# Make data for table
-table_data <- summaries$community |>
-  dplyr::arrange(desc(pm25_mean_network_mean_comm_mean)) |>
-  dplyr::mutate(
-    aqmap_link = nc_lat |>
-      make_aqmap_link(lng = nc_lng, zoom = 12, lang = "EN")
+community_table <- summaries$community |>
+  make_community_table(
+    report_dir = report_dir,
+    data_dir = data_dir,
+    figure_dir = figure_dir,
+    plot_timestamp = plot_timestamp
+  )
+
+table_caption <- "Canadian communities with at least 1 nearby PM<sub>2.5</sub> monitor
+reporting PM<sub>2.5</sub> concentrations in the past 24 hours. 
+The table is interactive, filterable, and has multiple pages.
+If you click the link on a community name it will take you to that community on [AQmap](https://aqmap.ca/)."
+community_table$card <- community_table$path |>
+  stringr::str_replace(stringr::fixed(report_dir), "./") |>
+  plot_card(text = table_caption, iframe = TRUE) |>
+  stringr::str_replace(
+    "<iframe",
+    paste0(community_table$dl_button, "\n<iframe")
   ) |>
-  dplyr::select(
-    "Name" = nearest_community,
-    "Prov./Terr." = prov_terr,
-    "Forecast Zone" = fcst_zone,
-    "# of Monitors" = n_monitors,
-    "Max Distance (km)" = nc_dist_km_network_max_comm_max,
-    "24hr Mean (μg/m3)" = pm25_mean_network_mean_comm_mean,
-    "24hr Max (μg/m3)" = pm25_max_network_max_comm_max,
-    "Current (μg/m3)" = pm25_current_network_mean_comm_mean,
-    # "# Hours\nabove 30 μg/m3"= n_hours_above_30_max,
-    "# Hours\nabove 60 μg/m3" = n_hours_above_60_network_max_comm_max,
-    "# Hours\nabove 100 μg/m3" = n_hours_above_100_network_max_comm_max,
-    aqmap_link
-  )
-
-# Make table
-columns <- list(
-  'Name' = reactable::colDef(cell = \(com) {
-    url = table_data[table_data$Name == com, "aqmap_link"]
-    htmltools::tags$a(href = url, target = "_blank", com)
-  }),
-  aqmap_link = reactable::colDef(show = FALSE)
-)
-col_groups <- list(
-  reactable::colGroup(
-    name = "Community Details",
-    columns = c("Name", "Prov./Terr.", "Forecast Zone")
-  ),
-  reactable::colGroup(
-    name = "PM2.5 Monitors",
-    columns = c("# of Monitors", "Max Distance (km)")
-  ),
-  reactable::colGroup(
-    name = "PM2.5 Observations",
-    columns = c(
-      "24hr Mean (μg/m3)",
-      "24hr Max (μg/m3)",
-      "Current (μg/m3)", #"# Hours\nabove 30 μg/m3",
-      "# Hours\nabove 60 μg/m3",
-      "# Hours\nabove 100 μg/m3"
-    )
-  )
-)
-
-community_table <- table_data |>
-  dplyr::arrange(desc("24hr Mean (μg/m3)")) |>
-  reactable(
-    data = _,
-    defaultSorted = c("# Hours\nabove 100 μg/m3", "24hr Mean (μg/m3)"),
-    defaultSortOrder = "desc",
-    columns = columns,
-    columnGroups = col_groups
-  )
-
-# Write out data to CSV and make download button linked to it
-file_path <- "%s/%s/community_summary_%s.csv" |>
-  sprintf(report_dir, data_dir, plot_timestamp)
-community_table_dl <- table_data |>
-  make_download_button(data_dir = data_dir, file_path = file_path)
+  knitr::asis_output()
 
 ```
 
@@ -348,7 +291,7 @@ old_report_dropdown <- report_dir |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, map_paths, map_texts, report_dir, map_table_buttons, map_tables, iframe = TRUE)`
+`r build_tabs(monitor_groups, map_paths, map_texts, report_dir, overall_summary_table_buttons, overall_summary_tables, iframe = TRUE)`
 
 ## <big><strong>Which sites had the highest concentrations?</strong></big>
 
@@ -386,26 +329,7 @@ old_report_dropdown <- report_dir |>
 
 `r build_community_summary(summaries$community, type = "daily")`
 
-:::: card
-
-::::: {.card-img-top .p-2}
-
-```{r include=TRUE}
-
-community_table_dl
-community_table
-
-```
-
-:::::
-
-::::: card-body
-
-Canadian communities with at least 1 nearby PM<sub>2.5</sub> monitor reporting PM<sub>2.5</sub> concentrations in the past 24 hours. The table is interactive, filterable, and has multiple pages. If you click the link on a community name it will take you to that community on [AQmap](https://aqmap.ca/).
-
-:::::
-
-::::
+`r community_table$card`
 
 :::
 
