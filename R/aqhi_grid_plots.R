@@ -40,7 +40,7 @@ make_and_save_prov_terr_grids <- function(
       invisible()
     })
 
-  return(plot_paths)
+  plot_paths |> setNames(monitor_groups)
 }
 
 make_and_save_fcst_zone_grids <- function(

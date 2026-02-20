@@ -62,6 +62,22 @@ save_aqhi_donuts_plots <- function(
       })
       return(plot_data)
     })
+  
+  plot_paths <- stats |> 
+    setNames(stats) |>
+    lapply(\(stat) {
+      is_stat <- names(plot_paths) |> startsWith(stat)
+      stat_plot_names <- names(plot_paths)[is_stat]
+      new_names <- stat_plot_names |>
+        stringr::str_replace(stat |> paste0("_"), "") |> 
+        stringr::str_replace("_", " ") |> 
+        stringr::str_replace("only", "Only") |> 
+        stringr::str_replace("pa", "PA") |> 
+        stringr::str_replace("fem", "FEM")
+      plot_paths[is_stat] |>
+        setNames(new_names)
+    })
+  
   return(
     list(
       data = plot_data,

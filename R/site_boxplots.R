@@ -69,7 +69,10 @@ make_and_save_site_boxplots <- function(
     )
   }) |>
     setNames(names(monitor_groups))
-  list(paths = plot_paths, summary_values = summary_values)
+  list(
+    paths = plot_paths |> setNames(monitor_groups),
+    summary_values = summary_values
+  )
 }
 
 make_site_boxplots <- function(
