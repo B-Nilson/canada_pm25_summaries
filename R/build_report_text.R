@@ -328,3 +328,33 @@ concentration in Canada from the PA network (%s {{< pm_units >}}).'
     make_summary_chunk() |>
     knitr::asis_output()
 }
+
+build_prov_grid_summary <- function(
+  grid_data,
+  type = c("daily", "monthly")[1]
+) {
+  average_text <- list(daily = "hours", monthly = "days")[[type]]
+  p <- grid_data |>
+    lapply(\(stat_data) {
+      stat_data |>
+        dplyr::group_by(y) |>
+        dplyr::summarise(n = sum(as.numeric(fill) > 3, na.rm = TRUE)) |>
+        dplyr::filter(n >= 3) |>
+        dplyr::arrange(dplyr::desc(n)) |>
+        dplyr::summarise(text = join_list_sentence(y)) |>
+        dplyr::pull(text)
+    })
+
+  template <- "%s had a significant amount of locations with elevated
+PM<sub>2.5</sub> concentrations  (> 30 {{< pm_units >}})
+for at least 3 %s [see median plot]. 
+
+%s had at least one location with elevated 
+PM<sub>2.5</sub> concentrations (> 30 {{< pm_units >}})
+for at least 3 %s [see maximum plot]."
+
+  template |>
+    sprintf(p$median, average_text, p$maximum, average_text) |>
+    make_summary_chunk() |>
+    knitr::asis_output()
+}

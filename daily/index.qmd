@@ -180,16 +180,6 @@ prov_grid_texts <- paste(
   setNames(monitor_groups) |>
   as.list()
 
-# Make summary data for autmated text for this section
-prov_grid_texts$p <- grid_data |>
-  lapply(\(dat) {
-    dat |>
-      dplyr::group_by(y) |>
-      dplyr::summarise(n = sum(as.numeric(fill) > 3, na.rm = TRUE)) |>
-      subset(n >= 3) |>
-      dplyr::arrange(desc(n))
-  })
-
 ```
 
 ```{r grids_fcst, include= FALSE}
@@ -516,26 +506,7 @@ boxplot_paths[["PA"]] |>
 
 ## Province Level
 
-::::: card
-
-:::::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-`r join_list_sentence(prov_grid_texts$p$median$y)` had a significant amount of locations
-which experienced elevated PM<sub>2.5</sub> concentrations  (> 30 {{< pm_units >}})
-for at least 3 of the past 24 hours [see median plot]. 
-
-`r join_list_sentence(prov_grid_texts$p$maximum$y)` had at least one location
-which experienced elevated PM<sub>2.5</sub> concentrations (> 30 {{< pm_units >}})
-for at least 3 of the past 24 hours [see maximum plot]. 
-
-</details>
-
-::::::
-
-:::::
+`r build_prov_grid_summary(grid_data, type = "daily")`
 
 `r tab_explainers$network_tabs`
 
