@@ -23,6 +23,7 @@ build_tabs <- function(
   report_dir = "./",
   table_buttons = NULL,
   tables = NULL,
+  table_captions = NULL,
   iframe = FALSE
 ) {
   chunks <- tab_names |>
@@ -41,7 +42,12 @@ build_tabs <- function(
             chunks[[names(tab_names[tab_names == tab_name])]],
             tables[[tab_name]] |>
               stringr::str_replace(stringr::fixed(report_dir), "./") |>
-              plot_card("", iframe = TRUE, is_table = TRUE, iframe_height = 526) |>
+              plot_card(
+                table_captions[[tab_name]],
+                iframe = TRUE,
+                is_table = TRUE,
+                iframe_height = 526
+              ) |>
               stringr::str_replace(
                 "</iframe>",
                 paste0("</iframe>\n", table_buttons[[tab_name]])
