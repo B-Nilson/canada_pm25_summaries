@@ -419,7 +419,8 @@ plot_card <- function(
   text,
   iframe = FALSE,
   title = NA,
-  iframe_height = 615
+  iframe_height = 615,
+  is_table = FALSE
 ) {
   img <- ifelse(
     iframe,
@@ -440,7 +441,7 @@ plot_card <- function(
     )
   }
   "
-::::: {.card #fig-$ID}
+::::: {.card #$TYPE-$ID}
   
 $IMG
   
@@ -448,6 +449,7 @@ $text
 
 :::::
 " |>
+    stringr::str_replace("\\$TYPE", ifelse(is_table, "tbl", "fig")) |>
     stringr::str_replace("\\$IMG", img) |>
     stringr::str_replace("\\$text", text |> stringr::str_replace("'", "\\'")) |>
     stringr::str_replace(

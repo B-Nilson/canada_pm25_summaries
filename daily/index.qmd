@@ -229,7 +229,12 @@ The table is interactive, filterable, and has multiple pages.
 If you click the link on a community name it will take you to that community on [AQmap](https://aqmap.ca/)."
 community_table$card <- community_table$path |>
   stringr::str_replace(stringr::fixed(report_dir), "./") |>
-  plot_card(text = table_caption, iframe = TRUE) |>
+  plot_card(
+    text = table_caption,
+    iframe = TRUE,
+    is_table = TRUE,
+    iframe_height = 526
+  ) |>
   stringr::str_replace(
     "<iframe",
     paste0(community_table$dl_button, "\n<iframe")
