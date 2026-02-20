@@ -358,3 +358,40 @@ for at least 3 %s [see maximum plot]."
     make_summary_chunk() |>
     knitr::asis_output()
 }
+
+build_fcst_grid_summary <- function(
+  grid_data,
+  type = c("daily", "monthly")[1]
+) {
+  text <- grid_data |>
+    dplyr::filter(y != "Not inside a zone") |>
+    dplyr::summarise(n = sum(as.numeric(fill) > 3), .by = c(z, y)) |>
+    dplyr::filter(n >= 3) |>
+    dplyr::arrange(z, desc(n))
+
+  if (nrow(text) == 0) {
+    text <- ""
+  } else {
+    text <- "- %s: %s" |>
+      sprintf(
+        unique(text$z),
+        unique(text$z) |>
+          sapply(\(p) {
+            text$y[text$z == p] |>
+              join_list_sentence(oxford = TRUE)
+          })
+      ) |>
+      paste(collapse = "\n\n")
+  }
+
+  average_text <- list(daily = "hours", monthly = "days")[[type]]
+  template <- "The following forecast regions experienced elevated PM<sub>2.5</sub> concentrations 
+(> 30 {{< pm_units >}}) for at least 3 %s:
+
+%s"
+
+  template |>
+    sprintf(average_text, text) |>
+    make_summary_chunk() |>
+    knitr::asis_output()
+}

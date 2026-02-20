@@ -258,25 +258,3 @@ make_grid_data <- function(
   }
   return(out)
 }
-
-make_grid_summary_text <- function(grid_data) {
-  text <- grid_data |>
-    subset(y != "Not inside a zone") |>
-    dplyr::summarise(n = sum(as.numeric(fill) > 3), .by = c(z, y)) |>
-    subset(n >= 3) |>
-    dplyr::arrange(z, desc(n))
-
-  if (nrow(text) == 0) {
-    ""
-  } else {
-    "- %s: %s" |>
-      sprintf(
-        unique(text$z),
-        unique(text$z) |>
-          sapply(\(p) {
-            text[text$z == p, "y"] |> join_list_sentence(oxford = TRUE)
-          })
-      ) |>
-      paste(collapse = "\n\n")
-  }
-}

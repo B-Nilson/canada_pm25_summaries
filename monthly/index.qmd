@@ -771,26 +771,9 @@ plot_texts <- paste(
   setNames(provinces_n_territories) |>
   as.list()
 
-# Make summary data for automated text for this section
-text <- fcst_grid_data |>
-  make_grid_summary_text()
-
 ```
 
-::: card
-::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-The following forecast regions experienced elevated PM<sub>2.5</sub> concentrations  (> 30 {{< pm_units >}}) for at least 3 days this month:
-
-`r text`
-  
-</details>
-
-:::
-:::
+`r build_fcst_grid_summary(fcst_grid_data, type = "monthly")`
 
 `r tab_explainers$prov_terr_tabs`
 
