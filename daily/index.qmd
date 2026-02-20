@@ -113,15 +113,27 @@ table_data <- summaries$overall |>
 
 # Make tables
 map_tables <- lapply(names(monitor_groups), \(monitor_group) {
-  table_data |>
+  map_table <- table_data |>
     make_map_table(
       monitor_group = monitor_group,
       report_dir = report_dir,
       data_dir = data_dir,
       plot_timestamp = plot_timestamp
     )
+  table_path <- "%s/%s_map_table_%s.html" |>
+    sprintf(
+      report_dir |> file.path(figure_dir),
+      monitor_groups_cleaned[[monitor_group]],
+      plot_timestamp
+    )
+  map_table$html |> htmlwidgets::saveWidget(table_path)
+  map_table$path <- table_path
+  return(map_table)
 }) |>
   setNames(monitor_groups)
+
+map_table_buttons <- map_tables |> lapply(\(x) x$dl_button)
+map_tables <- map_tables |> lapply(\(x) x$path)
 
 ```
 
@@ -312,57 +324,21 @@ old_report_dropdown <- report_dir |>
 
 `r build_prov_donut_summary(prov_donuts_text, type = "daily")`
 
-`r tab_explainers$network_tabs`
-
 :::: panel-tabset
 
-## FEM and PA
+`r tab_explainers$summary_tabs`
 
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$mean_fem_and_pa |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$mean$`FEM and PA`) |>
-  cat()
-```
+## Mean PM<sub>2.5</sub>
 
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$max_fem_and_pa |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$max$`FEM and PA`) |>
-  cat()
-```
+`r tab_explainers$network_tabs`
 
-## FEM Only
+`r build_tabs(monitor_groups, summaries$donuts$paths$mean, prov_donuts_text$mean, report_dir)`
 
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$mean_fem_only |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$mean$`FEM Only`) |>
-  cat()
-```
+## Max PM<sub>2.5</sub>
 
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$max_fem_only |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$max$`FEM Only`) |>
-  cat()
-```
+`r tab_explainers$network_tabs`
 
-## PA Only
-
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$mean_pa_only |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$mean$`PA Only`) |>
-  cat()
-```
-
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$max_pa_only |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$max$`PA Only`) |>
-  cat()
-```
+`r build_tabs(monitor_groups, summaries$donuts$paths$max, prov_donuts_text$max, report_dir)`
 
 ::::
 
@@ -372,57 +348,7 @@ summaries$donuts$paths$max_pa_only |>
 
 `r tab_explainers$network_tabs`
 
-:::: panel-tabset
-
-## FEM and PA
-
-```{r include=TRUE, results = 'asis'}
-map_paths[["FEM and PA"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(map_texts[["FEM and PA"]], iframe = TRUE) |>
-  cat()
-```
-
-|
-
-```{r include = TRUE}
-map_tables[["FEM and PA"]]$dl_button
-map_tables[["FEM and PA"]]$html
-```
-
-## FEM Only
-
-```{r include=TRUE, results = 'asis'}
-map_paths[["FEM Only"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(map_texts[["FEM Only"]], iframe = TRUE) |>
-  cat()
-```
-
-|
-
-```{r include = TRUE}
-map_tables[["FEM Only"]]$dl_button
-map_tables[["FEM Only"]]$html
-```
-
-## PA Only
-
-```{r include=TRUE, results = 'asis'}
-map_paths[["PA Only"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(map_texts[["PA Only"]], iframe = TRUE) |>
-  cat()
-```
-
-|
-
-```{r include = TRUE}
-map_tables[["PA Only"]]$dl_button
-map_tables[["PA Only"]]$html
-```
-
-::::
+`r build_tabs(monitor_groups, map_paths, map_texts, report_dir, map_table_buttons, map_tables, iframe = TRUE)`
 
 ## <big><strong>Which sites had the highest concentrations?</strong></big>
 
@@ -430,36 +356,7 @@ map_tables[["PA Only"]]$html
 
 `r tab_explainers$network_tabs`
 
-:::: panel-tabset
-
-## FEM and PA
-
-```{r include=TRUE, results = 'asis'}
-boxplot_paths[["FEM and PA"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(boxplot_texts[["FEM and PA"]], iframe = TRUE) |>
-  cat()
-```
-
-## FEM Only
-
-```{r include=TRUE, results = 'asis'}
-boxplot_paths[["FEM"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(boxplot_texts[["FEM Only"]], iframe = TRUE) |>
-  cat()
-```
-
-## PA Only
-
-```{r include=TRUE, results = 'asis'}
-boxplot_paths[["PA"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(boxplot_texts[["PA Only"]], iframe = TRUE) |>
-  cat()
-```
-
-::::
+`r build_tabs(monitor_groups, boxplot_paths, boxplot_texts, report_dir, iframe = TRUE)`
 
 ## <big><strong>Where and when did PM<sub>2.5</sub> events occur?</strong></big>
 
@@ -473,36 +370,7 @@ boxplot_paths[["PA"]] |>
 
 `r tab_explainers$network_tabs`
 
-::::: panel-tabset
-
-## FEM and PA
-
-```{r grids_both, include=TRUE, results = 'asis'}
-prov_grid_paths[['FEM and PA']] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_grid_texts[['FEM and PA']]) |>
-  cat()
-```
-
-## FEM Only
-
-```{r grids_fem, include=TRUE, results = 'asis'}
-prov_grid_paths[['FEM']] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_grid_texts[['FEM Only']]) |>
-  cat()
-```
-
-## PA Only
-
-```{r grids_pa, include=TRUE, results = 'asis'}
-prov_grid_paths[['PA']] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_grid_texts[['PA Only']]) |>
-  cat()
-```
-
-:::::
+`r build_tabs(monitor_groups, prov_grid_paths, prov_grid_texts, report_dir)`
 
 ## Region Level 
 
