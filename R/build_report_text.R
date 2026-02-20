@@ -12,7 +12,7 @@ build_header <- function(
 <center><h4>%s in Vancouver | %s in Halifax</h4></center>'
 
   report_name <- date_range[2] |>
-    get_report_name(type = type, months_in_seasons = months_in_seasons) |> 
+    get_report_name(type = type, months_in_seasons = months_in_seasons) |>
     parse_report_name(type = type)
 
   out_formats <- list(
@@ -172,7 +172,7 @@ and <strong>%s</strong> are between 30 and 60 {{< pm_units >}}.'
       prov_donuts_text$p$pa$p[3] |> paste0("%"),
       prov_donuts_text$p$pa$p[2] |> paste0("%")
     ) |>
-    make_summary_chunk() |> 
+    make_summary_chunk() |>
     knitr::asis_output()
 }
 
@@ -275,12 +275,15 @@ with a %s mean PM<sub>2.5</sub> concentration <strong>between 60 and 100 {{< pm_
       ),
       wd_text
     ) |>
-    make_summary_chunk() |> 
+    make_summary_chunk() |>
     knitr::asis_output()
 }
 
 # TODO: cleanup
-build_boxplot_summary <- function(boxplot_vals, type = c("daily", "monthly")[1]) {
+build_boxplot_summary <- function(
+  boxplot_vals,
+  type = c("daily", "monthly")[1]
+) {
   average_text <- list(daily = "24-hour", monthly = "1-month")[[type]]
   template <- '
 %s (a %s monitor located %s km from %s, %s) had the highest observed hourly mean PM<sub>2.5</sub>

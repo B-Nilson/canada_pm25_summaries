@@ -264,8 +264,8 @@ get_report_name <- function(
   )
 
   if (type == "daily") {
-    report_name <- (max_date - lubridate::days(1))  |> 
-      lubridate::ceiling_date("12 hours")|>
+    report_name <- (max_date - lubridate::days(1)) |>
+      lubridate::ceiling_date("12 hours") |>
       format(date_fmt) |>
       stringr::str_replace(" 00$", "-day") |>
       stringr::str_replace(" 12$", "-night")
