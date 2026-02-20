@@ -281,39 +281,6 @@ file_path <- "%s/%s/community_summary_%s.csv" |>
 community_table_dl <- table_data |>
   make_download_button(data_dir = data_dir, file_path = file_path)
 
-# Make summary data for automated text for this section
-pd <- summaries$community |>
-  dplyr::select(
-    P = prov_terr,
-    C = nearest_community,
-    N = n_monitors,
-    D = nc_dist_km_network_max_comm_max,
-    PM1 = pm25_mean_network_mean_comm_mean,
-    PM2 = pm25_max_network_max_comm_max,
-    H1 = n_hours_above_100_network_max_comm_max,
-    H2 = n_hours_above_60_network_max_comm_max
-  ) |>
-  dplyr::mutate(
-    NFEM = N |>
-      stringr::str_extract("FEM: \\d*") |>
-      stringr::str_remove("FEM: ") |>
-      handyr::swap(NA, with = "0"),
-    NPA = N |>
-      stringr::str_extract("PA: \\d*") |>
-      stringr::str_remove("PA: ") |>
-      handyr::swap(NA, with = "0")
-  )
-community_table_vals <- list(
-  pd |>
-    dplyr::arrange(desc(PM2)) |>
-    head(1),
-  pd |>
-    dplyr::arrange(desc(PM1)) |>
-    head(1),
-  pd |>
-    dplyr::arrange(desc(H1), desc(H2)) |>
-    head(1)
-)
 ```
 
 ```{r handleOldReports, include= FALSE, echo= FALSE}
@@ -566,33 +533,7 @@ chunks <- provinces_n_territories |>
 
 ## <big><strong>Which communities (with data) were impacted?</strong></big>
 
-:::: card
-
-::::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-`r community_table_vals[[1]]$C` (a community in `r community_table_vals[[1]]$P`
-with `r community_table_vals[[1]]$NFEM` FEM and `r community_table_vals[[1]]$NPA` PA monitors
-within at least `r community_table_vals[[1]]$D` km) had the highest observed hourly PM<sub>2.5</sub> concentration
-in Canada in the past 24 hours (`r community_table_vals[[1]]$PM2` {{< pm_units >}}). 
-During this period, `r community_table_vals[[2]]$C` (a community in `r community_table_vals[[2]]$P` 
-with `r community_table_vals[[2]]$NFEM` FEM and `r community_table_vals[[2]]$NPA` PA monitors
-within at least `r community_table_vals[[2]]$D` km) had the highest 24-hour mean in Canada
-(`r round(community_table_vals[[2]]$PM1,1)` {{< pm_units >}}).
-
-`r community_table_vals[[3]]$C` (a community in `r community_table_vals[[3]]$P`
-with `r community_table_vals[[3]]$NFEM` FEM and `r community_table_vals[[3]]$NPA` PA monitors
-within at least `r community_table_vals[[3]]$D` km)  had `r community_table_vals[[3]]$H1` hours
-where at least one monitor exceeded 100 {{< pm_units >}} and `r community_table_vals[[3]]$H2` hours
-where at least one monitor exceeded 60 {{< pm_units >}}.
-  
-</details>
-
-:::::
-
-::::
+`r build_community_summary(summaries$community, type = "daily")`
 
 :::: card
 

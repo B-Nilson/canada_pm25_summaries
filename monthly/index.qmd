@@ -914,57 +914,9 @@ plot_texts = paste0(
   as.list() |>
   setNames(monitor_groups)
 
-# Make summary for automated text
-vals = summaries$community |>
-  dplyr::ungroup() |>
-  dplyr::select(
-    P = prov_terr,
-    C = nearest_community,
-    N = n_monitors,
-    D = max_dist,
-    PM1 = pm25_24hr_mean,
-    PM2 = pm25_24hr_max,
-    H1 = n_hours_above_100_max,
-    H2 = n_hours_above_60_max
-  ) |>
-  dplyr::mutate(
-    NFEM = N |>
-      stringr::str_extract("FEM: \\d*") |>
-      stringr::str_remove("FEM: ") |>
-      handyr::swap(NA, with = "0"),
-    NPA = N |>
-      stringr::str_extract("PA: \\d*") |>
-      stringr::str_remove("PA: ") |>
-      handyr::swap(NA, with = "0")
-  )
-
-vals = list(
-  vals |>
-    dplyr::arrange(desc(PM2)) |>
-    head(1),
-  vals |>
-    dplyr::arrange(desc(PM1)) |>
-    head(1),
-  vals |>
-    dplyr::arrange(desc(H1), desc(H2)) |>
-    head(1)
-)
 ```
 
-::: card
-::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-`r vals[[1]]$C` (a community in `r vals[[1]]$P` with `r vals[[1]]$NFEM` FEM and `r vals[[1]]$NPA` PA monitors within at least `r vals[[1]]$D` km) had the highest observed hourly PM<sub>2.5</sub> concentration in Canada for `r format(date_range[2], "%B %Y")` (`r vals[[1]]$PM2` {{< pm_units >}}). During this period, `r vals[[2]]$C` (a community in `r vals[[2]]$P` with `r vals[[2]]$NFEM` FEM and `r vals[[2]]$NPA` PA monitors within at least `r vals[[2]]$D` km) had the highest 1-month mean in Canada (`r round(vals[[2]]$PM1,1)` {{< pm_units >}}).
-
-`r vals[[3]]$C` (a community in `r vals[[3]]$P` with `r vals[[3]]$NFEM` FEM and `r vals[[3]]$NPA` PA monitors within at least `r vals[[3]]$D` km)  had `r vals[[3]]$H1` hours where at least one monitor exceeded 100 {{< pm_units >}} and `r vals[[3]]$H2` hours where at least one monitor exceeded 60 {{< pm_units >}}.
-  
-</details>
-
-:::
-:::
+`r build_community_summary(summaries$community, type = "monthly")`
 
 `r tab_explainers$network_tabs`
 

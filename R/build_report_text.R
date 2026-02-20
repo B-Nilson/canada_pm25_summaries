@@ -395,3 +395,77 @@ build_fcst_grid_summary <- function(
     make_summary_chunk() |>
     knitr::asis_output()
 }
+
+build_community_summary <- function(
+  community_summary,
+  type = c("daily", "monthly")[1]
+) {
+  average_text <- list(daily = "24-hour", monthly = "1-month")[[type]]
+  pd <- summaries$community |>
+    dplyr::select(
+      P = prov_terr,
+      C = nearest_community,
+      N = n_monitors,
+      D = nc_dist_km_network_max_comm_max,
+      PM1 = pm25_mean_network_mean_comm_mean,
+      PM2 = pm25_max_network_max_comm_max,
+      H1 = n_hours_above_100_network_max_comm_max,
+      H2 = n_hours_above_60_network_max_comm_max
+    ) |>
+    dplyr::mutate(
+      NFEM = N |>
+        stringr::str_extract("FEM: \\d*") |>
+        stringr::str_remove("FEM: ") |>
+        handyr::swap(NA, with = "0"),
+      NPA = N |>
+        stringr::str_extract("PA: \\d*") |>
+        stringr::str_remove("PA: ") |>
+        handyr::swap(NA, with = "0")
+    )
+  community_table_vals <- list(
+    pd |>
+      dplyr::arrange(desc(PM2)) |>
+      head(1),
+    pd |>
+      dplyr::arrange(desc(PM1)) |>
+      head(1),
+    pd |>
+      dplyr::arrange(desc(H1), desc(H2)) |>
+      head(1)
+  )
+
+  template <- "%s (a community in %s with %s FEM and %s PA monitors within at least %s km)
+had the highest observed hourly PM<sub>2.5</sub> concentration in Canada for this report (%s {{< pm_units >}}). 
+During this period, %s (a community in %s with %s FEM and %s PA monitors within at least %s km) 
+had the highest %s mean in Canada (%s {{< pm_units >}}).
+
+%s (a community in %s with %s FEM and %s PA monitors within at least %s km)
+had %s hours where at least one monitor exceeded 100 {{< pm_units >}}
+and %s hours where at least one monitor exceeded 60 {{< pm_units >}}."
+
+  template |>
+    sprintf(
+      community_table_vals[[1]]$C,
+      community_table_vals[[1]]$P,
+      community_table_vals[[1]]$NFEM,
+      community_table_vals[[1]]$NPA,
+      community_table_vals[[1]]$D,
+      community_table_vals[[1]]$PM2,
+      community_table_vals[[2]]$C,
+      community_table_vals[[2]]$P,
+      community_table_vals[[2]]$NFEM,
+      community_table_vals[[2]]$NPA,
+      community_table_vals[[2]]$D,
+      average_text,
+      community_table_vals[[2]]$PM1,
+      community_table_vals[[3]]$C,
+      community_table_vals[[3]]$P,
+      community_table_vals[[3]]$NFEM,
+      community_table_vals[[3]]$NPA,
+      community_table_vals[[3]]$D,
+      community_table_vals[[3]]$H1,
+      community_table_vals[[3]]$H2
+    ) |>
+    make_summary_chunk() |>
+    knitr::asis_output()
+}
