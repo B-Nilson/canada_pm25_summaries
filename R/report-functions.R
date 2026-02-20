@@ -440,24 +440,24 @@ plot_card <- function(
     )
   }
   "
-::: card
+::::: {.card #fig-$ID}
   
 $IMG
   
-:::: card-body
-  
-::::: card-text
-
 $text
 
 :::::
-
-::::
-
-:::
 " |>
     stringr::str_replace("\\$IMG", img) |>
-    stringr::str_replace("\\$text", text)
+    stringr::str_replace("\\$text", text |> stringr::str_replace("'", "\\'")) |>
+    stringr::str_replace(
+      "\\$ID",
+      gsub(
+        "[^a-zA-Z0-9_\\-\\.]",
+        "",
+        tools::file_path_sans_ext(basename(plot_src))
+      )
+    )
 }
 
 make_sync_map <- function(
