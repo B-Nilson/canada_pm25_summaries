@@ -269,8 +269,7 @@ old_report_dropdown <- report_dir |>
 
 ```
 
-<center><h1>Canadian PM<sub>2.5</sub> Observations Monthly Summary</h1></center>
-<center><h3>Non-validated Data - <mark class="bg-info">`r max(obs$date) |> format("%B %Y")`</mark> Report</h3></center>
+`r build_header(type = "monthly", date_range = date_range)`
 
 `r if(run_future_month) paste0("<center><h4>**WARNING - This report is incomplete. It only contains data up to ",max(obs$date) |> format("%B %d"),"**</h4></center>") |> HTML()`
 
@@ -278,26 +277,13 @@ old_report_dropdown <- report_dir |>
 
 ## Overview {.unlisted .unnumbered}
 
-::: card
-
-::: card-body
-
-This report is a summary of the **fine particulate matter (PM<sub>2.5</sub>)** observation data in Canada for the **past 1 month** from the regulatory **Federal Equivalent Method (FEM)** monitors and the network of low-cost monitors from **PurpleAir (PA)**. This report is automatically updated at the end of every month. 
-
-`r old_report_dropdown`
-
-For any concerns, questions, or feedback regarding this report or the data within it, please contact brayden.nilson@ec.gc.ca
-
-`r report_details`
-
-:::
-
-:::
+`r build_overview_card(type = "monthly", report_dropdown = old_report_dropdown, contact_email = contact_email)`
 
 `r loading_div`
 
 ## Analysis of Past Month of PM<sub>2.5</sub> Observations {.panel-tabset .tabset-dropdown style="display: none;"}
-*Select your question from the following dropdown menu*
+
+`r tab_explainers$primary_tabs`
 
 ### <big><strong>How many observation sites at each risk level?</strong></big> {.panel-tabset}
 
@@ -306,14 +292,14 @@ For any concerns, questions, or feedback regarding this report or the data withi
 # Define plot summary text (figure titles essentially)
 plot_text_template <- "Distribution of monthly mean concentrations at %s PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a monthly mean within that concentration range." |>
   sprintf(monitor_groups)
-plot_text <- list(
+prov_donuts_text <- list(
   mean = plot_text_template,
   max = plot_text_template |> stringr::str_replace_all(" mean ", " max ")
 ) |>
   lapply(\(x) as.list(x) |> setNames(monitor_groups))
 
 # Make summary data for autmated text for this section
-p <- c(pa = "PA", fem = "FEM") |>
+prov_donuts_text$p <- c(pa = "PA", fem = "FEM") |>
   lapply(\(network) {
     summaries$donuts$data$mean |>
       dplyr::filter(monitor == network) |>
@@ -324,37 +310,22 @@ p <- c(pa = "PA", fem = "FEM") |>
 
 ```
 
-::: card
-::: card-body
+`r build_prov_donut_summary(prov_donuts_text, type = "monthly")`
 
-<details>
-<summary>Click for an automated text summary.</summary>
-
-There was <strong>`r sum(p$fem$n)` FEM sites</strong> and <strong>`r sum(p$pa$n)` PA sites</strong> reporting PM<sub>2.5</sub> in Canada in `r format(date_range[2], "%B %Y")`. <strong>
-
-- `r  p$fem$p[4]`%</strong> of the FEM sites had a 1-month mean exceeding 100 &mu;g m<sup>-3</sup>, <strong> `r p$fem$p[3]`%</strong> were between 60 and 100 &mu;g m<sup>-3</sup>, and <strong> `r p$fem$p[2]`%</strong> were between 30 and 60 &mu;g m<sup>-3</sup>.<strong> 
-
-- `r p$pa$p[4]`%</strong> of the PA sites in Canada had a 1-month mean exceeding 100 &mu;g m<sup>-3</sup>, <strong> `r p$pa$p[3]`%</strong> were between 60 and 100 &mu;g m<sup>-3</sup>, and <strong> `r p$pa$p[2]`%</strong> were between 30 and 60 &mu;g m<sup>-3</sup>.
-  
-</details>
-
-:::
-:::
-
-*Select which observation monitors to view using the following tabs*
+`r tab_explainers$network_tabs`
 
 #### FEM and PA
 
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$mean_fem_and_pa |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_text$mean$`FEM and PA`)
+  plot_card(prov_donuts_text$mean$`FEM and PA`)
 ```
 
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$max_fem_and_pa |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_text$max$`FEM and PA`)
+  plot_card(prov_donuts_text$max$`FEM and PA`)
 ```
 
 #### FEM Only
@@ -362,13 +333,13 @@ summaries$donuts$paths$max_fem_and_pa |>
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$mean_fem_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_text$mean$`FEM Only`)
+  plot_card(prov_donuts_text$mean$`FEM Only`)
 ```
 
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$max_fem_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_text$max$`FEM Only`)
+  plot_card(prov_donuts_text$max$`FEM Only`)
 ```
 
 #### PA Only
@@ -376,13 +347,13 @@ summaries$donuts$paths$max_fem_only |>
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$mean_pa_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_text$mean$`PA Only`)
+  plot_card(prov_donuts_text$mean$`PA Only`)
 ```
 
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$max_pa_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_text$max$`PA Only`)
+  plot_card(prov_donuts_text$max$`PA Only`)
 ```
 
 ### <big><strong>Who had access to nearby observations?</strong></big> {.panel-tabset}
@@ -497,71 +468,11 @@ coverage_dl = td |>
     icon = "fa fa-save"
   )
 
-p_summ = td |>
-  dplyr::group_by(pt = `Prov./Terr.`) |>
-  dplyr::mutate(
-    pop_fnic = as.numeric(stringr::str_remove_all(pop_fnic, ",")),
-    pop_rural = as.numeric(stringr::str_remove_all(pop_rural, ",")),
-    pop_urban = as.numeric(stringr::str_remove_all(pop_urban, ",")),
-    pop_total = as.numeric(stringr::str_remove_all(pop_total, ",")),
-    total_fnic = sum(pop_fnic, na.rm = TRUE),
-    total_rural = sum(pop_rural, na.rm = TRUE),
-    total_urban = sum(pop_urban, na.rm = TRUE),
-    total_total = sum(pop_total, na.rm = TRUE)
-  ) |>
-  dplyr::filter(`Within 25km of` != "No Monitor") |>
-  dplyr::summarise(
-    p_fnic = round(sum(pop_fnic / total_fnic, na.rm = TRUE) * 100, 1),
-    p_urban = round(sum(pop_rural / total_rural, na.rm = TRUE) * 100, 1),
-    p_rural = round(sum(pop_urban / total_urban, na.rm = TRUE) * 100, 1),
-    p_total = round(sum(pop_total / total_total, na.rm = TRUE) * 100, 1)
-  )
-reg_summ = td |>
-  dplyr::group_by(Region) |>
-  dplyr::mutate(
-    pop_fnic = as.numeric(stringr::str_remove_all(pop_fnic, ",")),
-    pop_rural = as.numeric(stringr::str_remove_all(pop_rural, ",")),
-    pop_urban = as.numeric(stringr::str_remove_all(pop_urban, ",")),
-    pop_total = as.numeric(stringr::str_remove_all(pop_total, ",")),
-    total_fnic = sum(pop_fnic, na.rm = TRUE),
-    total_rural = sum(pop_rural, na.rm = TRUE),
-    total_urban = sum(pop_urban, na.rm = TRUE),
-    total_total = sum(pop_total, na.rm = TRUE)
-  ) |>
-  dplyr::filter(`Within 25km of` != "No Monitor") |>
-  dplyr::summarise(
-    p_fnic = round(sum(pop_fnic / total_fnic, na.rm = TRUE) * 100, 1),
-    p_urban = round(sum(pop_rural / total_rural, na.rm = TRUE) * 100, 1),
-    p_rural = round(sum(pop_urban / total_urban, na.rm = TRUE) * 100, 1),
-    p_total = round(sum(pop_total / total_total, na.rm = TRUE) * 100, 1)
-  )
-
-
 ```
 
+`r build_coverage_summary(td)`
 
-::: card
-::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-Across Canada, `r dplyr::filter(reg_summ, Region == "Canada")$p_total[1]`% of the population (`r dplyr::filter(reg_summ, Region == "Canada")$p_rural[1]`% of rural and `r dplyr::filter(reg_summ, Region == "Canada")$p_urban[1]`% of urban) and `r dplyr::filter(reg_summ, Region == "Canada")$p_fnic[1]`% of Indigenous communities were within 25 km of a regulatory or low-cost PurpleAir PM<sub>2.5</sub> monitor in `r format(date_range[2], "%B of %Y")`.
-
-In the west, `r dplyr::filter(reg_summ, Region == "West")$p_total[1]`% of the *total population* was within 25 km of a PA or FEM PM<sub>2.5</sub> monitor (`r dplyr::filter(p_summ, pt == "BC")$p_total[1]`% for BC, `r dplyr::filter(p_summ, pt == "AB")$p_total[1]`% for AB, `r dplyr::filter(p_summ, pt == "SK")$p_total[1]`% for SK and `r dplyr::filter(p_summ, pt == "MB")$p_total[1]`% for MB). For the central provinces, `r dplyr::filter(reg_summ, Region == "Central")$p_total[1]`% of the population (`r dplyr::filter(p_summ, pt == "ON")$p_total[1]`% for ON and `r dplyr::filter(p_summ, pt == "QC")$p_total[1]`% for QC) was within 25 km of a PM<sub>2.5</sub> monitor. In the east, `r dplyr::filter(reg_summ, Region == "East")$p_total[1]`% of the population (`r dplyr::filter(p_summ, pt == "NS")$p_total[1]`% for NS, `r dplyr::filter(p_summ, pt == "NB")$p_total[1]`% for NB, `r dplyr::filter(p_summ, pt == "NL")$p_total[1]`% for NL and `r dplyr::filter(p_summ, pt == "PE")$p_total[1]`% for PE) was within 25 km of a PM<sub>2.5</sub> monitor. For the territories, `r dplyr::filter(reg_summ, Region == "North")$p_total[1]`% of the population (`r dplyr::filter(p_summ, pt == "YK")$p_total[1]`% for YT, `r dplyr::filter(p_summ, pt == "NT")$p_total[1]`% for NT and `r dplyr::filter(p_summ, pt == "NU")$p_total[1]`% for NU) was within 25 km of a PM<sub>2.5</sub> monitor.
-
-In the west, `r dplyr::filter(reg_summ, Region == "West")$p_fnic[1]`% of *Indigenous communities* were within 25 km of a PA or FEM PM<sub>2.5</sub> monitor (`r dplyr::filter(p_summ, pt == "BC")$p_fnic[1]`% for BC, `r dplyr::filter(p_summ, pt == "AB")$p_fnic[1]`% for AB, `r dplyr::filter(p_summ, pt == "SK")$p_fnic[1]`% for SK and `r dplyr::filter(p_summ, pt == "MB")$p_fnic[1]`% for MB). For the central provinces, `r dplyr::filter(reg_summ, Region == "Central")$p_fnic[1]`% of Indigenous communities (`r dplyr::filter(p_summ, pt == "ON")$p_fnic[1]`% for ON and `r dplyr::filter(p_summ, pt == "QC")$p_fnic[1]`% for QC) were within 25 km of a PM<sub>2.5</sub> monitor. In the east, `r dplyr::filter(reg_summ, Region == "East")$p_fnic[1]`% of Indigenous communities (`r dplyr::filter(p_summ, pt == "NS")$p_fnic[1]`% for NS, `r dplyr::filter(p_summ, pt == "NB")$p_fnic[1]`% for NB, `r dplyr::filter(p_summ, pt == "NL")$p_fnic[1]`% for NL and `r dplyr::filter(p_summ, pt == "PE")$p_fnic[1]`% for PE) were within 25 km of a PM<sub>2.5</sub> monitor. For the territories, `r dplyr::filter(reg_summ, Region == "North")$p_fnic[1]`% of Indigenous communities (`r dplyr::filter(p_summ, pt == "YK")$p_fnic[1]`% for YT, `r dplyr::filter(p_summ, pt == "NT")$p_fnic[1]`% for NT and `r dplyr::filter(p_summ, pt == "NU")$p_fnic[1]`% for NU) were within 25 km of a PM<sub>2.5</sub> monitor.
-
-In the west, `r dplyr::filter(reg_summ, Region == "West")$p_urban[1]`% of the *urban population* was within 25 km of a PA or FEM PM<sub>2.5</sub> monitor (`r dplyr::filter(p_summ, pt == "BC")$p_urban[1]`% for BC, `r dplyr::filter(p_summ, pt == "AB")$p_urban[1]`% for AB, `r dplyr::filter(p_summ, pt == "SK")$p_urban[1]`% for SK and `r dplyr::filter(p_summ, pt == "MB")$p_urban[1]`% for MB). For the central provinces, `r dplyr::filter(reg_summ, Region == "Central")$p_urban[1]`% of the urban population (`r dplyr::filter(p_summ, pt == "ON")$p_urban[1]`% for ON and `r dplyr::filter(p_summ, pt == "QC")$p_urban[1]`% for QC) was within 25 km of a PM<sub>2.5</sub> monitor. In the east, `r dplyr::filter(reg_summ, Region == "East")$p_urban[1]`% of the urban population (`r dplyr::filter(p_summ, pt == "NS")$p_urban[1]`% for NS, `r dplyr::filter(p_summ, pt == "NB")$p_urban[1]`% for NB, `r dplyr::filter(p_summ, pt == "NL")$p_urban[1]`% for NL and `r dplyr::filter(p_summ, pt == "PE")$p_urban[1]`% for PE) was within 25 km of a PM<sub>2.5</sub> monitor. For the territories, `r dplyr::filter(reg_summ, Region == "North")$p_urban[1]`% of the urban population (`r dplyr::filter(p_summ, pt == "YK")$p_urban[1]`% for YT, `r dplyr::filter(p_summ, pt == "NT")$p_urban[1]`% for NT and `r dplyr::filter(p_summ, pt == "NU")$p_urban[1]`% for NU) was within 25 km of a PM<sub>2.5</sub> monitor.
-
-In the west, `r dplyr::filter(reg_summ, Region == "West")$p_rural[1]`% of the *rural population* was within 25 km of a PA or FEM PM<sub>2.5</sub> monitor (`r dplyr::filter(p_summ, pt == "BC")$p_rural[1]`% for BC, `r dplyr::filter(p_summ, pt == "AB")$p_rural[1]`% for AB, `r dplyr::filter(p_summ, pt == "SK")$p_rural[1]`% for SK and `r dplyr::filter(p_summ, pt == "MB")$p_rural[1]`% for MB). For the central provinces, `r dplyr::filter(reg_summ, Region == "Central")$p_rural[1]`% of the rural population (`r dplyr::filter(p_summ, pt == "ON")$p_rural[1]`% for ON and `r dplyr::filter(p_summ, pt == "QC")$p_rural[1]`% for QC) was within 25 km of a PM<sub>2.5</sub> monitor. In the east, `r dplyr::filter(reg_summ, Region == "East")$p_rural[1]`% of the rural population (`r dplyr::filter(p_summ, pt == "NS")$p_rural[1]`% for NS, `r dplyr::filter(p_summ, pt == "NB")$p_rural[1]`% for NB, `r dplyr::filter(p_summ, pt == "NL")$p_rural[1]`% for NL and `r dplyr::filter(p_summ, pt == "PE")$p_rural[1]`% for PE) was within 25 km of a PM<sub>2.5</sub> monitor. For the territories, `r dplyr::filter(reg_summ, Region == "North")$p_rural[1]`% of the rural population (`r dplyr::filter(p_summ, pt == "YK")$p_rural[1]`% for YT, `r dplyr::filter(p_summ, pt == "NT")$p_rural[1]`% for NT and `r dplyr::filter(p_summ, pt == "NU")$p_rural[1]`% for NU) was within 25 km of a PM<sub>2.5</sub> monitor.
-  
-</details>
-
-:::
-:::
-
-*Select which population subset to view using the following tabs*
+`r tab_explainers$scale_tabs`
 
 #### Total Population
 
@@ -682,73 +593,13 @@ map = make_sync_map(
   legend_titles
 )
 
-
 htmltools::save_html(map, plot2_path, libdir = "./libs")
 
-# Make summary data for autmated text for this section
-very_high_fem_by_prov = summaries$aqhi_p_counts$by_prov |>
-  subset(FEM != 0 & aqhi_p_24hr == "Very High") |>
-  dplyr::arrange(desc(FEM))
-high_fem_by_prov = summaries$aqhi_p_counts$by_prov |>
-  subset(FEM != 0 & aqhi_p_24hr == "High") |>
-  dplyr::arrange(desc(PA))
-very_high_pa_by_prov = summaries$aqhi_p_counts$by_prov |>
-  subset(PA != 0 & aqhi_p_24hr == "Very High") |>
-  dplyr::arrange(desc(FEM))
-high_pa_by_prov = summaries$aqhi_p_counts$by_prov |>
-  subset(PA != 0 & aqhi_p_24hr == "High") |>
-  dplyr::arrange(desc(PA))
-
-wd = summaries$worst_day |>
-  dplyr::select(p = `Prov./Terr.`, w = `Worst Day`, m = `Mean of Site Means`) |>
-  dplyr::arrange(p) |>
-  dplyr::group_by(w) |>
-  dplyr::summarise(
-    m = join_list_sentence(m) |>
-      paste0(ifelse(length(p) > 1, ", respectively", "")),
-    p = join_list_sentence(p)
-  ) |>
-  dplyr::mutate(
-    t = paste0(
-      "- ",
-      p,
-      ": ",
-      w,
-      " - 24-hour mean PM<sub>2.5</sub>: ",
-      m,
-      " &mu;g m<sup>-3</sup>"
-    )
-  )
 ```
 
-::: card
-::: card-body
+`r build_map_summary(summaries$aqhi_p_counts, type = "monthly", worst_day = summaries$worst_day)`
 
-<details>
-<summary>Click for an automated text summary.</summary>
-
-There was <strong>`r summaries$aqhi_p_counts$overall$FEM[4]` FEM monitors</strong> and <strong>`r summaries$aqhi_p_counts$overall$PA[4]` PA monitors</strong> in Canada with a mean PM<sub>2.5</sub> concentration for `r format(date_range[2], "%B %Y")` <strong>exceeding 100 &mu;g m<sup>-3</sup></strong>
-
-`r paste0(ifelse(nrow(very_high_fem_by_prov), "* ",""), format_count_summary(very_high_fem_by_prov,"FEM","exceeding 100"))`
-
-`r paste0(ifelse(nrow(very_high_pa_by_prov), "* ",""), format_count_summary(very_high_pa_by_prov,"PA","exceeding 100"))`
-
-There was <strong>`r summaries$aqhi_p_counts$overall$FEM[3]` FEM monitors</strong> and <strong>`r summaries$aqhi_p_counts$overall$PA[3]` PA monitors</strong> in Canada with a mean PM<sub>2.5</sub> concentration for `r format(date_range[2], "%B %Y")` <strong>between 60 and 100 &mu;g m<sup>-3</sup></strong>
-
-`r paste0(ifelse(nrow(high_fem_by_prov), "* ",""),format_count_summary(high_fem_by_prov,"FEM","between 60 and 100"))`
-
-`r paste0(ifelse(nrow(high_pa_by_prov), "* ",""),format_count_summary(high_pa_by_prov,"PA","between 60 and 100"))`
-
-The worst overall day for each province/territory:
-
-`r paste(wd$t, collapse = "\n\n")`
-  
-</details>
-
-:::
-:::
-
-*Select which what timescale to view using the following tabs*
+`r tab_explainers$scale_tabs`
 
 #### Daily
 
@@ -797,38 +648,15 @@ plot_texts <- paste(
   setNames(monitor_groups) |>
   as.list()
 
-# Make summary data for autmated text for this section
-p <- grid_data |>
-  lapply(\(dat) {
-    dat |>
-      dplyr::group_by(y) |>
-      dplyr::summarise(n = sum(as.numeric(fill) > 3, na.rm = TRUE)) |>
-      subset(n >= 3) |>
-      dplyr::arrange(desc(n))
-  })
-
 ```
 
-*Select which what scale to view using the following tabs*
+`r tab_explainers$scale_tabs`
 
 #### Province Level {.panel-tabset}
 
-::: card
-::: card-body
+`r build_prov_grid_summary(grid_data, type = "monthly")`
 
-<details>
-<summary>Click for an automated text summary.</summary>
-
-`r join_list_sentence(p$median$y)` had a significant amount of locations which experienced elevated PM<sub>2.5</sub> concentrations  (> 30 &mu;g m<sup>-3</sup>) for at least 3 days this month [see median plot]. 
-
-`r join_list_sentence(p$maximum$y)` had at least one location which experienced elevated PM<sub>2.5</sub> concentrations (> 30 &mu;g m<sup>-3</sup>) for at least 3 days this month [see maximum plot]. 
-
-</details>
-
-:::
-:::
-
-*Select which observation monitors to view using the following tabs*
+`r tab_explainers$network_tabs`
 
 ##### FEM and PA
 
@@ -883,28 +711,11 @@ plot_texts <- paste(
   setNames(provinces_n_territories) |>
   as.list()
 
-# Make summary data for automated text for this section
-text <- fcst_grid_data |>
-  make_grid_summary_text()
-
 ```
 
-::: card
-::: card-body
+`r build_fcst_grid_summary(fcst_grid_data, type = "monthly")`
 
-<details>
-<summary>Click for an automated text summary.</summary>
-
-The following forecast regions experienced elevated PM<sub>2.5</sub> concentrations  (> 30 &mu;g m<sup>-3</sup>) for at least 3 days this month:
-
-`r text`
-  
-</details>
-
-:::
-:::
-
-*Select which province/territory to view using the following tabs*
+`r tab_explainers$prov_terr_tabs`
 
 ```{r include = TRUE, results="asis"}
 
@@ -938,7 +749,6 @@ boxplots <- summaries$overall |>
   )
 
 plot_paths <- boxplots$paths
-vals <- boxplots$summary_values
 
 # Define text for below plots (figure title essentially)
 plot_texts = paste0(
@@ -951,22 +761,9 @@ plot_texts = paste0(
 
 ```
 
-::: card
-::: card-body
+`r build_boxplot_summary(boxplots$summary_values, type = "monthly")`  
 
-<details>
-<summary>Click for an automated text summary.</summary>
-
-`r vals$FEM[[1]]$M` (a `r vals$FEM[[1]]$T` monitor located `r vals$FEM[[1]]$D` km from `r vals$FEM[[1]]$C`) in `r vals$FEM[[1]]$P` had the highest observed hourly PM<sub>2.5</sub> concentration in Canada from the FEM network for `r format(date_range[2],"%B %Y")` (`r vals$FEM[[1]]$PM` &mu;g m<sup>-3</sup>). During this period, `r vals$FEM[[2]]$M` (a `r vals$FEM[[2]]$T` monitor located `r vals$FEM[[2]]$D` km from `r vals$FEM[[2]]$C`) in `r vals$FEM[[2]]$P` had the highest 1-month mean in Canada from the FEM network (`r round(vals$FEM[[2]]$PM,1)`&mu;g m<sup>-3</sup>).
-
-`r vals$PA[[1]]$M` (a `r vals$PA[[1]]$T` monitor located `r vals$PA[[1]]$D` km from `r vals$PA[[1]]$C`) in `r vals$PA[[1]]$P` had the highest observed hourly PM<sub>2.5</sub> concentration in Canada from the PA network for `r format(date_range[2],"%B %Y")` (`r vals$PA[[1]]$PM` &mu;g m<sup>-3</sup>). During this period, `r vals$PA[[2]]$M` (a `r vals$PA[[2]]$T` monitor located `r vals$PA[[2]]$D` km from `r vals$PA[[2]]$C`) in `r vals$PA[[2]]$P` had the highest 1-month mean in Canada from the PA network (`r round(vals$PA[[2]]$PM,1)`&mu;g m<sup>-3</sup>).
-  
-</details>
-
-:::
-:::
-
-*Select which observation monitors to view using the following tabs*
+`r tab_explainers$network_tabs`
 
 #### FEM and PA
 
@@ -1050,66 +847,18 @@ plot_paths = paste0(
   setNames(monitor_groups)
 # Define text for below plots (figure title essentially)
 plot_texts = paste0(
-  "Each boxplot summarises the distribution of 1-month community counts of hours with PM<sub>2.5</sub> concentrations above 100 &mu;g m<sup>-3</sup> for at least one monitoring site (",
+  "Each boxplot summarises the distribution of 1-month community counts of hours with PM<sub>2.5</sub> concentrations above 100 {{< pm_units >}} for at least one monitoring site (",
   monitor_groups,
   ") in that community for each province/territory. Blue points for individual communities are displayed for any communities with counts higher than that regions 75th percentile. Hover over the blue points (if present) to see details about that specific community; hover over the boxplot (away from the points) to see the min/median/max and 25th/75th percentiles for that province/territory. See the menu in the top right for more."
 ) |>
   as.list() |>
   setNames(monitor_groups)
 
-# Make summary for automated text
-vals = summaries$community |>
-  dplyr::ungroup() |>
-  dplyr::select(
-    P = prov_terr,
-    C = nearest_community,
-    N = n_monitors,
-    D = max_dist,
-    PM1 = pm25_24hr_mean,
-    PM2 = pm25_24hr_max,
-    H1 = n_hours_above_100_max,
-    H2 = n_hours_above_60_max
-  ) |>
-  dplyr::mutate(
-    NFEM = N |>
-      stringr::str_extract("FEM: \\d*") |>
-      stringr::str_remove("FEM: ") |>
-      handyr::swap(NA, with = "0"),
-    NPA = N |>
-      stringr::str_extract("PA: \\d*") |>
-      stringr::str_remove("PA: ") |>
-      handyr::swap(NA, with = "0")
-  )
-
-vals = list(
-  vals |>
-    dplyr::arrange(desc(PM2)) |>
-    head(1),
-  vals |>
-    dplyr::arrange(desc(PM1)) |>
-    head(1),
-  vals |>
-    dplyr::arrange(desc(H1), desc(H2)) |>
-    head(1)
-)
 ```
 
-::: card
-::: card-body
+`r build_community_summary(summaries$community, type = "monthly")`
 
-<details>
-<summary>Click for an automated text summary.</summary>
-
-`r vals[[1]]$C` (a community in `r vals[[1]]$P` with `r vals[[1]]$NFEM` FEM and `r vals[[1]]$NPA` PA monitors within at least `r vals[[1]]$D` km) had the highest observed hourly PM<sub>2.5</sub> concentration in Canada for `r format(date_range[2], "%B %Y")` (`r vals[[1]]$PM2` &mu;g m<sup>-3</sup>). During this period, `r vals[[2]]$C` (a community in `r vals[[2]]$P` with `r vals[[2]]$NFEM` FEM and `r vals[[2]]$NPA` PA monitors within at least `r vals[[2]]$D` km) had the highest 1-month mean in Canada (`r round(vals[[2]]$PM1,1)` &mu;g m<sup>-3</sup>).
-
-`r vals[[3]]$C` (a community in `r vals[[3]]$P` with `r vals[[3]]$NFEM` FEM and `r vals[[3]]$NPA` PA monitors within at least `r vals[[3]]$D` km)  had `r vals[[3]]$H1` hours where at least one monitor exceeded 100 &mu;g m<sup>-3</sup> and `r vals[[3]]$H2` hours where at least one monitor exceeded 60 &mu;g m<sup>-3</sup>.
-  
-</details>
-
-:::
-:::
-
-*Select which observation monitors to view using the following tabs*
+`r tab_explainers$network_tabs`
 
 #### FEM and PA
 
@@ -1255,7 +1004,7 @@ table2 = reactable(
 :::
 :::
 
-*Select which what scale to view using the following tabs*
+`r tab_explainers$scale_tabs`
 
 #### Province Level
 
@@ -1272,7 +1021,7 @@ table
 
 ::: card-body
 
-The "worst day" for PM<sub>2.5</sub> concentrations **for each province**. The "worst day" is determined by the day with the most number of observation sites (FEM or PA) having a daily mean exceeding 100 &mu;g m<sup>-3</sup> with ties broken by the highest mean of the site daily mean concentrations across the province/territory.
+The "worst day" for PM<sub>2.5</sub> concentrations **for each province**. The "worst day" is determined by the day with the most number of observation sites (FEM or PA) having a daily mean exceeding 100 {{< pm_units >}} with ties broken by the highest mean of the site daily mean concentrations across the province/territory.
 
 :::
 
@@ -1293,7 +1042,7 @@ table2
 
 ::: card-body
 
-The "worst day" for PM<sub>2.5</sub> concentrations **for each forecast zone**. Click on the arrow beside a prov./terr. name to expand the table to view the zones for that area. The "worst day" is determined by the day with the most number of observation sites (FEM or PA) having a daily mean exceeding 100 &mu;g m<sup>-3</sup> with ties broken by the highest mean of the site daily mean concentrations across the province/territory.
+The "worst day" for PM<sub>2.5</sub> concentrations **for each forecast zone**. Click on the arrow beside a prov./terr. name to expand the table to view the zones for that area. The "worst day" is determined by the day with the most number of observation sites (FEM or PA) having a daily mean exceeding 100 {{< pm_units >}} with ties broken by the highest mean of the site daily mean concentrations across the province/territory.
 
 :::
 

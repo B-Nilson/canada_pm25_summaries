@@ -139,6 +139,8 @@ municipal_classes <- c(
 
 # Misc -----
 
+contact_email <- "brayden.nilson@ec.gc.ca"
+
 loading_div <- '
 <div id="loading" style="text-align:center;display: flex; align-items: center; justify-content: center; height: 250px;">
   <div>
@@ -146,34 +148,6 @@ loading_div <- '
     <p><img id="loading-image" src="index_files/icons/loading.gif" alt="Loading..." /></p>
   </div>
 </div>
-' |>
-  htmltools::HTML()
-
-report_details <- '
-<details>
-<summary>Click here for more details.</summary>
-
-<p>
-  <strong>PM<sub>2.5</sub></strong> is a major constituent of wildfire smoke and has significant health risks associated with acute and chronic exposure.
-  <strong>FEM monitors are the gold-standard</strong> for real-time data quality for PM<sub>2.5</sub>; however installations are limited by capital and maintenance costs.
-  <strong>PA monitors are less accurate</strong> than their FEM counterparts, but are <strong>much less cost prohibitive</strong> allowing large numbers to be installed. 
-  FEM monitors provide <strong>great</strong> data (in <strong>limited areas</strong>), but PA monitors provide <strong>good</strong> data (in <strong>many areas</strong>), and are very useful as "smoke detectors" during wildfire smoke events.
-</p>
-
-<p>All PM<sub>2.5</sub> data are sourced from the <a href="https://aqmap.ca/aqmap">UNBC AQmap</a> data repository.</p>
-
-<ul>
-  <li>
-    Data from the FEM network originate from <a href="https://www.airnow.gov/about-airnow/">AirNow</a>, and are NOT VALIDATED. 
-    No QA/QC is applied after retrieval from AirNow, and official values may differ from those presented here.
-  </li>
-  <li>
-    Data from the PA network originate from the <a href="https://api.purpleair.com/">PurpleAir API</a>, and a rigorous automated QA/QC method is applied to ensure the best available data are used. 
-    The <a href="https://amt.copernicus.org/articles/15/3315/2022/">UNBC/ECCC bias correction</a> is applied to all PA data to improve comparability with FEM values.
-  </li>
-</ul>
-
-</details>
 ' |>
   htmltools::HTML()
 

@@ -65,33 +65,19 @@ old_report_dropdown <- report_dir |>
 
 ```
 
-<center><h1>Canadian PM<sub>2.5</sub> Observations Seasonal Summary</h1></center>
-<center><h3>Non-validated Data - <mark class="bg-info">`r report_season`</mark></h3></center>
-<center><h3>`r format(date_range[1],"%B %Y")` to `r format(date_range[2],"%B %Y")`</h3></center>
+`r build_header(type = "seasonal", date_range = date_range, months_in_seasons = months_in_seasons)`
 
 |  
 
 ## Overview {.unlisted .unnumbered}
 
-<div class="card">
-<div class="card-body">
-
-This report is a summary of the **fine particulate matter (PM<sub>2.5</sub>)** observation data in Canada for the **past 6 months** from the regulatory **Federal Equivalent Method (FEM)** monitors and the network of low-cost monitors from **PurpleAir (PA)**.
-
-`r old_report_dropdown`
-
-For any concerns, questions, or feedback regarding this report or the data within it, please contact brayden.nilson@ec.gc.ca
-
-`r report_details`
-
-</div>
-</div>
+`r build_overview_card(type = "seasonal", report_dropdown = old_report_dropdown, contact_email = contact_email)`
 
 `r loading_div`
 
 ## Analysis of Past 6-months of PM<sub>2.5</sub> Observations {.panel-tabset .tabset-dropdown style="display:none;"}
 
-*Select your question from the following dropdown menu*
+`r tab_explainers$primary_tabs`
 
 ### <big><strong>Where/when did we have observations?</strong></big> {.panel-tabset}
 
@@ -348,7 +334,7 @@ The network of FEM monitors in Canada changed by `r text$tot$change[3]` this sea
 :::
 :::
 
-*Select which summary to view using the following tabs*
+`r tab_explainers$summary_tabs`
 
 #### Daily Monitor Counts
 
@@ -410,8 +396,8 @@ seasonal_zone_summaries = obs |>
                "<big><strong>",fcst_zone,"</strong></big>", "<br>",
                date_range," <b>(",days," days)</b>","<br>",
                "<b>",n, " monitors</b> (FEM: ",n_fem,", PA: ",n_pa, ")<br>",
-               "Seasonal mean PM<sub>2.5</sub>: <b>", handyr::swap(round(zone_mean_pm25,1), NA, with = "-"), " &mu;g m<sup>-3</sup></b><br>",
-               "Seasonal max PM<sub>2.5</sub>: <b>", handyr::swap(round(zone_max_pm25,1), NA, with = "-"), " &mu;g m<sup>-3</sup></b>"
+               "Seasonal mean PM<sub>2.5</sub>: <b>", handyr::swap(round(zone_mean_pm25,1), NA, with = "-"), " {{< pm_units >}}</b><br>",
+               "Seasonal max PM<sub>2.5</sub>: <b>", handyr::swap(round(zone_max_pm25,1), NA, with = "-"), " {{< pm_units >}}</b>"
              ) |>
       stringr::str_replace("NA <b>(NA days)</b>", "No data.")) |>
     sf::st_as_sf()
@@ -422,7 +408,7 @@ pal = colorBin(
     right = FALSE, na.color = "#ADADAD"#"#bbbbbb"
   )
 
-legend_title = paste0(report_season, "<br>Max PM<sub>2.5</sub> (&mu;g m<sup>-3</sup>)")
+legend_title = paste0(report_season, "<br>Max PM<sub>2.5</sub> ({{< pm_units >}})")
 pm_legend = paste0('<div style="margin-bottom:3px"><strong><span>',
                    legend_title, "</span></strong></div>",
                    '<i style="background:#ADADAD;opacity:1;"></i> No Data.<br>',
@@ -440,7 +426,7 @@ max_map = leaflet(height=605) |>
     addControl(pm_legend, position = "bottomleft")
 
 
-legend_title = paste0(report_season, "<br>Mean PM<sub>2.5</sub> (&mu;g m<sup>-3</sup>)")
+legend_title = paste0(report_season, "<br>Mean PM<sub>2.5</sub> ({{< pm_units >}})")
 pm_legend = paste0('<div style="margin-bottom:3px"><strong><span>',
                    legend_title, "</span></strong></div>",
                    '<i style="background:#ADADAD;opacity:1;"></i> No Data.<br>',
@@ -463,8 +449,8 @@ plot_paths$max_map = paste0("../../deployments/reports/seasonal/plots/", report_
 htmltools::save_html(max_map, plot_paths$max_map, libdir="./libs")
 
 # Define plot summary text (figure titles essentially)
-plot_texts$mean_map = 'Interactive map of seasonal mean PM<sub>2.5</sub> concentrations (&mu;g m<sup>-3</sup>) by Canadian forecast zone. Hover over a zone for more information.'
-plot_texts$max_map = 'Interactive map of seasonal max PM<sub>2.5</sub> concentrations (&mu;g m<sup>-3</sup>) by Canadian forecast zone. Hover over a zone for more information.'
+plot_texts$mean_map = 'Interactive map of seasonal mean PM<sub>2.5</sub> concentrations ({{< pm_units >}}) by Canadian forecast zone. Hover over a zone for more information.'
+plot_texts$max_map = 'Interactive map of seasonal max PM<sub>2.5</sub> concentrations ({{< pm_units >}}) by Canadian forecast zone. Hover over a zone for more information.'
 
 # Daily zone mean ts
 daily_zone_means = obs |>
@@ -520,7 +506,7 @@ ggsave(gg, filename = plot_paths$ts,
        width = fig_dims$w, height = fig_dims$h, units = fig_dims$u, dpi = 300)
 
 # Define plot summary text (figure titles essentially)
-plot_texts$ts = 'Daily mean PM<sub>2.5</sub> concentrations (&mu;g m<sup>-3</sup>) by Canadian forecast zone for each province/territory. The black line indicates the daily mean of the forcast zone averages.
+plot_texts$ts = 'Daily mean PM<sub>2.5</sub> concentrations ({{< pm_units >}}) by Canadian forecast zone for each province/territory. The black line indicates the daily mean of the forcast zone averages.
 
 Note: Not all forecast zones have observation data. See `
 When / where
@@ -677,22 +663,22 @@ text$daily2 = text$daily |> dplyr::arrange(desc(max))
 <summary>Click for an automated text summary.</summary>
 
 
-`r sum(seasonal_zone_summaries$n != 0)` of the `r nrow(seasonal_zone_summaries)` forecast regions in Canada had observation data in the `r report_season` season. `r text$mean_counts$low` of these zones had a seasonal (6-month) zone mean above 10 &mu;g m<sup>-3</sup>, `r text$mean_counts$mod` had a mean above 30 &mu;g m<sup>-3</sup>, `r text$mean_counts$high` had a mean above 60 &mu;g m<sup>-3</sup>, and `r text$mean_counts$vhigh` had a mean above 100 &mu;g m<sup>-3</sup>.
+`r sum(seasonal_zone_summaries$n != 0)` of the `r nrow(seasonal_zone_summaries)` forecast regions in Canada had observation data in the `r report_season` season. `r text$mean_counts$low` of these zones had a seasonal (6-month) zone mean above 10 {{< pm_units >}}, `r text$mean_counts$mod` had a mean above 30 {{< pm_units >}}, `r text$mean_counts$high` had a mean above 60 {{< pm_units >}}, and `r text$mean_counts$vhigh` had a mean above 100 {{< pm_units >}}.
 
-`r text$max_counts$vhigh` of the `r nrow(seasonal_zone_summaries)` forecast regions in Canada experienced concentrations above 100 &mu;g m<sup>-3</sup> during the `r report_season` season, `r text$max_counts$high` experienced concentrations above 60 &mu;g m<sup>-3</sup>, and `r text$max_counts$mod` experienced concentrations above 30 &mu;g m<sup>-3</sup>.
+`r text$max_counts$vhigh` of the `r nrow(seasonal_zone_summaries)` forecast regions in Canada experienced concentrations above 100 {{< pm_units >}} during the `r report_season` season, `r text$max_counts$high` experienced concentrations above 60 {{< pm_units >}}, and `r text$max_counts$mod` experienced concentrations above 30 {{< pm_units >}}.
 
-The most widespread impacts this season occurred in `r text$daily$prov_terr[1]`, `r text$daily$prov_terr[2]`, and `r text$daily$prov_terr[3]`, where daily forecast zone mean concentrations were `r paste(text$daily$mean[3], text$daily$mean[1], sep = " - ")` &mu;g m<sup>-3</sup> on average.
+The most widespread impacts this season occurred in `r text$daily$prov_terr[1]`, `r text$daily$prov_terr[2]`, and `r text$daily$prov_terr[3]`, where daily forecast zone mean concentrations were `r paste(text$daily$mean[3], text$daily$mean[1], sep = " - ")` {{< pm_units >}} on average.
 
-The worst impacts this season occurred in `r text$daily2$prov_terr[1]`, `r text$daily2$prov_terr[2]`, and `r text$daily2$prov_terr[3]`, where daily forecast zone max concentrations were `r paste(text$daily$max[3], text$daily$max[1], sep = " - ")` &mu;g m<sup>-3</sup> on average.
+The worst impacts this season occurred in `r text$daily2$prov_terr[1]`, `r text$daily2$prov_terr[2]`, and `r text$daily2$prov_terr[3]`, where daily forecast zone max concentrations were `r paste(text$daily$max[3], text$daily$max[1], sep = " - ")` {{< pm_units >}} on average.
 
-`r text$least$prov_terr[1]`, `r text$least$prov_terr[2]`, and `r text$least$prov_terr[3]` were the least impacted (where we had data), but still experienced daily mean concentrations as high as `r paste(text$least$max[1], text$least$max[3], sep = " - ")` &mu;g m<sup>-3</sup>.
+`r text$least$prov_terr[1]`, `r text$least$prov_terr[2]`, and `r text$least$prov_terr[3]` were the least impacted (where we had data), but still experienced daily mean concentrations as high as `r paste(text$least$max[1], text$least$max[3], sep = " - ")` {{< pm_units >}}.
   
 </details>
 
 :::
 :::
 
-*Select which summary to view using the following tabs*
+`r tab_explainers$summary_tabs`
 
 #### Seasonal Zone Mean
 
@@ -998,7 +984,7 @@ Duration(days)
     dplyr::arrange(desc(aqhip), desc(p))
   
   m_summary = paste0(
-    "In ", month, " there was ",nrow(e_data)," detected events in Canada where the daily max PM<sub>2.5</sub> concentration in a forecast zone exceeded 30 &mu;g m<sup>-3</sup> for more than 1 day in a row. The most events this month occurred in ", paste(e_prov_counts$`
+    "In ", month, " there was ",nrow(e_data)," detected events in Canada where the daily max PM<sub>2.5</sub> concentration in a forecast zone exceeded 30 {{< pm_units >}} for more than 1 day in a row. The most events this month occurred in ", paste(e_prov_counts$`
 Prov. / Terr.
 `[1:2], collapse = ", ") |> paste("and", e_prov_counts$`
 Prov. / Terr.
@@ -1027,11 +1013,11 @@ Mean * Duration
     
     if(nrow(p_m_data)==1 & p_m_data$aqhip[1] == "Low [0-30)"){
        paste0(
-        "In ",prov," this month, no forecast zones with observations had a day exceeding 30 &mu;g m<sup>-3</sup>."
+        "In ",prov," this month, no forecast zones with observations had a day exceeding 30 {{< pm_units >}}."
        )
     }else{
       paste0(
-        "In ",prov,", the worst day this month was ", format(p_m_data$worst_day[1], "%b %d"), ", where ", round(p_m_data$p[1]*100,1),"% of forecast zones had a maximum daily PM<sub>2.5</sub> concentration ", p_m_data$desc[1], " &mu;g m<sup>-3</sup>."
+        "In ",prov,", the worst day this month was ", format(p_m_data$worst_day[1], "%b %d"), ", where ", round(p_m_data$p[1]*100,1),"% of forecast zones had a maximum daily PM<sub>2.5</sub> concentration ", p_m_data$desc[1], " {{< pm_units >}}."
       )
     }
     
@@ -1067,7 +1053,7 @@ for(t in texts){
 :::
 :::
 
-*Select which summary to view using the following tabs*
+`r tab_explainers$summary_tabs`
 
 #### Peak Events (Zone Maximum)
 
@@ -1489,9 +1475,9 @@ texts = sapply(prov_pretty, \(prov) {
       worst_summs$dur_range,
       " days long, with mean and max concentrations over the duration ranging from ",
       worst_summs$mean_range,
-      " &mu;g m<sup>-3</sup> and ",
+      " {{< pm_units >}} and ",
       worst_summs$max_range,
-      " &mu;g m<sup>-3</sup>, respectively. The longest event (",
+      " {{< pm_units >}}, respectively. The longest event (",
       worst_summs$dur_max,
       " days) occurred in the ",
       worst_summs$zone_dur_max,
@@ -1499,9 +1485,9 @@ texts = sapply(prov_pretty, \(prov) {
       worst_summs$dur_max_dates,
       ", where a maximum hourly concentration of ",
       worst_summs$dur_max_max,
-      " &mu;g m<sup>-3</sup> and an overall mean of ",
+      " {{< pm_units >}} and an overall mean of ",
       worst_summs$dur_mean,
-      " &mu;g m<sup>-3</sup> was observed."
+      " {{< pm_units >}} was observed."
     )
   }
 })
@@ -1528,7 +1514,7 @@ for(t in texts){
 :::
 :::
 
-*Select which province/territory to view using the following tabs*
+`r tab_explainers$prov_terr_tabs`
 
 ```{r include = TRUE, results="asis"}
 
@@ -1730,8 +1716,8 @@ pd |>
 
 # Define plot summary text (figure titles essentially)
 plot_texts = list(
-  exceeds_60 = 'Number of hours each community with nearby observation data had a mean PM<sub>2.5</sub> concentration above 60 &mu;g m<sup>-3</sup> for each province/territory. A monitor must be within 25 km of a community and not closer to a different community to be considered located in that community.',
-  exceeds_100 = 'Number of hours each community with nearby observation data had a mean PM<sub>2.5</sub> concentration above 100 &mu;g m<sup>-3</sup> for each province/territory. A monitor must be within 25 km of a community and not closer to a different community to be considered located in that community.'
+  exceeds_60 = 'Number of hours each community with nearby observation data had a mean PM<sub>2.5</sub> concentration above 60 {{< pm_units >}} for each province/territory. A monitor must be within 25 km of a community and not closer to a different community to be considered located in that community.',
+  exceeds_100 = 'Number of hours each community with nearby observation data had a mean PM<sub>2.5</sub> concentration above 100 {{< pm_units >}} for each province/territory. A monitor must be within 25 km of a community and not closer to a different community to be considered located in that community.'
 )
 
 # Make summary data for autmated text for this section
@@ -1845,9 +1831,9 @@ text$provs_over_60 = paste0(
 <details>
 <summary>Click for an automated text summary.</summary>
 
-`r nrow(text$n_max_100)` communities of the `r nrow(pd)` in Canada with observation data in the `r report_season` season experienced concentrations in excess of 100 &mu;g m<sup>-3</sup>. `r text$more_100_over_100$p[text$more_100_over_100=="Canada"]`% of communities with data experienced more than 100 hours in excess of 100 &mu;g m<sup>-3</sup>; these communities were located in `r text$provs_over_100`. `r text$worst$community` a community in `r text$worst$prov_terr`, experienced the most hours above 100 &mu;g m<sup>-3</sup> (`r text$worst$hours_exceeding_100` hours in total, out of `r text$worst$hours_w_obs` hours where observations were available).
+`r nrow(text$n_max_100)` communities of the `r nrow(pd)` in Canada with observation data in the `r report_season` season experienced concentrations in excess of 100 {{< pm_units >}}. `r text$more_100_over_100$p[text$more_100_over_100=="Canada"]`% of communities with data experienced more than 100 hours in excess of 100 {{< pm_units >}}; these communities were located in `r text$provs_over_100`. `r text$worst$community` a community in `r text$worst$prov_terr`, experienced the most hours above 100 {{< pm_units >}} (`r text$worst$hours_exceeding_100` hours in total, out of `r text$worst$hours_w_obs` hours where observations were available).
 
-`r nrow(text$n_max_60)` communities of the `r nrow(pd)` in Canada with observation data in the `r report_season` season experienced concentrations in excess of 60 &mu;g m<sup>-3</sup>. `r text$more_60_over_100$p[text$more_60_over_100=="Canada"]`% of communities with data experienced more than 100 hours in excess of 60 &mu;g m<sup>-3</sup>; these communities were located in `r text$provs_over_60`. `r text$worst_60$community` a community in `r text$worst_60$prov_terr`, experienced the most hours above 60 &mu;g m<sup>-3</sup> (`r text$worst_60$hours_exceeding_100` hours in total, out of `r text$worst$hours_w_obs` hours where observations were available).
+`r nrow(text$n_max_60)` communities of the `r nrow(pd)` in Canada with observation data in the `r report_season` season experienced concentrations in excess of 60 {{< pm_units >}}. `r text$more_60_over_100$p[text$more_60_over_100=="Canada"]`% of communities with data experienced more than 100 hours in excess of 60 {{< pm_units >}}; these communities were located in `r text$provs_over_60`. `r text$worst_60$community` a community in `r text$worst_60$prov_terr`, experienced the most hours above 60 {{< pm_units >}} (`r text$worst_60$hours_exceeding_100` hours in total, out of `r text$worst$hours_w_obs` hours where observations were available).
 
   
 </details>
@@ -1855,7 +1841,7 @@ text$provs_over_60 = paste0(
 :::
 :::
 
-*Select which summary to view using the following tabs*
+`r tab_explainers$summary_tabs`
 
 #### Hours > 100 (V. High)
 

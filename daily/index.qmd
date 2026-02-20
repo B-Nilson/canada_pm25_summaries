@@ -60,16 +60,6 @@ summaries <- obs |>
   )
 
 max_date <- obs$date |> base::max()
-subtitle_date <- list(
-  utc = max_date |>
-    format("%Y-%m-%d %H UTC"),
-  vancouver = max_date |>
-    lubridate::with_tz("America/Vancouver") |>
-    format("%Y-%m-%d %I %p"),
-  halifax = max_date |>
-    lubridate::with_tz("America/Halifax") |>
-    format("%Y-%m-%d %I %p")
-)
 
 ```
 
@@ -133,20 +123,6 @@ map_tables <- lapply(names(monitor_groups), \(monitor_group) {
 }) |>
   setNames(monitor_groups)
 
-# Make summary data for autmated text for this section
-very_high_fem_by_prov <- summaries$aqhi_p_counts$by_prov |>
-  subset(FEM != 0 & aqhi_p_24hr == "Very High") |>
-  dplyr::arrange(desc(FEM))
-high_fem_by_prov <- summaries$aqhi_p_counts$by_prov |>
-  subset(FEM != 0 & aqhi_p_24hr == "High") |>
-  dplyr::arrange(desc(PA))
-very_high_pa_by_prov <- summaries$aqhi_p_counts$by_prov |>
-  subset(PA != 0 & aqhi_p_24hr == "Very High") |>
-  dplyr::arrange(desc(FEM))
-high_pa_by_prov <- summaries$aqhi_p_counts$by_prov |>
-  subset(PA != 0 & aqhi_p_24hr == "High") |>
-  dplyr::arrange(desc(PA))
-
 ```
 
 ```{r site_boxplots}
@@ -164,7 +140,6 @@ boxplots <- summaries$overall |>
   )
 
 boxplot_paths <- boxplots$paths
-boxplot_vals <- boxplots$summary_values
 
 # Define plot summary text (figure titles essentially)
 boxplot_texts = paste0(
@@ -205,16 +180,6 @@ prov_grid_texts <- paste(
   setNames(monitor_groups) |>
   as.list()
 
-# Make summary data for autmated text for this section
-prov_grid_texts$p <- grid_data |>
-  lapply(\(dat) {
-    dat |>
-      dplyr::group_by(y) |>
-      dplyr::summarise(n = sum(as.numeric(fill) > 3, na.rm = TRUE)) |>
-      subset(n >= 3) |>
-      dplyr::arrange(desc(n))
-  })
-
 ```
 
 ```{r grids_fcst, include= FALSE}
@@ -243,10 +208,6 @@ fcst_grid_texts <- paste(
   sprintf(provinces_n_territories) |>
   setNames(provinces_n_territories) |>
   as.list()
-
-# Make summary data for automated text for this section
-fcst_grid_texts$text <- fcst_grid_data |>
-  make_grid_summary_text()
 
 ```
 
@@ -320,39 +281,6 @@ file_path <- "%s/%s/community_summary_%s.csv" |>
 community_table_dl <- table_data |>
   make_download_button(data_dir = data_dir, file_path = file_path)
 
-# Make summary data for automated text for this section
-pd <- summaries$community |>
-  dplyr::select(
-    P = prov_terr,
-    C = nearest_community,
-    N = n_monitors,
-    D = nc_dist_km_network_max_comm_max,
-    PM1 = pm25_mean_network_mean_comm_mean,
-    PM2 = pm25_max_network_max_comm_max,
-    H1 = n_hours_above_100_network_max_comm_max,
-    H2 = n_hours_above_60_network_max_comm_max
-  ) |>
-  dplyr::mutate(
-    NFEM = N |>
-      stringr::str_extract("FEM: \\d*") |>
-      stringr::str_remove("FEM: ") |>
-      handyr::swap(NA, with = "0"),
-    NPA = N |>
-      stringr::str_extract("PA: \\d*") |>
-      stringr::str_remove("PA: ") |>
-      handyr::swap(NA, with = "0")
-  )
-community_table_vals <- list(
-  pd |>
-    dplyr::arrange(desc(PM2)) |>
-    head(1),
-  pd |>
-    dplyr::arrange(desc(PM1)) |>
-    head(1),
-  pd |>
-    dplyr::arrange(desc(H1), desc(H2)) |>
-    head(1)
-)
 ```
 
 ```{r handleOldReports, include= FALSE, echo= FALSE}
@@ -368,58 +296,23 @@ old_report_dropdown <- report_dir |>
 
 <!-- Report Start -->
 
-<center><h1>Canadian PM<sub>2.5</sub> Observations 24-hour Summary</h1></center>
-<center><h3>Non-validated Data - <mark class="bg-info">`r subtitle_date$utc`</mark></center>
-<center><h4>`r subtitle_date$vancouver` in Vancouver --- `r subtitle_date$halifax` in Halifax</h4></center>
-
-|  
+`r build_header(type = "daily", date_range = date_range)`
 
 ## Overview {.unlisted .unnumbered}
 
-:::: card
-
-::: card-body
-
-This report is a summary of the **fine particulate matter (PM<sub>2.5</sub>)** observation data in Canada for the **past 24 hours** from the regulatory **Federal Equivalent Method (FEM)** monitors and the network of low-cost monitors from **PurpleAir (PA)**. This report is automatically updated at 00 UTC and 12 UTC every day.
-
-`r knitr::asis_output(old_report_dropdown)`
-
-For any concerns, questions, or feedback regarding this report or the data within it, please contact brayden.nilson@ec.gc.ca
-
-`r knitr::asis_output(report_details)`
-
-:::
-
-::::
+`r build_overview_card(type = "daily", report_dropdown = old_report_dropdown, contact_email = contact_email)`
 
 ## Analysis of Past 24-Hours of PM<sub>2.5</sub> Observations
 
-*Select your question from the following tabs*
+`r tab_explainers$primary_tabs`
 
 ::: {.panel-tabset .primary-tabset}
 
 ## <big><strong>How many observation sites at each risk level?</strong></big>
 
-:::: card
+`r build_prov_donut_summary(prov_donuts_text, type = "daily")`
 
-::::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-There are <strong>`r sum(prov_donuts_text$p$fem$n)` FEM sites</strong> and <strong>`r sum(prov_donuts_text$p$pa$n)` PA sites</strong> currently reporting PM<sub>2.5</sub> in Canada. <strong>
-
-- `r prov_donuts_text$p$fem$p[4]`%</strong> of the FEM sites in Canada have a 24-hour mean exceeding 100 &mu;g m<sup>-3</sup>, <strong> `r prov_donuts_text$p$fem$p[3]`%</strong> are between 60 and 100 &mu;g m<sup>-3</sup>, and <strong> `r prov_donuts_text$p$fem$p[2]`%</strong> are between 30 and 60 &mu;g m<sup>-3</sup>.<strong> 
-
-- `r prov_donuts_text$p$pa$p[4]`%</strong> of the PA sites in Canada have a 24-hour mean exceeding 100 &mu;g m<sup>-3</sup>, <strong> `r prov_donuts_text$p$pa$p[3]`%</strong> are between 60 and 100 &mu;g m<sup>-3</sup>, and <strong> `r prov_donuts_text$p$pa$p[2]`%</strong> are between 30 and 60 &mu;g m<sup>-3</sup>.
-  
-</details>
-
-:::::
-
-::::
-
-*Select which observation monitors to view using the following tabs*
+`r tab_explainers$network_tabs`
 
 :::: panel-tabset
 
@@ -475,32 +368,9 @@ summaries$donuts$paths$max_pa_only |>
 
 ## <big><strong>Where were PM<sub>2.5</sub> concentrations high?</strong></big>
 
-:::: card
+`r build_map_summary(summaries$aqhi_p_counts, type = "daily")`
 
-::::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-There was <strong>`r summaries$aqhi_p_counts$overall$FEM[4]` FEM monitors</strong> and <strong>`r summaries$aqhi_p_counts$overall$PA[4]` PA monitors</strong> in Canada with a 24-hour mean PM<sub>2.5</sub> concentration <strong>exceeding 100 &mu;g m<sup>-3</sup></strong>
-
-`r paste0(ifelse(nrow(very_high_fem_by_prov), "* ",""), format_count_summary(very_high_fem_by_prov,"FEM","exceeding 100"))`
-
-`r paste0(ifelse(nrow(very_high_pa_by_prov), "* ",""), format_count_summary(very_high_pa_by_prov,"PA","exceeding 100"))`
-
-There was <strong>`r summaries$aqhi_p_counts$overall$FEM[3]` FEM monitors</strong> and <strong>`r summaries$aqhi_p_counts$overall$PA[3]` PA monitors</strong> in Canada with a 24-hour mean PM<sub>2.5</sub> concentration <strong>between 60 and 100 &mu;g m<sup>-3</sup></strong>
-
-`r paste0(ifelse(nrow(high_fem_by_prov), "* ",""),format_count_summary(high_fem_by_prov,"FEM","between 60 and 100"))`
-
-`r paste0(ifelse(nrow(high_pa_by_prov), "* ",""),format_count_summary(high_pa_by_prov,"PA","between 60 and 100"))`
-
-</details>
-
-:::::
-
-::::
-
-*Select which observation monitors to view using the following tabs*
+`r tab_explainers$network_tabs`
 
 :::: panel-tabset
 
@@ -556,38 +426,9 @@ map_tables[["PA Only"]]$html
 
 ## <big><strong>Which sites had the highest concentrations?</strong></big>
 
-:::: card
+`r build_boxplot_summary(boxplots$summary_values, type = "daily")`  
 
-::::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-`r boxplot_vals$FEM[[1]]$M` (a `r boxplot_vals$FEM[[1]]$T` monitor
-located `r boxplot_vals$FEM[[1]]$D` km from `r boxplot_vals$FEM[[1]]$C`)
-in `r boxplot_vals$FEM[[1]]$P` had the highest observed hourly PM<sub>2.5</sub>
-concentration in Canada from the FEM network in the past 24 hours (`r boxplot_vals$FEM[[1]]$PM` &mu;g m<sup>-3</sup>).
-During this period, `r boxplot_vals$FEM[[2]]$M`
-(a `r boxplot_vals$FEM[[2]]$T` monitor located `r boxplot_vals$FEM[[2]]$D` km
-from `r boxplot_vals$FEM[[2]]$C`) in `r boxplot_vals$FEM[[2]]$P`
-had the highest 24-hour mean in Canada from the FEM network (`r round(boxplot_vals$FEM[[2]]$PM,1)`&mu;g m<sup>-3</sup>).
-
-`r boxplot_vals$PA[[1]]$M` (a `r boxplot_vals$PA[[1]]$T` monitor
-located `r boxplot_vals$PA[[1]]$D` km from `r boxplot_vals$PA[[1]]$C`)
-in `r boxplot_vals$PA[[1]]$P` had the highest observed hourly PM<sub>2.5</sub>
-concentration in Canada from the PA network in the past 24 hours (`r boxplot_vals$PA[[1]]$PM` &mu;g m<sup>-3</sup>).
-During this period, `r boxplot_vals$PA[[2]]$M`
-(a `r boxplot_vals$PA[[2]]$T` monitor located `r boxplot_vals$PA[[2]]$D` km
-from `r boxplot_vals$PA[[2]]$C`) in `r boxplot_vals$PA[[2]]$P`
-had the highest 24-hour mean in Canada from the PA network (`r round(boxplot_vals$PA[[2]]$PM,1)`&mu;g m<sup>-3</sup>).
-  
-</details>
-
-:::::
-
-::::
-
-*Select which observation monitors to view using the following tabs*
+`r tab_explainers$network_tabs`
 
 :::: panel-tabset
 
@@ -622,34 +463,15 @@ boxplot_paths[["PA"]] |>
 
 ## <big><strong>Where and when did PM<sub>2.5</sub> events occur?</strong></big>
 
-*Select which what scale to view using the following tabs*
+`r tab_explainers$scale_tabs`
 
 :::: panel-tabset
 
 ## Province Level
 
-::::: card
+`r build_prov_grid_summary(grid_data, type = "daily")`
 
-:::::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-`r join_list_sentence(prov_grid_texts$p$median$y)` had a significant amount of locations
-which experienced elevated PM<sub>2.5</sub> concentrations  (> 30 &mu;g m<sup>-3</sup>)
-for at least 3 of the past 24 hours [see median plot]. 
-
-`r join_list_sentence(prov_grid_texts$p$maximum$y)` had at least one location
-which experienced elevated PM<sub>2.5</sub> concentrations (> 30 &mu;g m<sup>-3</sup>)
-for at least 3 of the past 24 hours [see maximum plot]. 
-
-</details>
-
-::::::
-
-:::::
-
-*Select which observation monitors to view using the following tabs*
+`r tab_explainers$network_tabs`
 
 ::::: panel-tabset
 
@@ -684,24 +506,9 @@ prov_grid_paths[['PA']] |>
 
 ## Region Level 
 
-::::: card
+`r build_fcst_grid_summary(fcst_grid_data, type = "daily")`
 
-:::::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-The following forecast regions experienced elevated PM<sub>2.5</sub> concentrations  (> 30 &mu;g m<sup>-3</sup>) for at least 3 of the past 24 hours:
-
-`r fcst_grid_texts$text`
-  
-</details>
-
-::::::
-
-:::::
-
-*Select which province/territory to view using the following tabs*
+`r tab_explainers$prov_terr_tabs`
 
 ```{r, include = TRUE, results="asis"}
 
@@ -726,33 +533,7 @@ chunks <- provinces_n_territories |>
 
 ## <big><strong>Which communities (with data) were impacted?</strong></big>
 
-:::: card
-
-::::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-`r community_table_vals[[1]]$C` (a community in `r community_table_vals[[1]]$P`
-with `r community_table_vals[[1]]$NFEM` FEM and `r community_table_vals[[1]]$NPA` PA monitors
-within at least `r community_table_vals[[1]]$D` km) had the highest observed hourly PM<sub>2.5</sub> concentration
-in Canada in the past 24 hours (`r community_table_vals[[1]]$PM2` &mu;g m<sup>-3</sup>). 
-During this period, `r community_table_vals[[2]]$C` (a community in `r community_table_vals[[2]]$P` 
-with `r community_table_vals[[2]]$NFEM` FEM and `r community_table_vals[[2]]$NPA` PA monitors
-within at least `r community_table_vals[[2]]$D` km) had the highest 24-hour mean in Canada
-(`r round(community_table_vals[[2]]$PM1,1)` &mu;g m<sup>-3</sup>).
-
-`r community_table_vals[[3]]$C` (a community in `r community_table_vals[[3]]$P`
-with `r community_table_vals[[3]]$NFEM` FEM and `r community_table_vals[[3]]$NPA` PA monitors
-within at least `r community_table_vals[[3]]$D` km)  had `r community_table_vals[[3]]$H1` hours
-where at least one monitor exceeded 100 &mu;g m<sup>-3</sup> and `r community_table_vals[[3]]$H2` hours
-where at least one monitor exceeded 60 &mu;g m<sup>-3</sup>.
-  
-</details>
-
-:::::
-
-::::
+`r build_community_summary(summaries$community, type = "daily")`
 
 :::: card
 
