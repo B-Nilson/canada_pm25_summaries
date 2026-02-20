@@ -468,69 +468,9 @@ coverage_dl = td |>
     icon = "fa fa-save"
   )
 
-p_summ = td |>
-  dplyr::group_by(pt = `Prov./Terr.`) |>
-  dplyr::mutate(
-    pop_fnic = as.numeric(stringr::str_remove_all(pop_fnic, ",")),
-    pop_rural = as.numeric(stringr::str_remove_all(pop_rural, ",")),
-    pop_urban = as.numeric(stringr::str_remove_all(pop_urban, ",")),
-    pop_total = as.numeric(stringr::str_remove_all(pop_total, ",")),
-    total_fnic = sum(pop_fnic, na.rm = TRUE),
-    total_rural = sum(pop_rural, na.rm = TRUE),
-    total_urban = sum(pop_urban, na.rm = TRUE),
-    total_total = sum(pop_total, na.rm = TRUE)
-  ) |>
-  dplyr::filter(`Within 25km of` != "No Monitor") |>
-  dplyr::summarise(
-    p_fnic = round(sum(pop_fnic / total_fnic, na.rm = TRUE) * 100, 1),
-    p_urban = round(sum(pop_rural / total_rural, na.rm = TRUE) * 100, 1),
-    p_rural = round(sum(pop_urban / total_urban, na.rm = TRUE) * 100, 1),
-    p_total = round(sum(pop_total / total_total, na.rm = TRUE) * 100, 1)
-  )
-reg_summ = td |>
-  dplyr::group_by(Region) |>
-  dplyr::mutate(
-    pop_fnic = as.numeric(stringr::str_remove_all(pop_fnic, ",")),
-    pop_rural = as.numeric(stringr::str_remove_all(pop_rural, ",")),
-    pop_urban = as.numeric(stringr::str_remove_all(pop_urban, ",")),
-    pop_total = as.numeric(stringr::str_remove_all(pop_total, ",")),
-    total_fnic = sum(pop_fnic, na.rm = TRUE),
-    total_rural = sum(pop_rural, na.rm = TRUE),
-    total_urban = sum(pop_urban, na.rm = TRUE),
-    total_total = sum(pop_total, na.rm = TRUE)
-  ) |>
-  dplyr::filter(`Within 25km of` != "No Monitor") |>
-  dplyr::summarise(
-    p_fnic = round(sum(pop_fnic / total_fnic, na.rm = TRUE) * 100, 1),
-    p_urban = round(sum(pop_rural / total_rural, na.rm = TRUE) * 100, 1),
-    p_rural = round(sum(pop_urban / total_urban, na.rm = TRUE) * 100, 1),
-    p_total = round(sum(pop_total / total_total, na.rm = TRUE) * 100, 1)
-  )
-
-
 ```
 
-
-::: card
-::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-Across Canada, `r dplyr::filter(reg_summ, Region == "Canada")$p_total[1]`% of the population (`r dplyr::filter(reg_summ, Region == "Canada")$p_rural[1]`% of rural and `r dplyr::filter(reg_summ, Region == "Canada")$p_urban[1]`% of urban) and `r dplyr::filter(reg_summ, Region == "Canada")$p_fnic[1]`% of Indigenous communities were within 25 km of a regulatory or low-cost PurpleAir PM<sub>2.5</sub> monitor in `r format(date_range[2], "%B of %Y")`.
-
-In the west, `r dplyr::filter(reg_summ, Region == "West")$p_total[1]`% of the *total population* was within 25 km of a PA or FEM PM<sub>2.5</sub> monitor (`r dplyr::filter(p_summ, pt == "BC")$p_total[1]`% for BC, `r dplyr::filter(p_summ, pt == "AB")$p_total[1]`% for AB, `r dplyr::filter(p_summ, pt == "SK")$p_total[1]`% for SK and `r dplyr::filter(p_summ, pt == "MB")$p_total[1]`% for MB). For the central provinces, `r dplyr::filter(reg_summ, Region == "Central")$p_total[1]`% of the population (`r dplyr::filter(p_summ, pt == "ON")$p_total[1]`% for ON and `r dplyr::filter(p_summ, pt == "QC")$p_total[1]`% for QC) was within 25 km of a PM<sub>2.5</sub> monitor. In the east, `r dplyr::filter(reg_summ, Region == "East")$p_total[1]`% of the population (`r dplyr::filter(p_summ, pt == "NS")$p_total[1]`% for NS, `r dplyr::filter(p_summ, pt == "NB")$p_total[1]`% for NB, `r dplyr::filter(p_summ, pt == "NL")$p_total[1]`% for NL and `r dplyr::filter(p_summ, pt == "PE")$p_total[1]`% for PE) was within 25 km of a PM<sub>2.5</sub> monitor. For the territories, `r dplyr::filter(reg_summ, Region == "North")$p_total[1]`% of the population (`r dplyr::filter(p_summ, pt == "YK")$p_total[1]`% for YT, `r dplyr::filter(p_summ, pt == "NT")$p_total[1]`% for NT and `r dplyr::filter(p_summ, pt == "NU")$p_total[1]`% for NU) was within 25 km of a PM<sub>2.5</sub> monitor.
-
-In the west, `r dplyr::filter(reg_summ, Region == "West")$p_fnic[1]`% of *Indigenous communities* were within 25 km of a PA or FEM PM<sub>2.5</sub> monitor (`r dplyr::filter(p_summ, pt == "BC")$p_fnic[1]`% for BC, `r dplyr::filter(p_summ, pt == "AB")$p_fnic[1]`% for AB, `r dplyr::filter(p_summ, pt == "SK")$p_fnic[1]`% for SK and `r dplyr::filter(p_summ, pt == "MB")$p_fnic[1]`% for MB). For the central provinces, `r dplyr::filter(reg_summ, Region == "Central")$p_fnic[1]`% of Indigenous communities (`r dplyr::filter(p_summ, pt == "ON")$p_fnic[1]`% for ON and `r dplyr::filter(p_summ, pt == "QC")$p_fnic[1]`% for QC) were within 25 km of a PM<sub>2.5</sub> monitor. In the east, `r dplyr::filter(reg_summ, Region == "East")$p_fnic[1]`% of Indigenous communities (`r dplyr::filter(p_summ, pt == "NS")$p_fnic[1]`% for NS, `r dplyr::filter(p_summ, pt == "NB")$p_fnic[1]`% for NB, `r dplyr::filter(p_summ, pt == "NL")$p_fnic[1]`% for NL and `r dplyr::filter(p_summ, pt == "PE")$p_fnic[1]`% for PE) were within 25 km of a PM<sub>2.5</sub> monitor. For the territories, `r dplyr::filter(reg_summ, Region == "North")$p_fnic[1]`% of Indigenous communities (`r dplyr::filter(p_summ, pt == "YK")$p_fnic[1]`% for YT, `r dplyr::filter(p_summ, pt == "NT")$p_fnic[1]`% for NT and `r dplyr::filter(p_summ, pt == "NU")$p_fnic[1]`% for NU) were within 25 km of a PM<sub>2.5</sub> monitor.
-
-In the west, `r dplyr::filter(reg_summ, Region == "West")$p_urban[1]`% of the *urban population* was within 25 km of a PA or FEM PM<sub>2.5</sub> monitor (`r dplyr::filter(p_summ, pt == "BC")$p_urban[1]`% for BC, `r dplyr::filter(p_summ, pt == "AB")$p_urban[1]`% for AB, `r dplyr::filter(p_summ, pt == "SK")$p_urban[1]`% for SK and `r dplyr::filter(p_summ, pt == "MB")$p_urban[1]`% for MB). For the central provinces, `r dplyr::filter(reg_summ, Region == "Central")$p_urban[1]`% of the urban population (`r dplyr::filter(p_summ, pt == "ON")$p_urban[1]`% for ON and `r dplyr::filter(p_summ, pt == "QC")$p_urban[1]`% for QC) was within 25 km of a PM<sub>2.5</sub> monitor. In the east, `r dplyr::filter(reg_summ, Region == "East")$p_urban[1]`% of the urban population (`r dplyr::filter(p_summ, pt == "NS")$p_urban[1]`% for NS, `r dplyr::filter(p_summ, pt == "NB")$p_urban[1]`% for NB, `r dplyr::filter(p_summ, pt == "NL")$p_urban[1]`% for NL and `r dplyr::filter(p_summ, pt == "PE")$p_urban[1]`% for PE) was within 25 km of a PM<sub>2.5</sub> monitor. For the territories, `r dplyr::filter(reg_summ, Region == "North")$p_urban[1]`% of the urban population (`r dplyr::filter(p_summ, pt == "YK")$p_urban[1]`% for YT, `r dplyr::filter(p_summ, pt == "NT")$p_urban[1]`% for NT and `r dplyr::filter(p_summ, pt == "NU")$p_urban[1]`% for NU) was within 25 km of a PM<sub>2.5</sub> monitor.
-
-In the west, `r dplyr::filter(reg_summ, Region == "West")$p_rural[1]`% of the *rural population* was within 25 km of a PA or FEM PM<sub>2.5</sub> monitor (`r dplyr::filter(p_summ, pt == "BC")$p_rural[1]`% for BC, `r dplyr::filter(p_summ, pt == "AB")$p_rural[1]`% for AB, `r dplyr::filter(p_summ, pt == "SK")$p_rural[1]`% for SK and `r dplyr::filter(p_summ, pt == "MB")$p_rural[1]`% for MB). For the central provinces, `r dplyr::filter(reg_summ, Region == "Central")$p_rural[1]`% of the rural population (`r dplyr::filter(p_summ, pt == "ON")$p_rural[1]`% for ON and `r dplyr::filter(p_summ, pt == "QC")$p_rural[1]`% for QC) was within 25 km of a PM<sub>2.5</sub> monitor. In the east, `r dplyr::filter(reg_summ, Region == "East")$p_rural[1]`% of the rural population (`r dplyr::filter(p_summ, pt == "NS")$p_rural[1]`% for NS, `r dplyr::filter(p_summ, pt == "NB")$p_rural[1]`% for NB, `r dplyr::filter(p_summ, pt == "NL")$p_rural[1]`% for NL and `r dplyr::filter(p_summ, pt == "PE")$p_rural[1]`% for PE) was within 25 km of a PM<sub>2.5</sub> monitor. For the territories, `r dplyr::filter(reg_summ, Region == "North")$p_rural[1]`% of the rural population (`r dplyr::filter(p_summ, pt == "YK")$p_rural[1]`% for YT, `r dplyr::filter(p_summ, pt == "NT")$p_rural[1]`% for NT and `r dplyr::filter(p_summ, pt == "NU")$p_rural[1]`% for NU) was within 25 km of a PM<sub>2.5</sub> monitor.
-  
-</details>
-
-:::
-:::
+`r build_coverage_summary(td)`
 
 `r tab_explainers$scale_tabs`
 

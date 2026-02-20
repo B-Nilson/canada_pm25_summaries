@@ -469,3 +469,151 @@ and %s hours where at least one monitor exceeded 60 {{< pm_units >}}."
     make_summary_chunk() |>
     knitr::asis_output()
 }
+
+build_coverage_summary <- function(coverage_data) {
+  p_summ = coverage_data |>
+    dplyr::group_by(pt = `Prov./Terr.`) |>
+    dplyr::mutate(
+      pop_fnic = as.numeric(stringr::str_remove_all(pop_fnic, ",")),
+      pop_rural = as.numeric(stringr::str_remove_all(pop_rural, ",")),
+      pop_urban = as.numeric(stringr::str_remove_all(pop_urban, ",")),
+      pop_total = as.numeric(stringr::str_remove_all(pop_total, ",")),
+      total_fnic = sum(pop_fnic, na.rm = TRUE),
+      total_rural = sum(pop_rural, na.rm = TRUE),
+      total_urban = sum(pop_urban, na.rm = TRUE),
+      total_total = sum(pop_total, na.rm = TRUE)
+    ) |>
+    dplyr::filter(`Within 25km of` != "No Monitor") |>
+    dplyr::summarise(
+      p_fnic = round(sum(pop_fnic / total_fnic, na.rm = TRUE) * 100, 1),
+      p_urban = round(sum(pop_rural / total_rural, na.rm = TRUE) * 100, 1),
+      p_rural = round(sum(pop_urban / total_urban, na.rm = TRUE) * 100, 1),
+      p_total = round(sum(pop_total / total_total, na.rm = TRUE) * 100, 1)
+    )
+  reg_summ = coverage_data |>
+    dplyr::group_by(Region) |>
+    dplyr::mutate(
+      pop_fnic = as.numeric(stringr::str_remove_all(pop_fnic, ",")),
+      pop_rural = as.numeric(stringr::str_remove_all(pop_rural, ",")),
+      pop_urban = as.numeric(stringr::str_remove_all(pop_urban, ",")),
+      pop_total = as.numeric(stringr::str_remove_all(pop_total, ",")),
+      total_fnic = sum(pop_fnic, na.rm = TRUE),
+      total_rural = sum(pop_rural, na.rm = TRUE),
+      total_urban = sum(pop_urban, na.rm = TRUE),
+      total_total = sum(pop_total, na.rm = TRUE)
+    ) |>
+    dplyr::filter(`Within 25km of` != "No Monitor") |>
+    dplyr::summarise(
+      p_fnic = round(sum(pop_fnic / total_fnic, na.rm = TRUE) * 100, 1),
+      p_urban = round(sum(pop_rural / total_rural, na.rm = TRUE) * 100, 1),
+      p_rural = round(sum(pop_urban / total_urban, na.rm = TRUE) * 100, 1),
+      p_total = round(sum(pop_total / total_total, na.rm = TRUE) * 100, 1)
+    )
+
+  template <- "Across Canada, %s of the population (%s of rural and %s of urban)
+and %s of Indigenous communities were within 25 km of a regulatory
+or low-cost PurpleAir PM<sub>2.5</sub> monitor during this report.
+
+In the west, %s of the *total population* was within 25 km of a PA or FEM PM<sub>2.5</sub> monitor
+(%s for BC, %s for AB, %s for SK and %s for MB). 
+For the central provinces, %s of the population (%s for ON and %s for QC) was within 25 km of a PM<sub>2.5</sub> monitor. 
+In the east, %s of the population (%s for NS, %s for NB, %s for NL and %s for PE) was within 25 km of a PM<sub>2.5</sub> monitor. 
+For the territories, %s of the population (%s for YT, %s for NT and %s for NU) was within 25 km of a PM<sub>2.5</sub> monitor.
+
+In the west, %s of the *Indigenous communities* were within 25 km of a PA or FEM PM<sub>2.5</sub> monitor
+(%s for BC, %s for AB, %s for SK and %s for MB). 
+For the central provinces, %s of the Indigenous communities (%s for ON and %s for QC) was within 25 km of a PM<sub>2.5</sub> monitor. 
+In the east, %s of the Indigenous communities (%s for NS, %s for NB, %s for NL and %s for PE) was within 25 km of a PM<sub>2.5</sub> monitor. 
+For the territories, %s of the Indigenous communities (%s for YT, %s for NT and %s for NU) was within 25 km of a PM<sub>2.5</sub> monitor.
+  
+In the west, %s of the *urban population* was within 25 km of a PA or FEM PM<sub>2.5</sub> monitor
+(%s for BC, %s for AB, %s for SK and %s for MB). 
+For the central provinces, %s of the urban population (%s for ON and %s for QC) was within 25 km of a PM<sub>2.5</sub> monitor. 
+In the east, %s of the urban population (%s for NS, %s for NB, %s for NL and %s for PE) was within 25 km of a PM<sub>2.5</sub> monitor. 
+For the territories, %s of the urban population (%s for YT, %s for NT and %s for NU) was within 25 km of a PM<sub>2.5</sub> monitor.
+
+In the west, %s of the *rural population* was within 25 km of a PA or FEM PM<sub>2.5</sub> monitor
+(%s for BC, %s for AB, %s for SK and %s for MB). 
+For the central provinces, %s of the rural population (%s for ON and %s for QC) was within 25 km of a PM<sub>2.5</sub> monitor. 
+In the east, %s of the rural population (%s for NS, %s for NB, %s for NL and %s for PE) was within 25 km of a PM<sub>2.5</sub> monitor. 
+For the territories, %s of the rural population (%s for YT, %s for NT and %s for NU) was within 25 km of a PM<sub>2.5</sub> monitor.
+  "
+
+  template |>
+    sprintf(
+      dplyr::filter(reg_summ, Region == "Canada")$p_total[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "Canada")$p_rural[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "Canada")$p_urban |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "Canada")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "West")$p_total[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "BC")$p_total[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "AB")$p_total[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "SK")$p_total[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "MB")$p_total[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "Central")$p_total[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "ON")$p_total[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "QC")$p_total[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "East")$p_total[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NS")$p_total[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NB")$p_total[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NL")$p_total[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "PE")$p_total[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "North")$p_total[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "YK")$p_total[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NT")$p_total[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NU")$p_total[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "West")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "BC")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "AB")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "SK")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "MB")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "Central")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "ON")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "QC")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "East")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NS")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NB")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NL")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "PE")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "North")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "YK")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NT")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NU")$p_fnic[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "West")$p_urban[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "BC")$p_urban[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "AB")$p_urban[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "SK")$p_urban[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "MB")$p_urban[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "Central")$p_urban[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "ON")$p_urban[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "QC")$p_urban[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "East")$p_urban[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NS")$p_urban[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NB")$p_urban[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NL")$p_urban[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "PE")$p_urban[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "North")$p_urban[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "YK")$p_urban[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NT")$p_urban[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NU")$p_urban[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "West")$p_rural[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "BC")$p_rural[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "AB")$p_rural[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "SK")$p_rural[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "MB")$p_rural[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "Central")$p_rural[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "ON")$p_rural[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "QC")$p_rural[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "East")$p_rural[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NS")$p_rural[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NB")$p_rural[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NL")$p_rural[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "PE")$p_rural[1] |> paste0("%"),
+      dplyr::filter(reg_summ, Region == "North")$p_rural[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "YK")$p_rural[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NT")$p_rural[1] |> paste0("%"),
+      dplyr::filter(p_summ, pt == "NU")$p_rural[1] |> paste0("%")
+    ) |>
+    make_summary_chunk() |>
+    knitr::asis_output()
+}
