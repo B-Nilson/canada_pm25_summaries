@@ -99,9 +99,9 @@ map_paths <- summaries$overall |>
   )
 
 # Define plot summary text (figure titles essentially)
-map_texts <- "Here is an interactive map showing 24-hour mean PM<sub>2.5</sub> concentrations from monitoring sites (%s) in Canada for the past 24 hours. Canadian forecast zones are shown coloured by the mean 24-hour concentration of the monitors within the zone. Toggle layers displayed in the top right menu.
-
-Below the map is a table summarising the data from the monitoring sites displayed in the map. The table is interactive, filterable, and may have pages if there are many sites. If you click the link on a site's name it will take you to that monitor on [AQmap](https://aqmap.ca/)." |>
+map_texts <- "Here is an interactive map showing 24-hour mean PM<sub>2.5</sub> concentrations from monitoring sites (%s) in Canada for the past 24 hours. 
+Canadian forecast zones are shown coloured by the mean 24-hour concentration of the monitors within the zone. Toggle layers displayed in the top right menu.
+Below the map is a table summarising the data from the monitoring sites displayed in the map." |>
   sprintf(monitor_groups) |>
   setNames(monitor_groups) |>
   as.list()
