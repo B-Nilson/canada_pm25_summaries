@@ -107,33 +107,23 @@ Below the map is a table summarising the data from the monitoring sites displaye
   setNames(monitor_groups) |>
   as.list()
 
-# Make data for tables below maps
-table_data <- summaries$overall |>
-  make_map_table_data()
-
-# Make tables
-map_tables <- lapply(names(monitor_groups), \(monitor_group) {
-  map_table <- table_data |>
-    make_map_table(
-      monitor_group = monitor_group,
+# Make and save tables
+overall_summary_tables <- lapply(names(monitor_groups), \(monitor_group) {
+  summaries$overall |>
+    dplyr::filter(monitor == monitor_group | monitor_group == "FEM and PA") |>
+    make_overall_summary_table(
       report_dir = report_dir,
+      monitor_group = monitor_group,
       data_dir = data_dir,
+      figure_dir = figure_dir,
       plot_timestamp = plot_timestamp
     )
-  table_path <- "%s/%s_map_table_%s.html" |>
-    sprintf(
-      report_dir |> file.path(figure_dir),
-      monitor_groups_cleaned[[monitor_group]],
-      plot_timestamp
-    )
-  map_table$html |> htmlwidgets::saveWidget(table_path)
-  map_table$path <- table_path
-  return(map_table)
 }) |>
   setNames(monitor_groups)
 
-map_table_buttons <- map_tables |> lapply(\(x) x$dl_button)
-map_tables <- map_tables |> lapply(\(x) x$path)
+overall_summary_table_buttons <- overall_summary_tables |>
+  lapply(\(x) x$dl_button)
+overall_summary_tables <- overall_summary_tables |> lapply(\(x) x$path)
 
 ```
 
@@ -348,7 +338,7 @@ old_report_dropdown <- report_dir |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, map_paths, map_texts, report_dir, map_table_buttons, map_tables, iframe = TRUE)`
+`r build_tabs(monitor_groups, map_paths, map_texts, report_dir, overall_summary_table_buttons, overall_summary_tables, iframe = TRUE)`
 
 ## <big><strong>Which sites had the highest concentrations?</strong></big>
 

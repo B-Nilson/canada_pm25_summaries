@@ -282,54 +282,127 @@ make_map_table_data <- function(obs_summary) {
     dplyr::filter(!duplicated(`Site Name`))
 }
 
-make_map_table <- function(
+make_overall_summary_table <- function(
   table_data,
   monitor_group,
   report_dir,
   data_dir,
+  figure_dir,
   plot_timestamp
 ) {
   dir.create(file.path(report_dir, data_dir), showWarnings = FALSE)
-  pd <- table_data
-  if (monitor_group != "FEM and PA") {
-    pd <- table_data |>
-      subset(Monitor == monitor_group)
-  }
-
-  column_definitions <- list(
-    'Site Name' = reactable::colDef(cell = \(Site, ...) {
-      s_name = table_data[table_data$`Site Name` == Site, "aqmap_link"] |>
-        unlist() |>
-        unname()
-      htmltools::tags$a(href = s_name, target = "_blank", Site)
-    }),
-    aqmap_link = reactable::colDef(show = FALSE),
-    lng = reactable::colDef(show = FALSE),
-    lat = reactable::colDef(show = FALSE)
+  display_names <- list(
+    name = "Name",
+    monitor = "Type",
+    prov_terr = "P/T",
+    fcst_zone = "Forecast Zone",
+    nearest_community = "Name",
+    nc_dist_km = "Distance",
+    n_hours_above_30 = gt::md("30 &mu;g/m<sup>3</sup>"),
+    n_hours_above_60 = gt::md("60 &mu;g/m<sup>3</sup>"),
+    n_hours_above_100 = gt::md("100 &mu;g/m<sup>3</sup>"),
+    pm25_current = "Last",
+    pm25_mean = "Mean",
+    pm25_max = "Max"
   )
+  table_data <- table_data |>
+    dplyr::mutate(
+      prov_terr = prov_terr |>
+        factor(
+          levels = levels(prov_terr),
+          labels = canadata::provinces_and_territories$abbreviation
+        ),
+      aqmap_link = make_aqmap_link(lat = lat, lng = lng),
+      name = "<a href='%s'>%s</a>" |> sprintf(aqmap_link, name),
+      dplyr::across(c(fcst_zone, name, nearest_community), \(x) abbrev_text(x))
+    ) |>
+    dplyr::select(dplyr::all_of(names(display_names))) |>
+    dplyr::arrange(dplyr::desc(pm25_mean), pm25_current)
 
-  table <- pd |>
-    reactable(
-      data = _,
-      defaultSorted = "24hr PM2.5 Mean\n(ug/m3)",
-      defaultSortOrder = "desc",
-      columns = column_definitions
-    )
+  table <- table_data |>
+    gt::gt() |>
+    gt::opt_interactive() |>
+    gt::cols_width(
+      monitor ~ gt::px(62),
+      prov_terr ~ gt::px(60),
+      fcst_zone ~ gt::px(130),
+      nearest_community ~ gt::px(120),
+      nc_dist_km ~ gt::px(90),
+      dplyr::starts_with("n_hours") ~ gt::px(94),
+      dplyr::starts_with("pm25") ~ gt::px(78)
+    ) |>
+    gt::tab_spanner(
+      label = "Monitoring Site",
+      columns = c("name", "monitor", "prov_terr", "fcst_zone")
+    ) |>
+    gt::tab_spanner(
+      label = gt::md("PM<sub>2.5</sub> Concentration (&mu;g m<sup>-3</sup>)"),
+      columns = dplyr::starts_with("pm25")
+    ) |>
+    gt::tab_spanner(
+      label = "Nearest Community",
+      columns = c("nearest_community", "nc_dist_km")
+    ) |>
+    gt::tab_spanner(
+      label = gt::md("Hours Above PM<sub>2.5</sub> Threshold"),
+      columns = dplyr::starts_with("n_hours"),
+      id = "hours_above_spanner"
+    ) |>
+    gt::cols_label(.list = display_names) |>
+    gt::cols_align(dplyr::starts_with("n_hours"), align = "center") |>
+    gt::cols_align("nearest_community", align = "right") |>
+    gt::cols_align("nc_dist_km", align = "left") |>
+    gt::fmt_number(dplyr::starts_with("pm25"), decimals = 1) |>
+    gt::fmt_number("nc_dist_km", decimals = 1, pattern = "{x} km") |>
+    gt::data_color(
+      alpha = 0.6,
+      columns = nc_dist_km,
+      fn = function(x) {
+        leaflet::colorNumeric(
+          reverse = TRUE,
+          palette = "viridis",
+          domain = range(log(x + 1))
+        )(log(x + 1))
+      }
+    ) |>
+    gt::data_color(
+      alpha = 0.6,
+      columns = dplyr::starts_with("n_hours"),
+      palette = "plasma",
+      domain = c(0, 24)
+    ) |>
+    gt::data_color(
+      alpha = 0.6,
+      columns = dplyr::starts_with("pm25"),
+      fn = \(x) x |> aqhi::get_aqhi_colours(types = "pm25_1hr")
+    ) |>
+    gt::sub_missing(dplyr::starts_with("n_hours") | dplyr::starts_with("pm25"))
 
   # Save data to csv for download
+  m_group_cleaned <- monitor_group |>
+    stringr::str_to_lower() |>
+    stringr::str_replace_all(" ", "_")
   file_path <- "%s/pm2.5_monitor_sites_%s_%s.csv" |>
     sprintf(
       file.path(report_dir, data_dir),
-      monitor_group |>
-        stringr::str_to_lower() |>
-        stringr::str_replace_all(" ", "_"),
+      m_group_cleaned,
       plot_timestamp
     )
-  dl_button <- pd |>
+  dl_button <- table_data |>
     make_download_button(data_dir = data_dir, file_path = file_path)
+
+  # Save table to .html
+  table_path <- "%s/overall_table_%s_%s.html" |>
+    sprintf(
+      file.path(report_dir, figure_dir),
+      m_group_cleaned,
+      plot_timestamp
+    )
+  table |> gt::gtsave(filename = table_path)
 
   list(
     html = table,
+    path = table_path,
     dl_button = dl_button
   )
 }

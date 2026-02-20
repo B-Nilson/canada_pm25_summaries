@@ -28,6 +28,7 @@ Imports:
     mapview,
     patchwork,
     plotly,
+    prismatic,
     renv,
     rmarkdown,
     RPostgres,

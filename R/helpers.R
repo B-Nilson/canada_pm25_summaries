@@ -53,3 +53,15 @@ build_tabs <- function(
     sprintf(paste(chunks, collapse = "\n")) |>
     knitr::asis_output()
 }
+
+abbrev_text <- function(x) {
+  x_safe <- x |>
+    stringr::str_replace_all("'", "&rsquo;") |>
+    stringr::str_replace_all("\"", "&quot;")
+  
+  '<div style="display:table; table-layout:fixed; width:100%;">' |>
+    paste0(
+      '<p title="%s" style="overflow-x:hidden; text-overflow:ellipsis; white-space:nowrap">%s</p></div>' |>
+        sprintf(x_safe, x)
+    )
+}
