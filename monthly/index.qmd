@@ -653,71 +653,11 @@ map = make_sync_map(
   legend_titles
 )
 
-
 htmltools::save_html(map, plot2_path, libdir = "./libs")
 
-# Make summary data for autmated text for this section
-very_high_fem_by_prov = summaries$aqhi_p_counts$by_prov |>
-  subset(FEM != 0 & aqhi_p_24hr == "Very High") |>
-  dplyr::arrange(desc(FEM))
-high_fem_by_prov = summaries$aqhi_p_counts$by_prov |>
-  subset(FEM != 0 & aqhi_p_24hr == "High") |>
-  dplyr::arrange(desc(PA))
-very_high_pa_by_prov = summaries$aqhi_p_counts$by_prov |>
-  subset(PA != 0 & aqhi_p_24hr == "Very High") |>
-  dplyr::arrange(desc(FEM))
-high_pa_by_prov = summaries$aqhi_p_counts$by_prov |>
-  subset(PA != 0 & aqhi_p_24hr == "High") |>
-  dplyr::arrange(desc(PA))
-
-wd = summaries$worst_day |>
-  dplyr::select(p = `Prov./Terr.`, w = `Worst Day`, m = `Mean of Site Means`) |>
-  dplyr::arrange(p) |>
-  dplyr::group_by(w) |>
-  dplyr::summarise(
-    m = join_list_sentence(m) |>
-      paste0(ifelse(length(p) > 1, ", respectively", "")),
-    p = join_list_sentence(p)
-  ) |>
-  dplyr::mutate(
-    t = paste0(
-      "- ",
-      p,
-      ": ",
-      w,
-      " - 24-hour mean PM<sub>2.5</sub>: ",
-      m,
-      " {{< pm_units >}}"
-    )
-  )
 ```
 
-::: card
-::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-There was <strong>`r summaries$aqhi_p_counts$overall$FEM[4]` FEM monitors</strong> and <strong>`r summaries$aqhi_p_counts$overall$PA[4]` PA monitors</strong> in Canada with a mean PM<sub>2.5</sub> concentration for `r format(date_range[2], "%B %Y")` <strong>exceeding 100 {{< pm_units >}}</strong>
-
-`r paste0(ifelse(nrow(very_high_fem_by_prov), "* ",""), format_count_summary(very_high_fem_by_prov,"FEM","exceeding 100"))`
-
-`r paste0(ifelse(nrow(very_high_pa_by_prov), "* ",""), format_count_summary(very_high_pa_by_prov,"PA","exceeding 100"))`
-
-There was <strong>`r summaries$aqhi_p_counts$overall$FEM[3]` FEM monitors</strong> and <strong>`r summaries$aqhi_p_counts$overall$PA[3]` PA monitors</strong> in Canada with a mean PM<sub>2.5</sub> concentration for `r format(date_range[2], "%B %Y")` <strong>between 60 and 100 {{< pm_units >}}</strong>
-
-`r paste0(ifelse(nrow(high_fem_by_prov), "* ",""),format_count_summary(high_fem_by_prov,"FEM","between 60 and 100"))`
-
-`r paste0(ifelse(nrow(high_pa_by_prov), "* ",""),format_count_summary(high_pa_by_prov,"PA","between 60 and 100"))`
-
-The worst overall day for each province/territory:
-
-`r paste(wd$t, collapse = "\n\n")`
-  
-</details>
-
-:::
-:::
+`r build_map_summary(summaries$aqhi_p_counts, type = "monthly", worst_day = summaries$worst_day)`
 
 `r tab_explainers$scale_tabs`
 

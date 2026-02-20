@@ -187,3 +187,118 @@ and <strong>%s</strong> are between 30 and 60 {{< pm_units >}}.
     ) |>
     knitr::asis_output()
 }
+
+# TODO: cleanup
+build_map_summary <- function(
+  aqhi_p_counts,
+  type = c("daily", "monthly")[1],
+  worst_day = NULL
+) {
+  average_text <- list(daily = "24-hour", monthly = "1-month")[[type]]
+
+  very_high_fem_by_prov <- aqhi_p_counts$by_prov |>
+    subset(FEM != 0 & aqhi_p_24hr == "Very High") |>
+    dplyr::arrange(dplyr::desc(FEM))
+  high_fem_by_prov <- aqhi_p_counts$by_prov |>
+    subset(FEM != 0 & aqhi_p_24hr == "High") |>
+    dplyr::arrange(dplyr::desc(PA))
+  very_high_pa_by_prov <- aqhi_p_counts$by_prov |>
+    subset(PA != 0 & aqhi_p_24hr == "Very High") |>
+    dplyr::arrange(dplyr::desc(FEM))
+  high_pa_by_prov <- aqhi_p_counts$by_prov |>
+    subset(PA != 0 & aqhi_p_24hr == "High") |>
+    dplyr::arrange(dplyr::desc(PA))
+
+  if (!is.null(worst_day)) {
+    wd <- worst_day |>
+      dplyr::select(
+        p = `Prov./Terr.`,
+        w = `Worst Day`,
+        m = `Mean of Site Means`
+      ) |>
+      dplyr::arrange(p) |>
+      dplyr::group_by(w) |>
+      dplyr::summarise(
+        m = join_list_sentence(m) |>
+          paste0(ifelse(length(p) > 1, ", respectively", "")),
+        p = join_list_sentence(p)
+      ) |>
+      dplyr::mutate(
+        t = paste0(
+          "- ",
+          p,
+          ": ",
+          w,
+          " - 24-hour mean PM<sub>2.5</sub>: ",
+          m,
+          " {{< pm_units >}}"
+        )
+      )
+  } else {
+    wd <- list(t = "")
+  }
+
+  template <- ':::: card
+
+::::: card-body
+
+<details>
+<summary>Click for an automated text summary.</summary>
+
+There was <strong>%s FEM monitors</strong> and <strong>%s PA monitors</strong> in Canada
+with a %s mean PM<sub>2.5</sub> concentration <strong>exceeding 100 {{< pm_units >}}</strong>
+
+%s
+
+%s
+
+There was <strong>%s FEM monitors</strong> and <strong>%s PA monitors</strong> in Canada
+with a %s mean PM<sub>2.5</sub> concentration <strong>between 60 and 100 {{< pm_units >}}</strong>
+  
+%s
+
+%s
+  
+%s
+
+</details>
+
+:::::
+
+::::'
+
+  if (!is.null(worst_day)) {
+    wd_text <- "The worst overall day for each province/territory:\n\n%s\n\n</details>" |>
+      sprintf(paste(wd$t, collapse = "\n\n"))
+  } else {
+    wd_text <- ""
+  }
+
+  template |>
+    sprintf(
+      aqhi_p_counts$overall$FEM[4],
+      aqhi_p_counts$overall$PA[4],
+      average_text,
+      paste0(
+        ifelse(nrow(very_high_fem_by_prov), "* ", ""),
+        format_count_summary(very_high_fem_by_prov, "FEM", "exceeding 100")
+      ),
+      paste0(
+        ifelse(nrow(very_high_pa_by_prov), "* ", ""),
+        format_count_summary(very_high_pa_by_prov, "PA", "exceeding 100")
+      ),
+      aqhi_p_counts$overall$FEM[3],
+      aqhi_p_counts$overall$PA[3],
+      average_text,
+      paste0(
+        ifelse(nrow(high_fem_by_prov), "* ", ""),
+        format_count_summary(high_fem_by_prov, "FEM", "between 60 and 100")
+      ),
+      paste0(
+        ifelse(nrow(high_pa_by_prov), "* ", ""),
+        format_count_summary(high_pa_by_prov, "PA", "between 60 and 100")
+      ),
+      wd_text
+    ) |>
+    knitr::asis_output()
+}
