@@ -149,14 +149,7 @@ build_prov_donut_summary <- function(
 ) {
   average_text <- list(daily = "24-hour", monthly = "1-month")[[type]]
 
-  template <- ':::: card
-
-::::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-There was <strong>%s FEM sites</strong> and <strong>%s PA sites</strong> reporting PM<sub>2.5</sub> in Canada for this report. 
+  template <- 'There was <strong>%s FEM sites</strong> and <strong>%s PA sites</strong> reporting PM<sub>2.5</sub> in Canada for this report. 
 
 - <strong>%s</strong> of the FEM sites in Canada have a %s mean exceeding 100 {{< pm_units >}},
 <strong>%s</strong> are between 60 and 100 {{< pm_units >}},
@@ -164,13 +157,7 @@ and <strong>%s</strong> are between 30 and 60 {{< pm_units >}}.
 
 - <strong>%s</strong> of the PA sites in Canada have a %s mean exceeding 100 {{< pm_units >}},
 <strong>%s</strong> are between 60 and 100 {{< pm_units >}},
-and <strong>%s</strong> are between 30 and 60 {{< pm_units >}}.
-  
-</details>
-
-:::::
-
-::::'
+and <strong>%s</strong> are between 30 and 60 {{< pm_units >}}.'
 
   template |>
     sprintf(
@@ -185,6 +172,7 @@ and <strong>%s</strong> are between 30 and 60 {{< pm_units >}}.
       prov_donuts_text$p$pa$p[3] |> paste0("%"),
       prov_donuts_text$p$pa$p[2] |> paste0("%")
     ) |>
+    make_summary_chunk() |> 
     knitr::asis_output()
 }
 
@@ -238,14 +226,7 @@ build_map_summary <- function(
     wd <- list(t = "")
   }
 
-  template <- ':::: card
-
-::::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-There was <strong>%s FEM monitors</strong> and <strong>%s PA monitors</strong> in Canada
+  template <- 'There was <strong>%s FEM monitors</strong> and <strong>%s PA monitors</strong> in Canada
 with a %s mean PM<sub>2.5</sub> concentration <strong>exceeding 100 {{< pm_units >}}</strong>
 
 %s
@@ -259,13 +240,7 @@ with a %s mean PM<sub>2.5</sub> concentration <strong>between 60 and 100 {{< pm_
 
 %s
   
-%s
-
-</details>
-
-:::::
-
-::::'
+%s'
 
   if (!is.null(worst_day)) {
     wd_text <- "The worst overall day for each province/territory:\n\n%s\n\n</details>" |>
@@ -300,5 +275,6 @@ with a %s mean PM<sub>2.5</sub> concentration <strong>between 60 and 100 {{< pm_
       ),
       wd_text
     ) |>
+    make_summary_chunk() |> 
     knitr::asis_output()
 }

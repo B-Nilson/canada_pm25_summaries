@@ -1,3 +1,4 @@
+source("R/helpers.R")
 source("R/get_report_start_end.R")
 source("R/load_report_data.R")
 source("R/handle_old_reports.R")
