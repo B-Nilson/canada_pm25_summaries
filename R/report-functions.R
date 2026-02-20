@@ -645,30 +645,6 @@ make_community_boxplots <- function(pd, m = "FEM and PA") {
 
 # Tables ------
 
-reactable <- function(pagination = TRUE, defaultPageSize = 10, ...) {
-  reactable::reactable(
-    ...,
-    filterable = TRUE,
-    resizable = TRUE,
-    bordered = TRUE,
-    striped = TRUE,
-    compact = TRUE,
-    pagination = pagination,
-    # showSortable = TRUE,
-    defaultPageSize = defaultPageSize,
-    highlight = TRUE,
-    defaultColDef = reactable::colDef(align = "center"),
-    theme = reactable::reactableTheme(
-      # Vertically center cells
-      cellStyle = list(
-        display = "flex",
-        flexDirection = "column",
-        justifyContent = "center"
-      )
-    )
-  )
-}
-
 dl_button_html <- function(outdir, file) {
   paste0(
     '<button class="btn btn-default" sep="," has_icon="TRUE" type="submit" onclick="window.open(\'',
