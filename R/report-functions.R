@@ -7,6 +7,7 @@ source("R/aqhi_donut_plots.R")
 source("R/interactive_map.R")
 source("R/site_boxplots.R")
 source("R/aqhi_grid_plots.R")
+source("R/make_community_table.R")
 source("R/build_report_text.R")
 
 # Convert strptime pattern to regex, escaping special (regex) characters as needed

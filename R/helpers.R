@@ -36,13 +36,16 @@ build_tabs <- function(
   if (!is.null(tables)) {
     chunks <- tab_names |>
       lapply(\(tab_name) {
-        "%s\n%s\n%s" |>
+        "%s\n%s" |>
           sprintf(
             chunks[[names(tab_names[tab_names == tab_name])]],
-            table_buttons[[tab_name]],
             tables[[tab_name]] |>
               stringr::str_replace(stringr::fixed(report_dir), "./") |>
-              plot_card("", iframe = TRUE)
+              plot_card("", iframe = TRUE) |>
+              stringr::str_replace(
+                "<iframe",
+                paste0(table_buttons[[tab_name]], "\n<iframe")
+              )
           )
       })
   }
@@ -58,7 +61,7 @@ abbrev_text <- function(x) {
   x_safe <- x |>
     stringr::str_replace_all("'", "&rsquo;") |>
     stringr::str_replace_all("\"", "&quot;")
-  
+
   '<div style="display:table; table-layout:fixed; width:100%;">' |>
     paste0(
       '<p title="%s" style="overflow-x:hidden; text-overflow:ellipsis; white-space:nowrap">%s</p></div>' |>
