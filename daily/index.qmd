@@ -510,24 +510,7 @@ prov_grid_paths[['PA']] |>
 
 `r tab_explainers$prov_terr_tabs`
 
-```{r, include = TRUE, results="asis"}
-
-chunks <- provinces_n_territories |>
-  sapply(\(pt_abbr) {
-    card <- fcst_grid_paths[[pt_abbr]] |>
-      stringr::str_replace(report_dir_esc, "./") |>
-      plot_card(fcst_grid_texts[[pt_abbr]])
-    "## %s\n%s" |>
-      sprintf(pt_abbr, card)
-  })
-
-":::::::: panel-tabset
-%s
-::::::::" |>
-  sprintf(paste(chunks, collapse = "\n")) |>
-  cat()
-
-```
+`r build_tabs(provinces_n_territories, fcst_grid_paths, fcst_grid_texts, report_dir)`
 
 ::::
 
