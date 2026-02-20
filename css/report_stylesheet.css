@@ -104,3 +104,7 @@ p, summary, details {
 #dropdownMenuButton{
   font-weight: bold;
 }
+
+.quarto-float-caption-bottom{
+  margin: 0.5rem;
+}
