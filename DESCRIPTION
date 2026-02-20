@@ -36,7 +36,7 @@ Imports:
     stringr,
     tidyr
 Remotes:
-    github::B-Nilson/aqhi
-    github::B-Nilson/aqmapr
-    github::B-Nilson/canadata
+    github::B-Nilson/aqhi,
+    github::B-Nilson/aqmapr,
+    github::B-Nilson/canadata,
     github::B-Nilson/handyr
