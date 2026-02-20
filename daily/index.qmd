@@ -140,7 +140,6 @@ boxplots <- summaries$overall |>
   )
 
 boxplot_paths <- boxplots$paths
-boxplot_vals <- boxplots$summary_values
 
 # Define plot summary text (figure titles essentially)
 boxplot_texts = paste0(
@@ -474,36 +473,7 @@ map_tables[["PA Only"]]$html
 
 ## <big><strong>Which sites had the highest concentrations?</strong></big>
 
-:::: card
-
-::::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-`r boxplot_vals$FEM[[1]]$M` (a `r boxplot_vals$FEM[[1]]$T` monitor
-located `r boxplot_vals$FEM[[1]]$D` km from `r boxplot_vals$FEM[[1]]$C`)
-in `r boxplot_vals$FEM[[1]]$P` had the highest observed hourly PM<sub>2.5</sub>
-concentration in Canada from the FEM network in the past 24 hours (`r boxplot_vals$FEM[[1]]$PM` {{< pm_units >}}).
-During this period, `r boxplot_vals$FEM[[2]]$M`
-(a `r boxplot_vals$FEM[[2]]$T` monitor located `r boxplot_vals$FEM[[2]]$D` km
-from `r boxplot_vals$FEM[[2]]$C`) in `r boxplot_vals$FEM[[2]]$P`
-had the highest 24-hour mean in Canada from the FEM network (`r round(boxplot_vals$FEM[[2]]$PM,1)`{{< pm_units >}}).
-
-`r boxplot_vals$PA[[1]]$M` (a `r boxplot_vals$PA[[1]]$T` monitor
-located `r boxplot_vals$PA[[1]]$D` km from `r boxplot_vals$PA[[1]]$C`)
-in `r boxplot_vals$PA[[1]]$P` had the highest observed hourly PM<sub>2.5</sub>
-concentration in Canada from the PA network in the past 24 hours (`r boxplot_vals$PA[[1]]$PM` {{< pm_units >}}).
-During this period, `r boxplot_vals$PA[[2]]$M`
-(a `r boxplot_vals$PA[[2]]$T` monitor located `r boxplot_vals$PA[[2]]$D` km
-from `r boxplot_vals$PA[[2]]$C`) in `r boxplot_vals$PA[[2]]$P`
-had the highest 24-hour mean in Canada from the PA network (`r round(boxplot_vals$PA[[2]]$PM,1)`{{< pm_units >}}).
-  
-</details>
-
-:::::
-
-::::
+`r build_boxplot_summary(boxplots$summary_values, type = "daily")`  
 
 `r tab_explainers$network_tabs`
 

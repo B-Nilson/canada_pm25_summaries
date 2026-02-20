@@ -278,3 +278,50 @@ with a %s mean PM<sub>2.5</sub> concentration <strong>between 60 and 100 {{< pm_
     make_summary_chunk() |> 
     knitr::asis_output()
 }
+
+# TODO: cleanup
+build_boxplot_summary <- function(boxplot_vals, type = c("daily", "monthly")[1]) {
+  average_text <- list(daily = "24-hour", monthly = "1-month")[[type]]
+  template <- '
+%s (a %s monitor located %s km from %s, %s) had the highest observed hourly mean PM<sub>2.5</sub>
+concentration in Canada from the FEM network for this report (%s {{< pm_units >}}).
+%s (a %s monitor located %s km from %s, %s) had the highest observed %s mean PM<sub>2.5</sub>
+concentration in Canada from the FEM network (%s {{< pm_units >}}).
+
+%s (a %s monitor located %s km from %s, %s) had the highest observed hourly mean PM<sub>2.5</sub>
+concentration in Canada from the PA network for this report (%s {{< pm_units >}}).
+%s (a %s monitor located %s km from %s, %s) had the highest observed %s mean PM<sub>2.5</sub>
+concentration in Canada from the PA network (%s {{< pm_units >}}).'
+
+  template |>
+    sprintf(
+      boxplot_vals$FEM[[1]]$M,
+      boxplot_vals$FEM[[1]]$T,
+      boxplot_vals$FEM[[1]]$D,
+      boxplot_vals$FEM[[1]]$C,
+      boxplot_vals$FEM[[1]]$P,
+      boxplot_vals$FEM[[1]]$PM,
+      boxplot_vals$FEM[[2]]$M,
+      boxplot_vals$FEM[[2]]$T,
+      boxplot_vals$FEM[[2]]$D,
+      boxplot_vals$FEM[[2]]$C,
+      boxplot_vals$FEM[[2]]$P,
+      average_text,
+      boxplot_vals$FEM[[2]]$PM,
+      boxplot_vals$PA[[1]]$M,
+      boxplot_vals$PA[[1]]$T,
+      boxplot_vals$PA[[1]]$D,
+      boxplot_vals$PA[[1]]$C,
+      boxplot_vals$PA[[1]]$P,
+      boxplot_vals$PA[[1]]$PM,
+      boxplot_vals$PA[[2]]$M,
+      boxplot_vals$PA[[2]]$T,
+      boxplot_vals$PA[[2]]$D,
+      boxplot_vals$PA[[2]]$C,
+      boxplot_vals$PA[[2]]$P,
+      average_text,
+      boxplot_vals$PA[[2]]$PM
+    ) |>
+    make_summary_chunk() |>
+    knitr::asis_output()
+}

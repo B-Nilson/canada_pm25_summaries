@@ -849,7 +849,6 @@ boxplots <- summaries$overall |>
   )
 
 plot_paths <- boxplots$paths
-vals <- boxplots$summary_values
 
 # Define text for below plots (figure title essentially)
 plot_texts = paste0(
@@ -862,20 +861,7 @@ plot_texts = paste0(
 
 ```
 
-::: card
-::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-`r vals$FEM[[1]]$M` (a `r vals$FEM[[1]]$T` monitor located `r vals$FEM[[1]]$D` km from `r vals$FEM[[1]]$C`) in `r vals$FEM[[1]]$P` had the highest observed hourly PM<sub>2.5</sub> concentration in Canada from the FEM network for `r format(date_range[2],"%B %Y")` (`r vals$FEM[[1]]$PM` {{< pm_units >}}). During this period, `r vals$FEM[[2]]$M` (a `r vals$FEM[[2]]$T` monitor located `r vals$FEM[[2]]$D` km from `r vals$FEM[[2]]$C`) in `r vals$FEM[[2]]$P` had the highest 1-month mean in Canada from the FEM network (`r round(vals$FEM[[2]]$PM,1)`{{< pm_units >}}).
-
-`r vals$PA[[1]]$M` (a `r vals$PA[[1]]$T` monitor located `r vals$PA[[1]]$D` km from `r vals$PA[[1]]$C`) in `r vals$PA[[1]]$P` had the highest observed hourly PM<sub>2.5</sub> concentration in Canada from the PA network for `r format(date_range[2],"%B %Y")` (`r vals$PA[[1]]$PM` {{< pm_units >}}). During this period, `r vals$PA[[2]]$M` (a `r vals$PA[[2]]$T` monitor located `r vals$PA[[2]]$D` km from `r vals$PA[[2]]$C`) in `r vals$PA[[2]]$P` had the highest 1-month mean in Canada from the PA network (`r round(vals$PA[[2]]$PM,1)`{{< pm_units >}}).
-  
-</details>
-
-:::
-:::
+`r build_boxplot_summary(boxplots$summary_values, type = "monthly")`  
 
 `r tab_explainers$network_tabs`
 
