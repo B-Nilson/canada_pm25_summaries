@@ -236,8 +236,8 @@ community_table$card <- community_table$path |>
     iframe_height = 526
   ) |>
   stringr::str_replace(
-    "<iframe",
-    paste0(community_table$dl_button, "\n<iframe")
+    "</iframe>",
+    paste0("</iframe>\n", community_table$dl_button)
   ) |>
   knitr::asis_output()
 

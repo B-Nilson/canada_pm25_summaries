@@ -43,8 +43,8 @@ build_tabs <- function(
               stringr::str_replace(stringr::fixed(report_dir), "./") |>
               plot_card("", iframe = TRUE, is_table = TRUE, iframe_height = 526) |>
               stringr::str_replace(
-                "<iframe",
-                paste0(table_buttons[[tab_name]], "\n<iframe")
+                "</iframe>",
+                paste0("</iframe>\n", table_buttons[[tab_name]])
               )
           )
       })
