@@ -23,13 +23,19 @@ build_tabs <- function(
   report_dir = "./",
   table_buttons = NULL,
   tables = NULL,
-  iframe = FALSE
+  table_captions = NULL,
+  iframe = FALSE,
+  iframe_height = 600
 ) {
   chunks <- tab_names |>
     sapply(\(tab_name) {
       card <- plot_paths[[tab_name]] |>
         stringr::str_replace(stringr::fixed(report_dir), "./") |>
-        plot_card(plot_captions[[tab_name]], iframe = iframe)
+        plot_card(
+          plot_captions[[tab_name]],
+          iframe = iframe,
+          iframe_height = iframe_height[1]
+        )
       "## %s\n%s" |> sprintf(tab_name, card)
     })
 
@@ -41,10 +47,15 @@ build_tabs <- function(
             chunks[[names(tab_names[tab_names == tab_name])]],
             tables[[tab_name]] |>
               stringr::str_replace(stringr::fixed(report_dir), "./") |>
-              plot_card("", iframe = TRUE) |>
+              plot_card(
+                table_captions[[tab_name]],
+                iframe = TRUE,
+                is_table = TRUE,
+                iframe_height = iframe_height[2]
+              ) |>
               stringr::str_replace(
-                "<iframe",
-                paste0(table_buttons[[tab_name]], "\n<iframe")
+                "</iframe>",
+                paste0("</iframe>\n", table_buttons[[tab_name]])
               )
           )
       })

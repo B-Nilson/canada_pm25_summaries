@@ -87,9 +87,9 @@ header <- c(
 )
 
 monitor_groups <- c(
+  "FEM and PA" = "FEM and PA",
   FEM = "FEM Only",
-  PA = "PA Only",
-  "FEM and PA" = "FEM and PA"
+  PA = "PA Only"
 )
 monitor_groups_cleaned <- monitor_groups |>
   stringr::str_to_lower() |>

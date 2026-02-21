@@ -99,9 +99,8 @@ map_paths <- summaries$overall |>
   )
 
 # Define plot summary text (figure titles essentially)
-map_texts <- "Here is an interactive map showing 24-hour mean PM<sub>2.5</sub> concentrations from monitoring sites (%s) in Canada for the past 24 hours. Canadian forecast zones are shown coloured by the mean 24-hour concentration of the monitors within the zone. Toggle layers displayed in the top right menu.
-
-Below the map is a table summarising the data from the monitoring sites displayed in the map. The table is interactive, filterable, and may have pages if there are many sites. If you click the link on a site's name it will take you to that monitor on [AQmap](https://aqmap.ca/)." |>
+map_texts <- "Here is an interactive map showing 24-hour mean PM<sub>2.5</sub> concentrations from monitoring sites (%s) in Canada for the past 24 hours. 
+Canadian forecast zones are shown coloured by the mean 24-hour concentration of the monitors within the zone. Toggle layers displayed in the top right menu." |>
   sprintf(monitor_groups) |>
   setNames(monitor_groups) |>
   as.list()
@@ -118,6 +117,13 @@ overall_summary_tables <- lapply(names(monitor_groups), \(monitor_group) {
       plot_timestamp = plot_timestamp
     )
 }) |>
+  setNames(monitor_groups)
+
+overall_summary_table_captions <- "Canadian %s PM<sub>2.5</sub> monitor observation summaries. 
+The table is interactive, filterable, and has multiple pages.
+If you click the link on a monitor name it will take you to that monitor's location on [AQmap](https://aqmap.ca/)." |> 
+  sprintf(names(monitor_groups)) |> 
+  as.list() |> 
   setNames(monitor_groups)
 
 overall_summary_table_buttons <- overall_summary_tables |>
@@ -229,10 +235,15 @@ The table is interactive, filterable, and has multiple pages.
 If you click the link on a community name it will take you to that community on [AQmap](https://aqmap.ca/)."
 community_table$card <- community_table$path |>
   stringr::str_replace(stringr::fixed(report_dir), "./") |>
-  plot_card(text = table_caption, iframe = TRUE) |>
+  plot_card(
+    text = table_caption,
+    iframe = TRUE,
+    is_table = TRUE,
+    iframe_height = 526
+  ) |>
   stringr::str_replace(
-    "<iframe",
-    paste0(community_table$dl_button, "\n<iframe")
+    "</iframe>",
+    paste0("</iframe>\n", community_table$dl_button)
   ) |>
   knitr::asis_output()
 
@@ -291,7 +302,7 @@ old_report_dropdown <- report_dir |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, map_paths, map_texts, report_dir, overall_summary_table_buttons, overall_summary_tables, iframe = TRUE)`
+`r build_tabs(monitor_groups, map_paths, map_texts, report_dir, overall_summary_table_buttons, overall_summary_tables, overall_summary_table_captions, iframe = TRUE, iframe_height = c(617, 526))`
 
 ## <big><strong>Which sites had the highest concentrations?</strong></big>
 
@@ -299,7 +310,7 @@ old_report_dropdown <- report_dir |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, boxplot_paths, boxplot_texts, report_dir, iframe = TRUE)`
+`r build_tabs(monitor_groups, boxplot_paths, boxplot_texts, report_dir, iframe = TRUE, iframe_height = 526)`
 
 ## <big><strong>Where and when did PM<sub>2.5</sub> events occur?</strong></big>
 

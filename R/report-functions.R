@@ -419,7 +419,8 @@ plot_card <- function(
   text,
   iframe = FALSE,
   title = NA,
-  iframe_height = 615
+  iframe_height = 615,
+  is_table = FALSE
 ) {
   img <- ifelse(
     iframe,
@@ -440,24 +441,25 @@ plot_card <- function(
     )
   }
   "
-::: card
+::::: {.card #$TYPE-$ID}
   
 $IMG
   
-:::: card-body
-  
-::::: card-text
-
 $text
 
 :::::
-
-::::
-
-:::
 " |>
+    stringr::str_replace("\\$TYPE", ifelse(is_table, "tbl", "fig")) |>
     stringr::str_replace("\\$IMG", img) |>
-    stringr::str_replace("\\$text", text)
+    stringr::str_replace("\\$text", text |> stringr::str_replace("'", "\\'")) |>
+    stringr::str_replace(
+      "\\$ID",
+      gsub(
+        "[^a-zA-Z0-9_\\-\\.]",
+        "",
+        tools::file_path_sans_ext(basename(plot_src))
+      )
+    )
 }
 
 make_sync_map <- function(
