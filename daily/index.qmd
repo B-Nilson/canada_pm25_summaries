@@ -302,7 +302,7 @@ old_report_dropdown <- report_dir |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, map_paths, map_texts, report_dir, overall_summary_table_buttons, overall_summary_tables, overall_summary_table_captions, iframe = TRUE)`
+`r build_tabs(monitor_groups, map_paths, map_texts, report_dir, overall_summary_table_buttons, overall_summary_tables, overall_summary_table_captions, iframe = TRUE, iframe_height = c(600, 526))`
 
 ## <big><strong>Which sites had the highest concentrations?</strong></big>
 
@@ -310,7 +310,7 @@ old_report_dropdown <- report_dir |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, boxplot_paths, boxplot_texts, report_dir, iframe = TRUE)`
+`r build_tabs(monitor_groups, boxplot_paths, boxplot_texts, report_dir, iframe = TRUE, iframe_height = 526)`
 
 ## <big><strong>Where and when did PM<sub>2.5</sub> events occur?</strong></big>
 
