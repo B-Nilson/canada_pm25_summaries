@@ -70,7 +70,7 @@ save_aqhi_donuts_plots <- function(
       stat_plot_names <- names(plot_paths)[is_stat]
       new_names <- stat_plot_names |>
         stringr::str_replace(stat |> paste0("_"), "") |> 
-        stringr::str_replace("_", " ") |> 
+        stringr::str_replace_all("_", " ") |> 
         stringr::str_replace("only", "Only") |> 
         stringr::str_replace("pa", "PA") |> 
         stringr::str_replace("fem", "FEM")
