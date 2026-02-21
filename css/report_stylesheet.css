@@ -125,8 +125,8 @@ details {
   font-weight: bold;
 }
 
-.quarto-float-caption-bottom {
-  margin: 0.5rem;
+.quarto-float-caption {
+  margin: 0.5rem !important;
 }
 
 .card>figure>div>button {
