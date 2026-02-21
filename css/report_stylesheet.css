@@ -129,6 +129,14 @@ details {
   margin: 0.5rem !important;
 }
 
+.quarto-float-caption-bottom {
+  margin-top: 0rem !important;
+}
+
+.quarto-float-caption-top {
+  margin-bottom: 0rem !important;
+}
+
 .card>figure>div>button {
   float: left;
   margin-left: 0.2rem !important;
