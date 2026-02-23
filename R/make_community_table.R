@@ -50,8 +50,9 @@ make_community_table <- function(
       nearest_community ~ gt::px(120),
       prov_terr ~ gt::px(60),
       fcst_zone ~ gt::px(130),
-      c(n_pa, n_fem) ~ gt::px(50),
-      dplyr::starts_with("nc_dist") ~ gt::px(95),
+      n_pa ~ gt::px(50),
+      n_fem ~ gt::px(60),
+      dplyr::starts_with("nc_dist") ~ gt::px(104),
       dplyr::starts_with("n_hours") & !dplyr::starts_with("n_hours_above_100") ~ gt::px(94),
       dplyr::starts_with("n_hours_above_100") ~ gt::px(105),
       dplyr::starts_with("pm25") ~ gt::px(78)
