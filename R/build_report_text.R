@@ -84,13 +84,9 @@ This report is automatically updated every %s.'
 </details>'
 
   template <- "
-::: card
-
-:::: card-body
+::: overview-card
 
 %s
-
-::::
 
 :::"
   # see R/report-constants.R
