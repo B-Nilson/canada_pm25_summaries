@@ -172,7 +172,8 @@ make_map_data <- function(
           pm25_mean,
           pm25_max,
           n_hours_above_60
-        )
+        ) |> 
+        lapply(htmltools::HTML)
     )
 }
 
