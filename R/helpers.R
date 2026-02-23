@@ -1,7 +1,5 @@
 make_summary_chunk <- function(contents) {
-  template <- ':::: card
-
-::::: card-body
+  template <- ':::: summary-card
 
 <details>
 <summary>Click for an automated text summary.</summary>
@@ -9,8 +7,6 @@ make_summary_chunk <- function(contents) {
 %s
   
 </details>
-
-:::::
 
 ::::'
   template |> sprintf(contents)
