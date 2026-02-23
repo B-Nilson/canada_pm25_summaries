@@ -28,7 +28,7 @@ make_and_save_overall_map <- function(
     )
   pd |>
     make_overall_map(
-      zone_summaries = zone_summary,
+      zone_summary = zone_summary,
       include_active_fires = include_active_fires
     ) |>
     aqmapr::save_map(
@@ -42,43 +42,69 @@ make_and_save_overall_map <- function(
 
 make_overall_map <- function(
   pd,
-  zone_summaries,
+  zone_summary,
   include_active_fires = TRUE,
   mean_pm25_col = 'mean_pm25_24hr_mean'
 ) {
-  layers.all <- c("Observations", "Forecast Zone Mean", "Active Fires")
+  layers <- list(
+    "FEM observations" = pd |> dplyr::filter(monitor == "FEM"),
+    "PA observations" = pd |> dplyr::filter(monitor == "PA"),
+    "Forecast Zone Mean (FEM + PA)" = zone_summary |>
+      dplyr::filter(!is.na(fcst_zone_fr)),
+    "Active Fires" = NULL
+  )
   if (!include_active_fires) {
-    layers.all <- layers.all[-length(layers.all)]
+    layers <- layers[names(layers) != "Active Fires"]
   }
 
+  aqhi_colours <- aqhi::get_aqhi_colours(1:11)
+  aqhi_mins <- 0:10 * 10
+  aqhi_maxs <- c(1:10 * 10, Inf)
   aqhi_pal <- leaflet::colorBin(
-    palette = aqhi::get_aqhi_colours(1:11),
+    palette = aqhi_colours,
     bins = c(0:10 * 10, Inf),
     right = FALSE,
     na.color = "#bbbbbb"
   )
 
-  pm_legend <- '<div style="margin-bottom:3px"><strong><span>24-hour Mean<br>PM<sub>2.5</sub> (μg m<sup>-3</sup>)</span></strong></div><i style="background:#21C6F5;opacity:1"></i> [0 – 10)<br><i style="background:#189ACA;opacity:1"></i> [10 – 20)<br><i style="background:#0D6797;opacity:1"></i> [20 – 30)<br><i style="background:#FFFD37;opacity:1"></i> [30 – 40)<br><i style="background:#FFCC2E;opacity:1"></i> [40 – 50)<br><i style="background:#FE9A3F;opacity:1"></i> [50 – 60)<br><i style="background:#FD6769;opacity:1"></i> [60 – 70)<br><i style="background:#FF3B3B;opacity:1"></i> [70 – 80)<br><i style="background:#FF0101;opacity:1"></i> [80 – 90)<br><i style="background:#CB0713;opacity:1"></i> [90 – 100)<br><i style="background:#650205;opacity:1"></i> [100 – Inf)<br>'
+  pm_legend <- paste(
+    sep = "<br>",
+    '<div style="margin-bottom:3px"><strong><span>24-hour Mean',
+    'PM<sub>2.5</sub> (μg m<sup>-3</sup>)</span></strong></div>',
+    '<i style="background: %s; opacity: 1"></i> [%s - %s)' |>
+      sprintf(aqhi_colours, aqhi_mins, aqhi_maxs) |>
+      paste(collapse = "<br>")
+  )
 
-  map <- pd |>
-    leaflet::leaflet(height = 600, width = "100%") |>
+  map <- leaflet::leaflet(height = 600, width = "100%") |>
     leaflet::addProviderTiles(leaflet::providers$OpenStreetMap) |>
     leaflet::addMarkers(
+      data = layers[[1]],
       lng = ~lng,
       lat = ~lat,
       options = ~ leaflet::markerOptions(zIndexOffset = pm25_mean * 100),
       label = ~labels,
-      group = layers.all[1],
+      group = names(layers)[1],
+      icon = ~ list(iconUrl = icon_link, iconHeight = 26, iconWidth = 26)
+    ) |>
+    leaflet::addMarkers(
+      data = layers[[2]],
+      lng = ~lng,
+      lat = ~lat,
+      options = ~ leaflet::markerOptions(zIndexOffset = pm25_mean * 100),
+      label = ~labels,
+      group = names(layers)[2],
       icon = ~ list(iconUrl = icon_link, iconHeight = 26, iconWidth = 26)
     ) |>
     leaflet::addPolygons(
-      data = zone_summaries |> dplyr::filter(!is.na(fcst_zone_fr)),
+      data = zone_summary |>
+        dplyr::filter_out(fcst_zone == "Not inside a zone"),
       fillColor = ~ aqhi_pal(get(mean_pm25_col)),
       color = "black",
       weight = 1,
       fillOpacity = ~ ifelse(is.na(get(mean_pm25_col)), 0, 0.5),
       popupOptions = leaflet::popupOptions(minWidth = '330'),
-      group = layers.all[2],
+      group = names(layers)[3],
       popup = ~ make_map_popup(
         fcst_zone,
         mean_pm25_24hr_mean_FEM,
@@ -90,7 +116,7 @@ make_overall_map <- function(
     ) |>
     # Add layers control menu
     leaflet::addLayersControl(
-      overlayGroups = layers.all,
+      overlayGroups = names(layers),
       position = 'topright'
     ) |>
     leaflet::addControl(html = pm_legend, position = 'bottomleft')
@@ -107,11 +133,11 @@ make_overall_map <- function(
         fire_pal,
         factor(fire_states, fire_states),
         opacity = 0.8,
-        title = layers.all[3]
+        title = names(layers)[4]
       ) |>
       leaflet::addCircleMarkers(
         data = active_fires,
-        group = layers.all[3],
+        group = names(layers)[4],
         lat = ~lat,
         lng = ~lon,
         fill = TRUE,
@@ -125,8 +151,7 @@ make_overall_map <- function(
         options = leaflet::markerOptions(
           zIndexOffset = as.numeric(active_fires$state)
         ),
-        popup = ~labels,
-        popupOptions = leaflet::popupOptions()
+        popup = ~labels
       )
   }
   return(map)
@@ -162,7 +187,7 @@ make_map_data <- function(
           pm25_mean,
           pm25_max,
           n_hours_above_60
-        ) |> 
+        ) |>
         lapply(htmltools::HTML)
     )
 }
@@ -286,7 +311,8 @@ make_overall_summary_table <- function(
       fcst_zone ~ gt::px(130),
       nearest_community ~ gt::px(120),
       nc_dist_km ~ gt::px(90),
-      dplyr::starts_with("n_hours") & !dplyr::starts_with("n_hours_above_100") ~ gt::px(97),
+      dplyr::starts_with("n_hours") &
+        !dplyr::starts_with("n_hours_above_100") ~ gt::px(97),
       n_hours_above_100 ~ gt::px(105),
       dplyr::starts_with("pm25") ~ gt::px(78)
     ) |>
