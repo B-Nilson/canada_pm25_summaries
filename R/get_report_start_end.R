@@ -84,9 +84,6 @@ get_last_report_date <- function(
     seasonal = "Summer\\.html|Winter\\.html"
   )
 
-  season_end_month <- months_in_seasons |>
-    lapply(\(months) dplyr::last(months) |> as.character())
-
   last_report_name <- report_dir |>
     list.files(pattern = report_patterns[[type]], recursive = TRUE) |>
     sort() |>
@@ -105,9 +102,6 @@ get_last_report_date <- function(
   if (is.na(last_report_name)) {
     return(NULL)
   }
-
-  is_winter <- last_report_name |>
-    stringr::str_detect("Winter")
 
   dplyr::case_when(
     type == "daily" ~ last_report_name |>
