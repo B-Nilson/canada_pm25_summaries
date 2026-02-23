@@ -429,7 +429,7 @@ plot_card <- function(
       iframe_height,
       "px' src='$plot_src' class='card-img-top p-2' data-external='1' frameborder='0' scrolling='no' width='100%'></iframe>"
     ),
-    "<img loading='lazy' src='$plot_src' class='card-img-top p-2'>"
+    "<div><img loading='lazy' src='$plot_src' class='card-img-top p-2'/></div>"
   ) |>
     stringr::str_replace("\\$plot_src", plot_src)
   if (!is.na(title)) {
