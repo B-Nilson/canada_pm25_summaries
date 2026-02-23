@@ -441,13 +441,13 @@ plot_card <- function(
     )
   }
   "
-::::: {.card #$TYPE-$ID}
+:::::: {.plot-card #$TYPE-$ID}
   
 $IMG
   
 $text
 
-:::::
+::::::
 " |>
     stringr::str_replace("\\$TYPE", ifelse(is_table, "tbl", "fig")) |>
     stringr::str_replace("\\$IMG", img) |>
