@@ -7,6 +7,11 @@ subtitle: |
   `r params$report$date_ranges$vancouver` in Vancouver |
   `r params$report$date_ranges$halifax` in Halifax
 date: "`r params$report$date`"
+citation: 
+  id: seasonal-report
+  title: "Seasonal Canada PM2.5 Summary"
+  url: https://aqmap.ca/aqmap/reports/seasonal
+  publisher: "University of Northern British Columbia, Environment and Climate Change Canada"
 
 format:
   html:
