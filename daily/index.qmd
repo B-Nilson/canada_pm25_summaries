@@ -6,7 +6,8 @@ subtitle: |
   Non-validated, auto-QA/QCed data representing `r params$report$date_ranges$utc`<br>
   `r params$report$date_ranges$vancouver` in Vancouver |
   `r params$report$date_ranges$halifax` in Halifax
- 
+date: "`r params$report$date`"
+
 format:
   html:
     pagetitle: "24hr Canada PM2.5 Summary"
