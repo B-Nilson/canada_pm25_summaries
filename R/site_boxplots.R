@@ -134,7 +134,7 @@ make_site_boxplots <- function(
 }
 
 make_site_boxplot_data <- function(overall_summary) {
-  summaries$overall |>
+  overall_summary |>
     dplyr::mutate(aqhi_p_mean = aqhi::AQHI_plus(pm25_mean, detailed = FALSE)) |>
     tidyr::complete(
       prov_terr = levels(prov_terr) |> factor(levels = levels(prov_terr)),
