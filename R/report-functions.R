@@ -4,7 +4,7 @@ source("R/load_report_data.R")
 source("R/handle_old_reports.R")
 source("R/make_summaries.R")
 source("R/aqhi_donut_plots.R")
-source("R/interactive_map.R")
+source("R/make_overall_map.R")
 source("R/site_boxplots.R")
 source("R/aqhi_grid_plots.R")
 source("R/make_community_table.R")
@@ -429,7 +429,7 @@ plot_card <- function(
       iframe_height,
       "px' src='$plot_src' class='card-img-top p-2' data-external='1' frameborder='0' scrolling='no' width='100%'></iframe>"
     ),
-    "<img loading='lazy' src='$plot_src' class='card-img-top p-2'>"
+    "<div><img loading='lazy' src='$plot_src' class='card-img-top p-2'/></div>"
   ) |>
     stringr::str_replace("\\$plot_src", plot_src)
   if (!is.na(title)) {
@@ -441,13 +441,13 @@ plot_card <- function(
     )
   }
   "
-::::: {.card #$TYPE-$ID}
+:::::: {.plot-card #$TYPE-$ID}
   
 $IMG
   
 $text
 
-:::::
+::::::
 " |>
     stringr::str_replace("\\$TYPE", ifelse(is_table, "tbl", "fig")) |>
     stringr::str_replace("\\$IMG", img) |>
