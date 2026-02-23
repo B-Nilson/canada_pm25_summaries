@@ -103,18 +103,20 @@ get_last_report_date <- function(
     return(NULL)
   }
 
-  dplyr::case_when(
-    type == "daily" ~ last_report_name |>
+  if (type == "daily") {
+    last_report_name |>
       stringr::str_replace("-day$", " 23") |>
       stringr::str_replace("-night$", " 11") |>
-      lubridate::ymd_h(),
-    type == "monthly" ~ last_report_name |>
+      lubridate::ymd_h()
+  } else if (type == "monthly") {
+    last_report_name |>
       lubridate::ym() |>
       lubridate::ceiling_date("1 months") -
-      lubridate::hours(1),
-    type == "seasonal" ~ last_report_name |>
+      lubridate::hours(1)
+  } else if (type == "seasonal") {
+    last_report_name |>
       get_season_end(months_in_seasons = months_in_seasons)
-  )
+  }
 }
 
 get_season_end <- function(
