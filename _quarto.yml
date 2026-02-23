@@ -2,8 +2,6 @@ project:
   title: "canada_pm25_summaries"
   execute-dir: project
 
-title: ""
-
 knitr:
   opts_chunk: 
     warning: false
@@ -13,7 +11,7 @@ knitr:
     fig.height: 5
     fig.align: center
     out.width: "100%"
-    
+
 format:
   html: 
     page-layout: full

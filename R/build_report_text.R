@@ -1,21 +1,5 @@
-build_header <- function(
-  type = c("daily", "monthly", "seasonal")[1],
-  date_range,
-  months_in_seasons = list(
-    "Summer" = 5:10,
-    "Winter" = c(11:12, 1:4)
-  )
-) {
-  template <- '<center><h1>Canadian PM<sub>2.5</sub> Observations %s Summary</h1></center>
-<center><h3>Non-validated Data for <mark class="bg-info">%s</mark></center>
-<center><h3>Representing %s</h3></center>
-<center><h4>%s in Vancouver | %s in Halifax</h4></center>'
-
-  report_name <- date_range[2] |>
-    get_report_name(type = type, months_in_seasons = months_in_seasons) |>
-    parse_report_name(type = type)
-
-  out_formats <- list(
+make_report_date_ranges <- function(date_range) {
+    out_formats <- list(
     utc = "%F %H UTC",
     vancouver = "%F %I %p",
     halifax = "%F %I %p"
@@ -47,15 +31,7 @@ build_header <- function(
   ranges$utc <- ranges$utc |>
     sub(pattern = " UTC", replacement = "", fixed = TRUE) # remove first tz
 
-  template |>
-    sprintf(
-      stringr::str_to_title(type),
-      report_name,
-      ranges$utc,
-      ranges$vancouver,
-      ranges$halifax
-    ) |>
-    knitr::asis_output()
+  return(ranges)
 }
 
 build_overview_card <- function(
