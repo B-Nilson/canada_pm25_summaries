@@ -250,40 +250,6 @@ make_map_popup <- function(
     stringr::str_replace_all(">NA &mu;g m<sup>-3</sup><", ">-<")
 }
 
-make_map_table_data <- function(obs_summary) {
-  obs_summary |>
-    dplyr::mutate(
-      aqhi_p_cat_mean = aqhi::AQHI_plus(pm25_mean)$risk,
-      aqhi_p_cat_max = aqhi::AQHI_plus(pm25_max)$risk,
-      aqhi_p_cat_current = aqhi::AQHI_plus(pm25_current)$risk
-    ) |>
-    dplyr::mutate(
-      aqmap_link = paste0(
-        "https://aqmap.ca/aqmap/#12/",
-        lat,
-        "/",
-        lng
-      )
-    ) |>
-    dplyr::select(
-      "Site Name" = name,
-      "Monitor" = monitor,
-      "Prov./Terr." = prov_terr,
-      "Forecast Zone" = fcst_zone,
-      "Closest Community" = nearest_community,
-      "Dist. From Community\n(km)" = nc_dist_km,
-      "# Hours (/24) >/= 60 ug/m3" = n_hours_above_60,
-      "Current PM2.5\n(ug/m3)" = pm25_current,
-      "24hr PM2.5 Mean\n(ug/m3)" = pm25_mean,
-      "24hr PM2.5 Max\n(ug/m3)" = pm25_max,
-      lng,
-      lat,
-      aqmap_link
-    ) |>
-    dplyr::arrange(dplyr::desc(`24hr PM2.5 Mean\n(ug/m3)`), `Prov./Terr.`) |>
-    dplyr::filter(!duplicated(`Site Name`))
-}
-
 make_overall_summary_table <- function(
   table_data,
   monitor_group,
@@ -330,7 +296,8 @@ make_overall_summary_table <- function(
       fcst_zone ~ gt::px(130),
       nearest_community ~ gt::px(120),
       nc_dist_km ~ gt::px(90),
-      dplyr::starts_with("n_hours") ~ gt::px(94),
+      dplyr::starts_with("n_hours") & !dplyr::starts_with("n_hours_above_100") ~ gt::px(97),
+      n_hours_above_100 ~ gt::px(105),
       dplyr::starts_with("pm25") ~ gt::px(78)
     ) |>
     gt::tab_spanner(
