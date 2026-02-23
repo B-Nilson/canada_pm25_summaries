@@ -369,5 +369,3 @@ old_report_dropdown <- report_dir |>
 `r community_table$card`
 
 :::
-
-##
