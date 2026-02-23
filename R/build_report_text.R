@@ -1,5 +1,5 @@
 make_report_date_ranges <- function(date_range) {
-    out_formats <- list(
+  out_formats <- list(
     utc = "%F %H UTC",
     vancouver = "%F %I %p",
     halifax = "%F %I %p"
