@@ -272,7 +272,7 @@ old_report_dropdown <- report_dir |>
 
 ## Overview {.unlisted .unnumbered}
 
-`r build_overview_card(type = "daily", report_dropdown = old_report_dropdown, contact_email = contact_email)`
+`r build_overview_card(type = "daily", report_dropdown = old_report_dropdown)`
 
 ## Analysis of Past 24-Hours of PM<sub>2.5</sub> Observations
 

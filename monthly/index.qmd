@@ -283,7 +283,7 @@ old_report_dropdown <- report_dir |>
 
 ## Overview {.unlisted .unnumbered}
 
-`r build_overview_card(type = "monthly", report_dropdown = old_report_dropdown, contact_email = contact_email)`
+`r build_overview_card(type = "monthly", report_dropdown = old_report_dropdown)`
 
 `r loading_div`
 

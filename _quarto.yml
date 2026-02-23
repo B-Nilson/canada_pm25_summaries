@@ -26,3 +26,8 @@ format:
           <link rel="preconnect" href="https://rsms.me/">
           <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
           <script src="index_files/js/page_load.js"></script>
+
+author: 
+  - name: "Brayden Nilson"
+    affiliation: "Environment and Climate Change Canada"
+    email: brayden.nilson@ec.gc.ca

@@ -36,8 +36,7 @@ make_report_date_ranges <- function(date_range) {
 
 build_overview_card <- function(
   type = c("daily", "monthly", "seasonal")[1],
-  report_dropdown,
-  contact_email
+  report_dropdown
 ) {
   texts <- list(
     daily = list(
@@ -84,9 +83,6 @@ This report is automatically updated every %s.'
 
 </details>'
 
-  contact_details <- "For any concerns, questions, or feedback regarding this report or the data within it, please contact %s" |>
-    sprintf(contact_email)
-
   template <- "
 ::: card
 
@@ -102,7 +98,6 @@ This report is automatically updated every %s.'
     report_overview |>
       sprintf(texts$data_for_past, texts$updated_every),
     report_dropdown,
-    contact_details,
     report_details
   ) |>
     paste(collapse = "\n\n")
