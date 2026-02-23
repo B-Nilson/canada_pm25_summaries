@@ -322,9 +322,13 @@ old_report_dropdown <- report_dir |>
 
 `r tab_explainers$network_tabs`
 
+<div>
+
 `r map_card`
 
 `r overall_summary_table$card`
+
+</div>
 
 ## <big><strong>Which sites had the highest concentrations?</strong></big>
 
