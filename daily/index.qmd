@@ -103,47 +103,54 @@ prov_donuts_text$p <- c(pa = "PA", fem = "FEM") |>
 
 ```{r, maps}
 
-map_paths <- summaries$overall |>
-  make_and_save_maps(
+map_path <- summaries$overall |>
+  make_and_save_overall_map(
     zone_summary = summaries$by_zone,
-    monitor_groups = monitor_groups,
+    monitor_group = "FEM and PA",
     report_dir = report_dir,
     plot_dir = figure_dir,
     lib_dir = lib_dir,
     include_active_fires = FALSE
   )
-
 # Define plot summary text (figure titles essentially)
-map_texts <- "Here is an interactive map showing 24-hour mean PM<sub>2.5</sub> concentrations from monitoring sites (%s) in Canada for the past 24 hours. 
-Canadian forecast zones are shown coloured by the mean 24-hour concentration of the monitors within the zone. Toggle layers displayed in the top right menu." |>
-  sprintf(monitor_groups) |>
-  setNames(monitor_groups) |>
-  as.list()
+map_text <- "Here is an interactive map showing 24-hour mean PM<sub>2.5</sub> concentrations from FEM and PA monitoring sites in Canada for the past 24 hours. 
+Canadian forecast zones are shown coloured by the mean 24-hour concentration of the monitors within the zone. Toggle layers displayed in the top right menu."
+
+map_card <- map_path |>
+  stringr::str_replace(stringr::fixed(report_dir), "./") |>
+  plot_card(
+    text = map_text,
+    iframe = TRUE,
+    iframe_height = 617
+  )
 
 # Make and save tables
-overall_summary_tables <- lapply(names(monitor_groups), \(monitor_group) {
-  summaries$overall |>
-    dplyr::filter(monitor == monitor_group | monitor_group == "FEM and PA") |>
-    make_overall_summary_table(
-      report_dir = report_dir,
-      monitor_group = monitor_group,
-      data_dir = data_dir,
-      figure_dir = figure_dir,
-      plot_timestamp = plot_timestamp
-    )
-}) |>
-  setNames(monitor_groups)
+overall_summary_table <- summaries$overall |>
+  make_overall_summary_table(
+    report_dir = report_dir,
+    monitor_group = "FEM and PA",
+    data_dir = data_dir,
+    figure_dir = figure_dir,
+    plot_timestamp = plot_timestamp
+  )
 
-overall_summary_table_captions <- "Canadian %s PM<sub>2.5</sub> monitor observation summaries. 
+table_caption <- "Canadian PM<sub>2.5</sub> monitor observation summaries. 
 The table is interactive, filterable, and has multiple pages.
-If you click the link on a monitor name it will take you to that monitor's location on [AQmap](https://aqmap.ca/)." |> 
-  sprintf(names(monitor_groups)) |> 
-  as.list() |> 
-  setNames(monitor_groups)
+If you click the link on a monitor name it will take you to that monitor's location on [AQmap](https://aqmap.ca/)."
 
-overall_summary_table_buttons <- overall_summary_tables |>
-  lapply(\(x) x$dl_button)
-overall_summary_tables <- overall_summary_tables |> lapply(\(x) x$path)
+overall_summary_table$card <-  overall_summary_table$path |>
+  stringr::str_replace(stringr::fixed(report_dir), "./") |>
+  plot_card(
+    text = table_caption,
+    iframe = TRUE,
+    is_table = TRUE,
+    iframe_height = 526
+  ) |>
+  stringr::str_replace(
+    "</iframe>",
+    paste0("</iframe>\n", overall_summary_table$dl_button)
+  ) |>
+  knitr::asis_output()
 
 ```
 
@@ -315,7 +322,9 @@ old_report_dropdown <- report_dir |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, map_paths, map_texts, report_dir, overall_summary_table_buttons, overall_summary_tables, overall_summary_table_captions, iframe = TRUE, iframe_height = c(617, 526))`
+`r map_card`
+
+`r overall_summary_table$card`
 
 ## <big><strong>Which sites had the highest concentrations?</strong></big>
 

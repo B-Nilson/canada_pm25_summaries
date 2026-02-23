@@ -1,7 +1,7 @@
-make_and_save_maps <- function(
+make_and_save_overall_map <- function(
   overall_summary,
   zone_summary,
-  monitor_groups,
+  monitor_group,
   include_active_fires = FALSE,
   report_dir,
   plot_dir,
@@ -11,46 +11,36 @@ make_and_save_maps <- function(
     make_map_data()
 
   # Make paths to map files
-  plot_names <- "site_mean_map_%s_%s.html" |>
+  plot_name <- "site_mean_map_%s_%s.html" |>
     sprintf(
-      monitor_groups |>
+      monitor_group |>
         stringr::str_to_lower() |>
         stringr::str_replace_all(" ", "_"),
       plot_timestamp
     )
-  plot_paths <- report_dir |>
-    file.path(plot_dir, plot_names) |>
-    setNames(monitor_groups) |>
-    as.list()
+  plot_path <- report_dir |>
+    file.path(plot_dir, plot_name)
 
   # Make and save maps
-  monitor_groups |>
-    lapply(\(monitor_group) {
-      group_name <- names(monitor_groups)[monitor_groups == monitor_group]
-      pd <- map_data
-      if (monitor_group != "FEM and PA") {
-        pd <- pd |>
-          dplyr::filter(
-            monitor ==
-              ifelse(monitor_group != "FEM and PA", group_name, monitor)
-          )
-      }
-      pd |>
-        make_pm25_obs_map(
-          zone_summaries = zone_summary,
-          include_active_fires = include_active_fires
-        ) |>
-        aqmapr::save_map(
-          save_to = plot_paths[[monitor_group]],
-          library_dir = lib_dir,
-          self_contained = FALSE
-        )
-    })
+  pd <- map_data |>
+    dplyr::filter(
+      monitor == monitor_group | monitor_group == "FEM and PA"
+    )
+  pd |>
+    make_overall_map(
+      zone_summaries = zone_summary,
+      include_active_fires = include_active_fires
+    ) |>
+    aqmapr::save_map(
+      save_to = plot_path,
+      library_dir = lib_dir,
+      self_contained = FALSE
+    )
 
-  return(plot_paths)
+  return(plot_path)
 }
 
-make_pm25_obs_map <- function(
+make_overall_map <- function(
   pd,
   zone_summaries,
   include_active_fires = TRUE,
