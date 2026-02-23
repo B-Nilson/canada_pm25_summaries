@@ -296,7 +296,8 @@ make_overall_summary_table <- function(
       fcst_zone ~ gt::px(130),
       nearest_community ~ gt::px(120),
       nc_dist_km ~ gt::px(90),
-      dplyr::starts_with("n_hours") ~ gt::px(94),
+      dplyr::starts_with("n_hours") & !dplyr::starts_with("n_hours_above_100") ~ gt::px(94),
+      n_hours_above_100 ~ gt::px(105),
       dplyr::starts_with("pm25") ~ gt::px(78)
     ) |>
     gt::tab_spanner(

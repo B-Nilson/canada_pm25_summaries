@@ -52,7 +52,8 @@ make_community_table <- function(
       fcst_zone ~ gt::px(130),
       c(n_pa, n_fem) ~ gt::px(50),
       dplyr::starts_with("nc_dist") ~ gt::px(95),
-      dplyr::starts_with("n_hours") ~ gt::px(94),
+      dplyr::starts_with("n_hours") & !dplyr::starts_with("n_hours_above_100") ~ gt::px(94),
+      dplyr::starts_with("n_hours_above_100") ~ gt::px(105),
       dplyr::starts_with("pm25") ~ gt::px(78)
     ) |>
     gt::tab_spanner(
