@@ -105,6 +105,7 @@ prov_donuts_text$p <- c(pa = "PA", fem = "FEM") |>
 
 map_paths <- summaries$overall |>
   make_and_save_maps(
+    zone_summary = summaries$by_zone,
     monitor_groups = monitor_groups,
     report_dir = report_dir,
     plot_dir = figure_dir,

@@ -1,12 +1,13 @@
 make_and_save_maps <- function(
   overall_summary,
+  zone_summary,
   monitor_groups,
   include_active_fires = FALSE,
   report_dir,
   plot_dir,
   lib_dir = "libs"
 ) {
-  map_data <- summaries$overall |>
+  map_data <- overall_summary |>
     make_map_data()
 
   # Make paths to map files
@@ -36,7 +37,7 @@ make_and_save_maps <- function(
       }
       pd |>
         make_pm25_obs_map(
-          zone_summaries = summaries$by_zone,
+          zone_summaries = zone_summary,
           include_active_fires = include_active_fires
         ) |>
         aqmapr::save_map(

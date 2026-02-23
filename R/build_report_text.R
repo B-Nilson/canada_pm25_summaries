@@ -372,7 +372,7 @@ build_community_summary <- function(
   type = c("daily", "monthly")[1]
 ) {
   average_text <- list(daily = "24-hour", monthly = "1-month")[[type]]
-  pd <- summaries$community |>
+  pd <- community_summary |>
     dplyr::select(
       P = prov_terr,
       C = nearest_community,
