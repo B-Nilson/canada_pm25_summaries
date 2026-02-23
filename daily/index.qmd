@@ -1,4 +1,18 @@
 ---
+params:
+  report: !expr source("../R/set_params.R"); set_params(type = "daily")
+title: "Canadian PM<sub>2.5</sub> Observations Daily Summary for <mark class='bg-info'>`r params$report$name_parsed`</mark>"
+subtitle: | 
+  Non-validated, auto-QA/QCed data representing `r params$report$date_ranges$utc`<br>
+  `r params$report$date_ranges$vancouver` in Vancouver |
+  `r params$report$date_ranges$halifax` in Halifax
+date: "`r params$report$date`"
+citation: 
+  id: daily-report
+  title: "24hr Canada PM2.5 Summary"
+  url: https://aqmap.ca/aqmap/reports/daily
+  publisher: "University of Northern British Columbia, Environment and Climate Change Canada"
+
 format:
   html:
     pagetitle: "24hr Canada PM2.5 Summary"
@@ -262,11 +276,9 @@ old_report_dropdown <- report_dir |>
 
 <!-- Report Start -->
 
-`r build_header(type = "daily", date_range = date_range)`
-
 ## Overview {.unlisted .unnumbered}
 
-`r build_overview_card(type = "daily", report_dropdown = old_report_dropdown, contact_email = contact_email)`
+`r build_overview_card(type = "daily", report_dropdown = old_report_dropdown)`
 
 ## Analysis of Past 24-Hours of PM<sub>2.5</sub> Observations
 

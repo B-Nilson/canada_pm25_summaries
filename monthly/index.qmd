@@ -1,4 +1,18 @@
 ---
+params:
+  report: !expr source("../R/set_params.R"); set_params(type = "monthly")
+title: "Canadian PM<sub>2.5</sub> Observations Monthly Summary for <mark class='bg-info'>`r params$report$name_parsed`</mark>"
+subtitle: | 
+  Non-validated, auto-QA/QCed data representing `r params$report$date_ranges$utc`<br>
+  `r params$report$date_ranges$vancouver` in Vancouver |
+  `r params$report$date_ranges$halifax` in Halifax
+date: "`r params$report$date`"
+citation: 
+  id: monthly-report
+  title: "Monthly Canada PM2.5 Summary"
+  url: https://aqmap.ca/aqmap/reports/monthly
+  publisher: "University of Northern British Columbia, Environment and Climate Change Canada"
+
 format:
   html:
     pagetitle: "Monthly Canada PM2.5 Summary"
@@ -269,15 +283,13 @@ old_report_dropdown <- report_dir |>
 
 ```
 
-`r build_header(type = "monthly", date_range = date_range)`
-
 `r if(run_future_month) paste0("<center><h4>**WARNING - This report is incomplete. It only contains data up to ",max(obs$date) |> format("%B %d"),"**</h4></center>") |> HTML()`
 
 |  
 
 ## Overview {.unlisted .unnumbered}
 
-`r build_overview_card(type = "monthly", report_dropdown = old_report_dropdown, contact_email = contact_email)`
+`r build_overview_card(type = "monthly", report_dropdown = old_report_dropdown)`
 
 `r loading_div`
 

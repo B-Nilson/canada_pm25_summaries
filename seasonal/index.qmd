@@ -1,4 +1,18 @@
 ---
+params:
+  report: !expr source("../R/set_params.R"); set_params(type = "seasonal")
+title: "Canadian PM<sub>2.5</sub> Observations Seasonal Summary for <mark class='bg-info'>`r params$report$name_parsed`</mark>"
+subtitle: | 
+  Non-validated, auto-QA/QCed data representing `r params$report$date_ranges$utc`<br>
+  `r params$report$date_ranges$vancouver` in Vancouver |
+  `r params$report$date_ranges$halifax` in Halifax
+date: "`r params$report$date`"
+citation: 
+  id: seasonal-report
+  title: "Seasonal Canada PM2.5 Summary"
+  url: https://aqmap.ca/aqmap/reports/seasonal
+  publisher: "University of Northern British Columbia, Environment and Climate Change Canada"
+
 format:
   html:
     pagetitle: "Seasonal Canada PM2.5 Summary"
@@ -65,13 +79,9 @@ old_report_dropdown <- report_dir |>
 
 ```
 
-`r build_header(type = "seasonal", date_range = date_range, months_in_seasons = months_in_seasons)`
-
-|  
-
 ## Overview {.unlisted .unnumbered}
 
-`r build_overview_card(type = "seasonal", report_dropdown = old_report_dropdown, contact_email = contact_email)`
+`r build_overview_card(type = "seasonal", report_dropdown = old_report_dropdown)`
 
 `r loading_div`
 

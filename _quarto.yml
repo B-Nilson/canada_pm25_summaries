@@ -2,8 +2,6 @@ project:
   title: "canada_pm25_summaries"
   execute-dir: project
 
-title: ""
-
 knitr:
   opts_chunk: 
     warning: false
@@ -13,7 +11,7 @@ knitr:
     fig.height: 5
     fig.align: center
     out.width: "100%"
-    
+
 format:
   html: 
     page-layout: full
@@ -28,3 +26,11 @@ format:
           <link rel="preconnect" href="https://rsms.me/">
           <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
           <script src="index_files/js/page_load.js"></script>
+
+author: 
+  - name: "Brayden Nilson"
+    affiliation: "Environment and Climate Change Canada"
+    email: brayden.nilson@ec.gc.ca
+date-modified: now
+license: "CC BY-NC-SA"
+appendix-cite-as: display
