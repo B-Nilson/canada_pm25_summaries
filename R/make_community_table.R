@@ -45,7 +45,7 @@ make_community_table <- function(
 
   community_table <- table_data |>
     gt::gt() |>
-    gt::opt_interactive() |>
+    gt::opt_interactive(use_filters = TRUE) |>
     gt::cols_width(
       nearest_community ~ gt::px(120),
       prov_terr ~ gt::px(60),
