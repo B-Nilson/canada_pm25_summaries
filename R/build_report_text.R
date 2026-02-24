@@ -176,7 +176,7 @@ build_map_summary <- function(
       dplyr::summarise(
         m = join_list_sentence(m) |>
           paste0(ifelse(length(p) > 1, ", respectively", "")),
-        p = join_list_sentence(p)
+        p = join_list_sentence(p, type = "provinces/territories")
       ) |>
       dplyr::mutate(
         t = paste0(
@@ -308,7 +308,7 @@ build_prov_grid_summary <- function(
         dplyr::summarise(n = sum(as.numeric(fill) > 3, na.rm = TRUE)) |>
         dplyr::filter(n >= 3) |>
         dplyr::arrange(dplyr::desc(n)) |>
-        dplyr::summarise(text = join_list_sentence(y)) |>
+        dplyr::summarise(text = join_list_sentence(y, type = "provinces/territories")) |>
         dplyr::pull(text)
     })
 

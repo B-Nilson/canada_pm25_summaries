@@ -239,9 +239,9 @@ shorten_number_list <- function(x) {
   )
 }
 
-join_list_sentence <- function(l, oxford = FALSE) {
+join_list_sentence <- function(l, oxford = FALSE, type = "regions") {
   if (length(l) == 0) {
-    return("No regions")
+    return(paste("No", type))
   }
   if (length(l) == 1) {
     return(l)
