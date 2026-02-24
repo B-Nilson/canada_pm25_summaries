@@ -330,7 +330,6 @@ build_prov_grid_summary <- function(
   template <- "%s had a significant amount of locations with elevated
 PM<sub>2.5</sub> concentrations  (> 30 {{< pm_units >}})
 for at least 3 %s (See @fig-prov_medianpeak_grid_fem_and_pa \"Median\"). 
-
 %s had at least one location with elevated 
 PM<sub>2.5</sub> concentrations (> 30 {{< pm_units >}})
 for at least 3 %s (See @fig-prov_medianpeak_grid_fem_and_pa \"Maximum\")."
