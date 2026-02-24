@@ -380,6 +380,7 @@ build_community_summary <- function(
       H2 = n_hours_above_60_network_max_comm_max
     ) |>
     dplyr::mutate(
+      C = C |> escape_md(),
       NFEM = N |>
         stringr::str_extract("FEM: \\d*") |>
         stringr::str_remove("FEM: ") |>

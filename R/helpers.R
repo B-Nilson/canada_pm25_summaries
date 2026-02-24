@@ -70,3 +70,18 @@ abbrev_text <- function(x) {
         sprintf(x_safe, x)
     )
 }
+
+escape_md <- function(x) {
+  # Order matters: escape backslash first
+  x <- gsub("\\\\", "\\\\\\\\", x)
+
+  # Escape Markdown special characters
+  specials <- c("`", "\\*", "_", "\\{", "\\}", "\\[", "\\]", 
+                "\\(", "\\)", "#", "\\+", "-", "\\.", "!", "\\|")
+  
+  for (s in specials) {
+    x <- gsub(s, paste0("\\\\", s), x)
+  }
+  
+  x
+}
