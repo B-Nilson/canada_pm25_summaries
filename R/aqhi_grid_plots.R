@@ -67,12 +67,13 @@ make_and_save_fcst_zone_grids <- function(
   lapply(provinces_n_territories, \(prov_abbr) {
     pt_data <- grid_data |>
       dplyr::filter(z == prov_abbr)
-    
+
     if (is.null(fig_dims$h)) {
       h <- pt_data |>
-        dplyr::distinct(y) |> 
-        nrow() / 7 + 3
-    }else {
+        dplyr::distinct(y) |>
+        nrow()
+      h <- h / 6 + 3
+    } else {
       h <- fig_dims$h
     }
 
@@ -133,7 +134,7 @@ make_fcst_zone_grids <- function(
       stat = "Median",
       small_text = TRUE,
       caption = plot_caption
-    )+
+    ) +
     ggplot2::labs(subtitle = "Median")
 }
 
