@@ -44,6 +44,7 @@ make_and_save_site_boxplots <- function(
     list(
       # Worst site by MAX
       plot_data |>
+        dplyr::mutate(name = escape_md(name)) |>
         dplyr::arrange(desc(pm25_max)) |>
         head(1) |>
         dplyr::select(
@@ -56,6 +57,7 @@ make_and_save_site_boxplots <- function(
         ),
       # Worst site by MEAN
       plot_data |>
+        dplyr::mutate(name = escape_md(name)) |>
         dplyr::arrange(desc(pm25_mean)) |>
         head(1) |>
         dplyr::select(

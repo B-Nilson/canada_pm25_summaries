@@ -1,12 +1,7 @@
 make_summary_chunk <- function(contents) {
   template <- ':::: summary-card
 
-<details>
-<summary>Click for an automated text summary.</summary>
-
 %s
-  
-</details>
 
 ::::'
   template |> sprintf(contents)
@@ -21,7 +16,8 @@ build_tabs <- function(
   tables = NULL,
   table_captions = NULL,
   iframe = FALSE,
-  iframe_height = 600
+  iframe_height = 600,
+  plot_timestamp
 ) {
   chunks <- tab_names |>
     sapply(\(tab_name) {
@@ -30,7 +26,8 @@ build_tabs <- function(
         plot_card(
           plot_captions[[tab_name]],
           iframe = iframe,
-          iframe_height = iframe_height[1]
+          iframe_height = iframe_height[1],
+          plot_timestamp = plot_timestamp
         )
       "## %s\n%s" |> sprintf(tab_name, card)
     })
@@ -47,7 +44,8 @@ build_tabs <- function(
                 table_captions[[tab_name]],
                 iframe = TRUE,
                 is_table = TRUE,
-                iframe_height = iframe_height[2]
+                iframe_height = iframe_height[2],
+                plot_timestamp = plot_timestamp
               ) |>
               stringr::str_replace(
                 "</iframe>",
@@ -74,4 +72,19 @@ abbrev_text <- function(x) {
       '<p title="%s" style="overflow-x:hidden; text-overflow:ellipsis; white-space:nowrap">%s</p></div>' |>
         sprintf(x_safe, x)
     )
+}
+
+escape_md <- function(x) {
+  # Order matters: escape backslash first
+  x <- gsub("\\\\", "\\\\\\\\", x)
+
+  # Escape Markdown special characters
+  specials <- c("`", "\\*", "_", "\\{", "\\}", "\\[", "\\]", 
+                "\\(", "\\)", "#", "\\+", "-", "\\.", "!", "\\|")
+  
+  for (s in specials) {
+    x <- gsub(s, paste0("\\\\", s), x)
+  }
+  
+  x
 }

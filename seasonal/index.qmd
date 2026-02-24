@@ -20,10 +20,6 @@ format:
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-```{js onpageload}
-$(window).on('load', () => on_page_load("#analysis-of-past-6-months-of-pm2\\.5-observations"));  
-```
-
 ```{r setup}
 
 source("R/report-functions.R")
@@ -83,11 +79,9 @@ old_report_dropdown <- report_dir |>
 
 `r loading_div`
 
-## Analysis of Past 6-months of PM<sub>2.5</sub> Observations {.panel-tabset .tabset-dropdown style="display:none;"}
+## Analysis of Past 6-months of PM<sub>2.5</sub> Observations
 
-`r tab_explainers$primary_tabs`
-
-### <big><strong>Where/when did we have observations?</strong></big> {.panel-tabset}
+### Where/when did we have observations? {.panel-tabset}
 
 ```{r}
 # Define dimensions for output figures
@@ -360,7 +354,7 @@ plot_path |>
 table
 ```
 
-### <big><strong>How was this season overall?</strong></big> {.panel-tabset}
+### How was this season overall? {.panel-tabset}
 
 ```{r}
 # Define dimensions for output figures
@@ -723,7 +717,7 @@ plot_paths$ts |>
 table
 ```
 
-### <big><strong>When/where did events occur?</strong></big> {.panel-tabset}
+### When/where did events occur? {.panel-tabset}
 
 ```{r }
 # Define dimensions for output figures
@@ -1089,7 +1083,7 @@ plot_paths$median |>
 table
 ```
 
-### <big><strong>What were the worst events like?</strong></big> {.panel-tabset}
+### What were the worst events like? {.panel-tabset}
 
 ```{r }
 # Define dimensions for output figures
@@ -1539,7 +1533,7 @@ for (p in names(prov_pretty)) {
 
 ```
 
-### <big><strong>Which communities [with data] were impacted?</strong></big> {.panel-tabset}
+### Which communities [with data] were impacted? {.panel-tabset}
 
 ```{r }
 # Define dimensions for output figures

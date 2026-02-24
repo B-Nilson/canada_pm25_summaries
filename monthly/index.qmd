@@ -16,25 +16,6 @@ citation:
 format:
   html:
     pagetitle: "Monthly Canada PM2.5 Summary"
-    include-in-header: 
-      - text: |
-          <script src="https://code.jquery.com/jquery-4.0.0.min.js"></script>
-          <script>
-            var main_header = "#analysis-of-past-month-of-pm2\\.5-observations";
-            $(main_header).hide();
-            $(main_header + " > .panel-tabset .primary-tabset").hide();
-            var icons = [
-              'icons8-doughnut-chart-64.png',
-              'icons8-vertical-timeline-64.png',
-              'icons8-map-64.png',
-              'icons8-data-sheet-64.png',
-              'icons8-vertical-timeline-64.png',
-              'icons8-vertical-timeline-64.png',
-              'icons8-grid-64.png',
-              'icons8-grid-64.png'
-            ].map((f_name) => "index_files/icons/" + f_name);
-            $(document).ready(() => on_page_load(main_header, icons));
-          </script>
 ---
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -291,19 +272,17 @@ old_report_dropdown <- report_dir |>
 
 `r loading_div`
 
-## Analysis of Past Month of PM<sub>2.5</sub> Observations {.panel-tabset .tabset-dropdown style="display: none;"}
+## Analysis of Past Month of PM<sub>2.5</sub> Observations
 
-`r tab_explainers$primary_tabs`
-
-### <big><strong>How many observation sites at each risk level?</strong></big> {.panel-tabset}
+### How many observation sites at each risk level?
 
 ```{r prov_donuts}
 
 # Define plot summary text (figure titles essentially)
-plot_text_template <- "Distribution of monthly mean concentrations at %s PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a monthly mean within that concentration range." |>
+plot_text_template <- "Distribution of monthly median concentrations at %s PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a monthly median within that concentration range." |>
   sprintf(monitor_groups)
 prov_donuts_text <- list(
-  mean = plot_text_template,
+  median = plot_text_template,
   max = plot_text_template |> stringr::str_replace_all(" mean ", " max ")
 ) |>
   lapply(\(x) as.list(x) |> setNames(monitor_groups))
@@ -311,7 +290,7 @@ prov_donuts_text <- list(
 # Make summary data for autmated text for this section
 prov_donuts_text$p <- c(pa = "PA", fem = "FEM") |>
   lapply(\(network) {
-    summaries$donuts$data$mean |>
+    summaries$donuts$data$median |>
       dplyr::filter(monitor == network) |>
       dplyr::group_by(monitor, aqhi_p) |>
       dplyr::summarise(n = sum(n), .groups = "drop") |>
@@ -327,7 +306,7 @@ prov_donuts_text$p <- c(pa = "PA", fem = "FEM") |>
 #### FEM and PA
 
 ```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$mean_fem_and_pa |>
+summaries$donuts$paths$median_fem_and_pa |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(prov_donuts_text$mean$`FEM and PA`)
 ```
@@ -341,7 +320,7 @@ summaries$donuts$paths$max_fem_and_pa |>
 #### FEM Only
 
 ```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$mean_fem_only |>
+summaries$donuts$paths$median_fem_only |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(prov_donuts_text$mean$`FEM Only`)
 ```
@@ -355,7 +334,7 @@ summaries$donuts$paths$max_fem_only |>
 #### PA Only
 
 ```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$mean_pa_only |>
+summaries$donuts$paths$median_pa_only |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(prov_donuts_text$mean$`PA Only`)
 ```
@@ -366,7 +345,7 @@ summaries$donuts$paths$max_pa_only |>
   plot_card(prov_donuts_text$max$`PA Only`)
 ```
 
-### <big><strong>Who had access to nearby observations?</strong></big> {.panel-tabset}
+### Who had access to nearby observations? {.panel-tabset}
 
 ```{r coverage_charts}
 fig_dims = list(h = 7, w = 9, u = 'in')
@@ -551,7 +530,7 @@ coverage_dl
 coverage_table
 ```
 
-### <big><strong>Where and when were PM<sub>2.5</sub> concentrations high?</strong></big>{.panel-tabset}
+### Where and when were PM<sub>2.5</sub> concentrations high? {.panel-tabset}
 
 ```{r, maps}
 
@@ -627,7 +606,7 @@ plot2_path |>
   plot_card(plot2_text, iframe = TRUE, plot2_title, iframe_height = 625)
 ```
 
-### <big><strong>Where and when did PM<sub>2.5</sub> events occur?</strong></big> {.panel-tabset}
+### Where and when did PM<sub>2.5</sub> events occur? {.panel-tabset}
 
 ```{r grids_prov}
 
@@ -742,7 +721,7 @@ for (pt_name in names(provinces_n_territories)) {
 
 ```
 
-### <big><strong>Which sites had the highest concentrations?</strong></big> {.panel-tabset}
+### Which sites had the highest concentrations? {.panel-tabset}
 
 ```{r site_boxplots}
 
@@ -799,7 +778,7 @@ plot_paths[["PA"]] |>
   plot_card(plot_texts[["PA Only"]], iframe = TRUE)
 ```
 
-### <big><strong>Which communities [with data] had very high PM<sub>2.5</sub>?</strong></big> {.panel-tabset}
+### Which communities [with data] had very high PM<sub>2.5</sub>? {.panel-tabset}
 
 ```{r community_boxplots}
 
@@ -894,7 +873,7 @@ plot_paths[["PA Only"]] |>
   plot_card(plot_texts[["PA Only"]], iframe = TRUE)
 ```
 
-### <big><strong>What was the worst day this month?</strong></big>{.panel-tabset}
+### What was the worst day this month? {.panel-tabset}
 
 ```{r worst_day_tables}
 # Make download link and table for province level
@@ -1058,7 +1037,7 @@ The "worst day" for PM<sub>2.5</sub> concentrations **for each forecast zone**. 
 
 :::
 
-### <big><strong>Which regions were most impacted, and for which days?</strong></big>
+### Which regions were most impacted, and for which days?
 
 ```{r analysis7, cache= FALSE}
 

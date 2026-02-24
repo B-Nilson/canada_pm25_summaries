@@ -116,28 +116,43 @@ build_prov_donut_summary <- function(
 ) {
   average_text <- list(daily = "24-hour", monthly = "1-month")[[type]]
 
-  template <- 'There was <strong>%s FEM sites</strong> and <strong>%s PA sites</strong> reporting PM<sub>2.5</sub> in Canada for this report. 
+  template <- 'There was <strong>%s FEM sites</strong> and <strong>%s PA sites</strong> reporting PM<sub>2.5</sub> in Canada for this report (@fig-monitor_donuts_median_fem_and_pa, @fig-monitor_donuts_max_fem_and_pa). 
 
-- <strong>%s</strong> of the FEM sites in Canada have a %s mean exceeding 100 {{< pm_units >}},
+- <strong>%s</strong> of the FEM sites in Canada have a %s median exceeding 100 {{< pm_units >}},
 <strong>%s</strong> are between 60 and 100 {{< pm_units >}},
-and <strong>%s</strong> are between 30 and 60 {{< pm_units >}}. 
-
-- <strong>%s</strong> of the PA sites in Canada have a %s mean exceeding 100 {{< pm_units >}},
+and <strong>%s</strong> are between 30 and 60 {{< pm_units >}} (@fig-monitor_donuts_median_fem_only). 
+<strong>%s</strong> of the PA sites in Canada have a %s median exceeding 100 {{< pm_units >}},
 <strong>%s</strong> are between 60 and 100 {{< pm_units >}},
-and <strong>%s</strong> are between 30 and 60 {{< pm_units >}}.'
+and <strong>%s</strong> are between 30 and 60 {{< pm_units >}} (@fig-monitor_donuts_median_pa_only).
+  
+- <strong>%s</strong> of the FEM sites in Canada have a %s maximum exceeding 100 {{< pm_units >}},
+<strong>%s</strong> are between 60 and 100 {{< pm_units >}},
+and <strong>%s</strong> are between 30 and 60 {{< pm_units >}} (@fig-monitor_donuts_max_fem_only). 
+<strong>%s</strong> of the PA sites in Canada have a %s maximum exceeding 100 {{< pm_units >}},
+<strong>%s</strong> are between 60 and 100 {{< pm_units >}},
+and <strong>%s</strong> are between 30 and 60 {{< pm_units >}} (@fig-monitor_donuts_max_pa_only).'
 
   template |>
     sprintf(
-      sum(prov_donuts_text$p$fem$n),
-      sum(prov_donuts_text$p$pa$n),
-      prov_donuts_text$p$fem$p[4] |> paste0("%"),
+      sum(prov_donuts_text$p$fem$median$n),
+      sum(prov_donuts_text$p$pa$median$n),
+      prov_donuts_text$p$fem$median$p[4] |> paste0("%"),
       average_text,
-      prov_donuts_text$p$fem$p[3] |> paste0("%"),
-      prov_donuts_text$p$fem$p[2] |> paste0("%"),
-      prov_donuts_text$p$pa$p[4] |> paste0("%"),
+      prov_donuts_text$p$fem$median$p[3] |> paste0("%"),
+      prov_donuts_text$p$fem$median$p[2] |> paste0("%"),
+      prov_donuts_text$p$pa$median$p[4] |> paste0("%"),
       average_text,
-      prov_donuts_text$p$pa$p[3] |> paste0("%"),
-      prov_donuts_text$p$pa$p[2] |> paste0("%")
+      prov_donuts_text$p$pa$median$p[3] |> paste0("%"),
+      prov_donuts_text$p$pa$median$p[2] |> paste0("%"),
+
+      prov_donuts_text$p$fem$max$p[4] |> paste0("%"),
+      average_text,
+      prov_donuts_text$p$fem$max$p[3] |> paste0("%"),
+      prov_donuts_text$p$fem$max$p[2] |> paste0("%"),
+      prov_donuts_text$p$pa$max$p[4] |> paste0("%"),
+      average_text,
+      prov_donuts_text$p$pa$max$p[3] |> paste0("%"),
+      prov_donuts_text$p$pa$max$p[2] |> paste0("%")
     ) |>
     make_summary_chunk() |>
     knitr::asis_output()
@@ -157,12 +172,19 @@ build_map_summary <- function(
   high_fem_by_prov <- aqhi_p_counts$by_prov |>
     subset(FEM != 0 & aqhi_p_24hr == "High") |>
     dplyr::arrange(dplyr::desc(PA))
+  mod_fem_by_prov <- aqhi_p_counts$by_prov |>
+    subset(FEM != 0 & aqhi_p_24hr == "Moderate") |>
+    dplyr::arrange(dplyr::desc(PA))
+
   very_high_pa_by_prov <- aqhi_p_counts$by_prov |>
     subset(PA != 0 & aqhi_p_24hr == "Very High") |>
     dplyr::arrange(dplyr::desc(FEM))
   high_pa_by_prov <- aqhi_p_counts$by_prov |>
     subset(PA != 0 & aqhi_p_24hr == "High") |>
     dplyr::arrange(dplyr::desc(PA))
+  mod_pa_by_prov <- aqhi_p_counts$by_prov |>
+    subset(PA != 0 & aqhi_p_24hr == "Moderate") |>
+    dplyr::arrange(dplyr::desc(FEM))
 
   if (!is.null(worst_day)) {
     wd <- worst_day |>
@@ -176,7 +198,7 @@ build_map_summary <- function(
       dplyr::summarise(
         m = join_list_sentence(m) |>
           paste0(ifelse(length(p) > 1, ", respectively", "")),
-        p = join_list_sentence(p)
+        p = join_list_sentence(p, type = "provinces/territories")
       ) |>
       dplyr::mutate(
         t = paste0(
@@ -195,17 +217,15 @@ build_map_summary <- function(
 
   template <- 'There was <strong>%s FEM monitors</strong> and <strong>%s PA monitors</strong> in Canada
 with a %s mean PM<sub>2.5</sub> concentration <strong>exceeding 100 {{< pm_units >}}</strong>
-
-%s
-
-%s
+*(very high AQHI risk)* (@tbl-overall_table_fem_and_pa, @fig-site_mean_map_fem_and_pa).%s%s
 
 There was <strong>%s FEM monitors</strong> and <strong>%s PA monitors</strong> in Canada
 with a %s mean PM<sub>2.5</sub> concentration <strong>between 60 and 100 {{< pm_units >}}</strong>
+*(high AQHI risk)*.%s%s
   
-%s
-
-%s
+There was <strong>%s FEM monitors</strong> and <strong>%s PA monitors</strong> in Canada
+with a %s mean PM<sub>2.5</sub> concentration <strong>between 30 and 60 {{< pm_units >}}</strong>
+*(moderate AQHI risk)*.%s%s
   
 %s'
 
@@ -221,25 +241,18 @@ with a %s mean PM<sub>2.5</sub> concentration <strong>between 60 and 100 {{< pm_
       aqhi_p_counts$overall$FEM[4],
       aqhi_p_counts$overall$PA[4],
       average_text,
-      paste0(
-        ifelse(nrow(very_high_fem_by_prov), "* ", ""),
-        format_count_summary(very_high_fem_by_prov, "FEM", "exceeding 100")
-      ),
-      paste0(
-        ifelse(nrow(very_high_pa_by_prov), "* ", ""),
-        format_count_summary(very_high_pa_by_prov, "PA", "exceeding 100")
-      ),
+      format_count_summary(very_high_fem_by_prov, "FEM", "exceeding 100"),
+      format_count_summary(very_high_pa_by_prov, "PA", "exceeding 100"),
       aqhi_p_counts$overall$FEM[3],
       aqhi_p_counts$overall$PA[3],
       average_text,
-      paste0(
-        ifelse(nrow(high_fem_by_prov), "* ", ""),
-        format_count_summary(high_fem_by_prov, "FEM", "between 60 and 100")
-      ),
-      paste0(
-        ifelse(nrow(high_pa_by_prov), "* ", ""),
-        format_count_summary(high_pa_by_prov, "PA", "between 60 and 100")
-      ),
+      format_count_summary(high_fem_by_prov, "FEM", "between 60 and 100"),
+      format_count_summary(high_pa_by_prov, "PA", "between 60 and 100"),
+      aqhi_p_counts$overall$FEM[2],
+      aqhi_p_counts$overall$PA[2],
+      average_text,
+      format_count_summary(mod_fem_by_prov, "FEM", "between 30 and 60"),
+      format_count_summary(mod_pa_by_prov, "PA", "between 30 and 60"),
       wd_text
     ) |>
     make_summary_chunk() |>
@@ -253,14 +266,14 @@ build_boxplot_summary <- function(
 ) {
   average_text <- list(daily = "24-hour", monthly = "1-month")[[type]]
   template <- '
-%s (a %s monitor located %s km from %s, %s) had the highest observed hourly mean PM<sub>2.5</sub>
-concentration in Canada from the FEM network for this report (%s {{< pm_units >}}).
-%s (a %s monitor located %s km from %s, %s) had the highest observed %s mean PM<sub>2.5</sub>
+*%s* (a %s monitor located %s km from %s, %s) had the highest observed hourly maximum PM<sub>2.5</sub>
+concentration in Canada from the FEM network for this report (%s {{< pm_units >}}) (@fig-site_mean_boxplots_fem_and_pa, @fig-site_mean_boxplots_fem_only).
+*%s* (a %s monitor located %s km from %s, %s) had the highest observed %s mean PM<sub>2.5</sub>
 concentration in Canada from the FEM network (%s {{< pm_units >}}).
 
-%s (a %s monitor located %s km from %s, %s) had the highest observed hourly mean PM<sub>2.5</sub>
-concentration in Canada from the PA network for this report (%s {{< pm_units >}}).
-%s (a %s monitor located %s km from %s, %s) had the highest observed %s mean PM<sub>2.5</sub>
+*%s* (a %s monitor located %s km from %s, %s) had the highest observed hourly maximum PM<sub>2.5</sub>
+concentration in Canada from the PA network for this report (%s {{< pm_units >}})  (@fig-site_mean_boxplots_fem_and_pa, @fig-site_mean_boxplots_pa_only).
+*%s* (a %s monitor located %s km from %s, %s) had the highest observed %s mean PM<sub>2.5</sub>
 concentration in Canada from the PA network (%s {{< pm_units >}}).'
 
   template |>
@@ -308,17 +321,18 @@ build_prov_grid_summary <- function(
         dplyr::summarise(n = sum(as.numeric(fill) > 3, na.rm = TRUE)) |>
         dplyr::filter(n >= 3) |>
         dplyr::arrange(dplyr::desc(n)) |>
-        dplyr::summarise(text = join_list_sentence(y)) |>
+        dplyr::summarise(
+          text = join_list_sentence(y, type = "provinces/territories")
+        ) |>
         dplyr::pull(text)
     })
 
   template <- "%s had a significant amount of locations with elevated
 PM<sub>2.5</sub> concentrations  (> 30 {{< pm_units >}})
-for at least 3 %s [see median plot]. 
-
+for at least 3 %s (See @fig-prov_medianpeak_grid_fem_and_pa \"Median\"). 
 %s had at least one location with elevated 
 PM<sub>2.5</sub> concentrations (> 30 {{< pm_units >}})
-for at least 3 %s [see maximum plot]."
+for at least 3 %s (See @fig-prov_medianpeak_grid_fem_and_pa \"Maximum\")."
 
   template |>
     sprintf(p$median, average_text, p$maximum, average_text) |>
@@ -339,8 +353,9 @@ build_fcst_grid_summary <- function(
   if (nrow(text) == 0) {
     text <- ""
   } else {
-    text <- "- %s: %s" |>
+    text <- "- %s (@fig-zone_median_grid_%s): %s" |>
       sprintf(
+        unique(text$z),
         unique(text$z),
         unique(text$z) |>
           sapply(\(p) {
@@ -353,7 +368,7 @@ build_fcst_grid_summary <- function(
 
   average_text <- list(daily = "hours", monthly = "days")[[type]]
   template <- "The following forecast regions experienced elevated PM<sub>2.5</sub> concentrations 
-(> 30 {{< pm_units >}}) for at least 3 %s:
+(> 30 {{< pm_units >}}) for at least 3 %s):
 
 %s"
 
@@ -377,9 +392,11 @@ build_community_summary <- function(
       PM1 = pm25_mean_network_mean_comm_mean,
       PM2 = pm25_max_network_max_comm_max,
       H1 = n_hours_above_100_network_max_comm_max,
-      H2 = n_hours_above_60_network_max_comm_max
+      H2 = n_hours_above_60_network_max_comm_max,
+      H3 = n_hours_above_30_network_max_comm_max
     ) |>
     dplyr::mutate(
+      C = C |> escape_md(),
       NFEM = N |>
         stringr::str_extract("FEM: \\d*") |>
         stringr::str_remove("FEM: ") |>
@@ -397,18 +414,19 @@ build_community_summary <- function(
       dplyr::arrange(desc(PM1)) |>
       head(1),
     pd |>
-      dplyr::arrange(desc(H1), desc(H2)) |>
+      dplyr::arrange(desc(H1), desc(H2), desc(H3)) |>
       head(1)
   )
 
-  template <- "%s (a community in %s with %s FEM and %s PA monitors within at least %s km)
-had the highest observed hourly PM<sub>2.5</sub> concentration in Canada for this report (%s {{< pm_units >}}). 
-During this period, %s (a community in %s with %s FEM and %s PA monitors within at least %s km) 
+  template <- "*%s* (a community in %s with %s FEM and %s PA monitors within at least %s km)
+had the highest observed hourly PM<sub>2.5</sub> concentration in Canada for this report (%s {{< pm_units >}}) (@tbl-community_summary). 
+*%s* (a community in %s with %s FEM and %s PA monitors within at least %s km) 
 had the highest %s mean in Canada (%s {{< pm_units >}}).
 
-%s (a community in %s with %s FEM and %s PA monitors within at least %s km)
-had %s hours where at least one monitor exceeded 100 {{< pm_units >}}
-and %s hours where at least one monitor exceeded 60 {{< pm_units >}}."
+*%s* (a community in %s with %s FEM and %s PA monitors within at least %s km)
+had %s hours where at least one monitor exceeded 100 {{< pm_units >}}, 
+%s hours where at least one monitor exceeded 60 {{< pm_units >}}, 
+and %s hours where at least one monitor exceeded 30 {{< pm_units >}}."
 
   template |>
     sprintf(
@@ -431,7 +449,8 @@ and %s hours where at least one monitor exceeded 60 {{< pm_units >}}."
       community_table_vals[[3]]$NPA,
       community_table_vals[[3]]$D,
       community_table_vals[[3]]$H1,
-      community_table_vals[[3]]$H2
+      community_table_vals[[3]]$H2,
+      community_table_vals[[3]]$H3
     ) |>
     make_summary_chunk() |>
     knitr::asis_output()

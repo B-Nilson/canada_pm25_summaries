@@ -239,9 +239,9 @@ shorten_number_list <- function(x) {
   )
 }
 
-join_list_sentence <- function(l, oxford = FALSE) {
+join_list_sentence <- function(l, oxford = FALSE, type = "regions") {
   if (length(l) == 0) {
-    return("No regions")
+    return(paste("No", type))
   }
   if (length(l) == 1) {
     return(l)
@@ -316,7 +316,7 @@ format_count_summary <- function(
   range_text = "exceeding 100"
 ) {
   if (nrow(dat) > 1) {
-    x <- paste0("<strong>", dat[[monitor]], "</strong>") |>
+    x <- paste0(" <strong>", dat[[monitor]], "</strong>") |>
       paste(
         unlist(dat[, 'prov_terr']),
         sep = paste0(" ", monitor, " monitor(s) in ")
@@ -327,20 +327,20 @@ format_count_summary <- function(
       paste0(
         ', and ',
         dplyr::last(x),
-        " with a mean PM<sub>2.5</sub> concentration over the past 24 hours <strong> ",
+        " had a mean PM<sub>2.5</sub> concentration ",
         range_text,
-        " &mu;g m<sup>-3</sup></strong>"
+        " {{< pm_units >}}."
       )
   } else if (nrow(dat) == 1) {
-    paste0("<strong>", dat[[monitor]], "</strong>") |>
+    paste0(" <strong>", dat[[monitor]], "</strong>") |>
       paste(
         unlist(dat[, 'prov_terr']),
         sep = paste0(" ", monitor, " monitor(s) in ")
       ) |>
       paste0(
-        " with a mean PM<sub>2.5</sub> concentration over the past 24 hours <strong> ",
+        " had a mean PM<sub>2.5</sub> concentration ",
         range_text,
-        " &mu;g m<sup>-3</sup></strong>"
+        " {{< pm_units >}}."
       )
   } else {
     ""
@@ -420,7 +420,8 @@ plot_card <- function(
   iframe = FALSE,
   title = NA,
   iframe_height = 615,
-  is_table = FALSE
+  is_table = FALSE,
+  plot_timestamp
 ) {
   img <- ifelse(
     iframe,
@@ -457,7 +458,9 @@ $text
       gsub(
         "[^a-zA-Z0-9_\\-\\.]",
         "",
-        tools::file_path_sans_ext(basename(plot_src))
+        basename(plot_src) |>
+          tools::file_path_sans_ext() |>
+          stringr::str_remove(stringr::fixed(paste0("_", plot_timestamp)))
       )
     )
 }

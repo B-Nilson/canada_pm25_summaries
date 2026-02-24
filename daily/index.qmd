@@ -16,20 +16,6 @@ citation:
 format:
   html:
     pagetitle: "24hr Canada PM2.5 Summary"
-    include-in-header: 
-      - text: |
-          <script src="https://code.jquery.com/jquery-4.0.0.min.js"></script>
-          <script>
-            var main_header = "#analysis-of-past-24-hours-of-pm2\\.5-observations";
-            var icons = [
-                "icons8-doughnut-chart-64.png",
-                "icons8-map-64.png",
-                "icons8-vertical-timeline-64.png",
-                "icons8-data-sheet-64.png",
-                "icons8-grid-64.png"
-            ].map((f_name) => "index_files/icons/" + f_name);
-            $(document).ready(() => on_page_load(main_header, icons));
-          </script>
 ---
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -81,22 +67,25 @@ max_date <- obs$date |> base::max()
 # plots created and saved in make_summaries()
 
 # Define plot summary text (figure titles essentially)
-plot_text_template <- "Distribution of 24-hour mean concentrations at %s PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a 24-hour mean within that concentration range." |>
+plot_text_template <- "Monitor counts and frequencies of median AQHI risk levels for %s PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a median AQHI risk at that level for this report." |>
   sprintf(monitor_groups)
 prov_donuts_text <- list(
-  mean = plot_text_template,
-  max = plot_text_template |> stringr::str_replace_all(" mean ", " max ")
+  median = plot_text_template,
+  max = plot_text_template |> stringr::str_replace_all(" median ", " max ")
 ) |>
   lapply(\(x) as.list(x) |> setNames(monitor_groups))
 
 # Make summary data for autmated text for this section
 prov_donuts_text$p <- c(pa = "PA", fem = "FEM") |>
   lapply(\(network) {
-    summaries$donuts$data$mean |>
-      dplyr::filter(monitor == network) |>
-      dplyr::group_by(monitor, aqhi_p) |>
-      dplyr::summarise(n = sum(n), .groups = "drop") |>
-      dplyr::mutate(p = round(n / sum(n) * 100, 1))
+    summaries$donuts$data |>
+      lapply(\(stat_data) {
+        stat_data |>
+          dplyr::filter(monitor == network) |>
+          dplyr::group_by(monitor, aqhi_p) |>
+          dplyr::summarise(n = sum(n), .groups = "drop") |>
+          dplyr::mutate(p = round(n / sum(n) * 100, 1))
+      })
   })
 
 ```
@@ -121,7 +110,8 @@ map_card <- map_path |>
   plot_card(
     text = map_text,
     iframe = TRUE,
-    iframe_height = 617
+    iframe_height = 617,
+    plot_timestamp = plot_timestamp
   )
 
 # Make and save tables
@@ -144,7 +134,8 @@ overall_summary_table$card <-  overall_summary_table$path |>
     text = table_caption,
     iframe = TRUE,
     is_table = TRUE,
-    iframe_height = 526
+    iframe_height = 526,
+    plot_timestamp = plot_timestamp
   ) |>
   stringr::str_replace(
     "</iframe>",
@@ -261,7 +252,8 @@ community_table$card <- community_table$path |>
     text = table_caption,
     iframe = TRUE,
     is_table = TRUE,
-    iframe_height = 526
+    iframe_height = 526,
+    plot_timestamp = plot_timestamp
   ) |>
   stringr::str_replace(
     "</iframe>",
@@ -288,13 +280,7 @@ old_report_dropdown <- report_dir |>
 
 `r build_overview_card(type = "daily", report_dropdown = old_report_dropdown)`
 
-## Analysis of Past 24-Hours of PM<sub>2.5</sub> Observations
-
-`r tab_explainers$primary_tabs`
-
-::: {.panel-tabset .primary-tabset}
-
-## <big><strong>How many observation sites at each risk level?</strong></big>
+## Past 24-Hours of PM<sub>2.5</sub> Observations
 
 `r build_prov_donut_summary(prov_donuts_text, type = "daily")`
 
@@ -306,39 +292,33 @@ old_report_dropdown <- report_dir |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, summaries$donuts$paths$mean, prov_donuts_text$mean, report_dir)`
+`r build_tabs(monitor_groups, summaries$donuts$paths$median, prov_donuts_text$median, report_dir, plot_timestamp = plot_timestamp)`
 
 ## Max PM<sub>2.5</sub>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, summaries$donuts$paths$max, prov_donuts_text$max, report_dir)`
+`r build_tabs(monitor_groups, summaries$donuts$paths$max, prov_donuts_text$max, report_dir, plot_timestamp = plot_timestamp)`
 
 ::::
 
-## <big><strong>Where were PM<sub>2.5</sub> concentrations high?</strong></big>
+### Where were PM<sub>2.5</sub> concentrations high?
 
 `r build_map_summary(summaries$aqhi_p_counts, type = "daily")`
 
-`r tab_explainers$network_tabs`
-
-<div>
+`r overall_summary_table$card`
 
 `r map_card`
 
-`r overall_summary_table$card`
+`r build_community_summary(summaries$community, type = "daily")`
 
-</div>
+`r community_table$card`
 
-## <big><strong>Which sites had the highest concentrations?</strong></big>
+### When did PM<sub>2.5</sub> events occur?
 
-`r build_boxplot_summary(boxplots$summary_values, type = "daily")`  
+`r build_prov_grid_summary(grid_data, type = "daily")`
 
-`r tab_explainers$network_tabs`
-
-`r build_tabs(monitor_groups, boxplot_paths, boxplot_texts, report_dir, iframe = TRUE, iframe_height = 526)`
-
-## <big><strong>Where and when did PM<sub>2.5</sub> events occur?</strong></big>
+`r build_fcst_grid_summary(fcst_grid_data, type = "daily")`
 
 `r tab_explainers$scale_tabs`
 
@@ -346,26 +326,22 @@ old_report_dropdown <- report_dir |>
 
 ## Province Level
 
-`r build_prov_grid_summary(grid_data, type = "daily")`
-
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, prov_grid_paths, prov_grid_texts, report_dir)`
+`r build_tabs(monitor_groups, prov_grid_paths, prov_grid_texts, report_dir, plot_timestamp = plot_timestamp)`
 
 ## Region Level 
 
-`r build_fcst_grid_summary(fcst_grid_data, type = "daily")`
-
 `r tab_explainers$prov_terr_tabs`
 
-`r build_tabs(provinces_n_territories, fcst_grid_paths, fcst_grid_texts, report_dir)`
+`r build_tabs(provinces_n_territories, fcst_grid_paths, fcst_grid_texts, report_dir, plot_timestamp = plot_timestamp)`
 
 ::::
 
-## <big><strong>Which communities (with data) were impacted?</strong></big>
+### Where were the worst PM<sub>2.5</sub> concentrations?
 
-`r build_community_summary(summaries$community, type = "daily")`
+`r build_boxplot_summary(boxplots$summary_values, type = "daily")`  
 
-`r community_table$card`
+`r tab_explainers$network_tabs`
 
-:::
+`r build_tabs(monitor_groups, boxplot_paths, boxplot_texts, report_dir, iframe = TRUE, iframe_height = 526, plot_timestamp = plot_timestamp)`
