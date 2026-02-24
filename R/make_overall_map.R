@@ -299,7 +299,8 @@ make_overall_summary_table <- function(
           labels = canadata::provinces_and_territories$abbreviation
         ),
       aqmap_link = make_aqmap_link(lat = lat, lng = lng),
-      name = "<a href='%s'>%s</a>" |> sprintf(aqmap_link, name),
+      name = "<a title='%s' href='%s'>%s</a>" |>
+        sprintf(name |> htmltools::htmlEscape(), aqmap_link, name),
       dplyr::across(c(fcst_zone, name, nearest_community), \(x) abbrev_text(x))
     ) |>
     dplyr::select(dplyr::all_of(names(display_names))) |>

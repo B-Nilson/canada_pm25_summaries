@@ -36,8 +36,8 @@ make_community_table <- function(
       }),
       aqmap_link = nc_lat |>
         make_aqmap_link(lng = nc_lng, zoom = 12, lang = "EN"),
-      nearest_community = "<a href='%s'>%s</a>" |>
-        sprintf(aqmap_link, nearest_community),
+      nearest_community = "<a title='%s' href='%s'>%s</a>" |>
+        sprintf(nearest_community |> htmltools::htmlEscape(), aqmap_link, nearest_community),
       dplyr::across(c(fcst_zone, nearest_community), \(x) abbrev_text(x))
     ) |>
     dplyr::select(dplyr::all_of(names(display_names))) |>
