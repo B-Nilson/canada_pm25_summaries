@@ -12,3 +12,4 @@ data/
 index_files/
 index.html
 historic
+.luarc.json
