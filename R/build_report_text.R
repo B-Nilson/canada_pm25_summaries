@@ -253,12 +253,12 @@ build_boxplot_summary <- function(
 ) {
   average_text <- list(daily = "24-hour", monthly = "1-month")[[type]]
   template <- '
-%s (a %s monitor located %s km from %s, %s) had the highest observed hourly mean PM<sub>2.5</sub>
+%s (a %s monitor located %s km from %s, %s) had the highest observed hourly maximum PM<sub>2.5</sub>
 concentration in Canada from the FEM network for this report (%s {{< pm_units >}}).
 %s (a %s monitor located %s km from %s, %s) had the highest observed %s mean PM<sub>2.5</sub>
 concentration in Canada from the FEM network (%s {{< pm_units >}}).
 
-%s (a %s monitor located %s km from %s, %s) had the highest observed hourly mean PM<sub>2.5</sub>
+%s (a %s monitor located %s km from %s, %s) had the highest observed hourly maximum PM<sub>2.5</sub>
 concentration in Canada from the PA network for this report (%s {{< pm_units >}}).
 %s (a %s monitor located %s km from %s, %s) had the highest observed %s mean PM<sub>2.5</sub>
 concentration in Canada from the PA network (%s {{< pm_units >}}).'
