@@ -274,7 +274,7 @@ old_report_dropdown <- report_dir |>
 
 `r build_overview_card(type = "daily", report_dropdown = old_report_dropdown)`
 
-### Analysis of Past 24-Hours of PM<sub>2.5</sub> Observations
+## Past 24-Hours of PM<sub>2.5</sub> Observations
 
 `r build_prov_donut_summary(prov_donuts_text, type = "daily")`
 
@@ -304,7 +304,11 @@ old_report_dropdown <- report_dir |>
 
 `r map_card`
 
-### Where and when did PM<sub>2.5</sub> events occur?
+`r build_community_summary(summaries$community, type = "daily")`
+
+`r community_table$card`
+
+### When did PM<sub>2.5</sub> events occur?
 
 `r tab_explainers$scale_tabs`
 
@@ -328,16 +332,10 @@ old_report_dropdown <- report_dir |>
 
 ::::
 
-### Which sites had the highest concentrations?
+### Where were the worst PM<sub>2.5</sub> concentrations?
 
 `r build_boxplot_summary(boxplots$summary_values, type = "daily")`  
 
 `r tab_explainers$network_tabs`
 
 `r build_tabs(monitor_groups, boxplot_paths, boxplot_texts, report_dir, iframe = TRUE, iframe_height = 526)`
-
-### Which communities (with data) were impacted?
-
-`r build_community_summary(summaries$community, type = "daily")`
-
-`r community_table$card`
