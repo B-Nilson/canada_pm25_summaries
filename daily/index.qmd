@@ -16,20 +16,6 @@ citation:
 format:
   html:
     pagetitle: "24hr Canada PM2.5 Summary"
-    include-in-header: 
-      - text: |
-          <script src="https://code.jquery.com/jquery-4.0.0.min.js"></script>
-          <script>
-            var main_header = "#analysis-of-past-24-hours-of-pm2\\.5-observations";
-            var icons = [
-                "icons8-doughnut-chart-64.png",
-                "icons8-map-64.png",
-                "icons8-vertical-timeline-64.png",
-                "icons8-data-sheet-64.png",
-                "icons8-grid-64.png"
-            ].map((f_name) => "index_files/icons/" + f_name);
-            $(document).ready(() => on_page_load(main_header, icons));
-          </script>
 ---
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -288,13 +274,7 @@ old_report_dropdown <- report_dir |>
 
 `r build_overview_card(type = "daily", report_dropdown = old_report_dropdown)`
 
-## Analysis of Past 24-Hours of PM<sub>2.5</sub> Observations
-
-`r tab_explainers$primary_tabs`
-
-::: {.panel-tabset .primary-tabset}
-
-## <big><strong>How many observation sites at each risk level?</strong></big>
+### Analysis of Past 24-Hours of PM<sub>2.5</sub> Observations
 
 `r build_prov_donut_summary(prov_donuts_text, type = "daily")`
 
@@ -316,29 +296,15 @@ old_report_dropdown <- report_dir |>
 
 ::::
 
-## <big><strong>Where were PM<sub>2.5</sub> concentrations high?</strong></big>
+### Where were PM<sub>2.5</sub> concentrations high?
 
 `r build_map_summary(summaries$aqhi_p_counts, type = "daily")`
 
-`r tab_explainers$network_tabs`
-
-<div>
+`r overall_summary_table$card`
 
 `r map_card`
 
-`r overall_summary_table$card`
-
-</div>
-
-## <big><strong>Which sites had the highest concentrations?</strong></big>
-
-`r build_boxplot_summary(boxplots$summary_values, type = "daily")`  
-
-`r tab_explainers$network_tabs`
-
-`r build_tabs(monitor_groups, boxplot_paths, boxplot_texts, report_dir, iframe = TRUE, iframe_height = 526)`
-
-## <big><strong>Where and when did PM<sub>2.5</sub> events occur?</strong></big>
+### Where and when did PM<sub>2.5</sub> events occur?
 
 `r tab_explainers$scale_tabs`
 
@@ -362,10 +328,16 @@ old_report_dropdown <- report_dir |>
 
 ::::
 
-## <big><strong>Which communities (with data) were impacted?</strong></big>
+### Which sites had the highest concentrations?
+
+`r build_boxplot_summary(boxplots$summary_values, type = "daily")`  
+
+`r tab_explainers$network_tabs`
+
+`r build_tabs(monitor_groups, boxplot_paths, boxplot_texts, report_dir, iframe = TRUE, iframe_height = 526)`
+
+### Which communities (with data) were impacted?
 
 `r build_community_summary(summaries$community, type = "daily")`
 
 `r community_table$card`
-
-:::
