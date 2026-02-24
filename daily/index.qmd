@@ -135,7 +135,7 @@ overall_summary_table$card <-  overall_summary_table$path |>
     text = table_caption,
     iframe = TRUE,
     is_table = TRUE,
-    iframe_height = 526,
+    iframe_height = 590,
     plot_timestamp = plot_timestamp
   ) |>
   stringr::str_replace(
@@ -253,7 +253,7 @@ community_table$card <- community_table$path |>
     text = table_caption,
     iframe = TRUE,
     is_table = TRUE,
-    iframe_height = 526,
+    iframe_height = 590,
     plot_timestamp = plot_timestamp
   ) |>
   stringr::str_replace(
