@@ -50,7 +50,7 @@ make_and_save_fcst_zone_grids <- function(
   plot_timestamp,
   xlab = "Hour of Day",
   plot_caption = "",
-  fig_dims = list(h = 7, w = 11, u = 'in'),
+  fig_dims = list(w = 11, u = 'in'),
   provinces_n_territories
 ) {
   # Make paths to plot files
@@ -64,10 +64,19 @@ make_and_save_fcst_zone_grids <- function(
     as.list()
 
   # Make and save plots
-  lapply(names(provinces_n_territories), \(prov_name) {
-    prov_abbr <- provinces_n_territories[[prov_name]]
-    grid_data |>
-      subset(as.character(z) == prov_abbr) |>
+  lapply(provinces_n_territories, \(prov_abbr) {
+    pt_data <- grid_data |>
+      dplyr::filter(z == prov_abbr)
+    
+    if (is.null(fig_dims$h)) {
+      h <- pt_data |>
+        dplyr::distinct(y) |> 
+        nrow() / 7 + 3
+    }else {
+      h <- fig_dims$h
+    }
+
+    pt_data |>
       make_fcst_zone_grids(
         prov_abbr = prov_abbr,
         xlab = xlab,
@@ -75,7 +84,7 @@ make_and_save_fcst_zone_grids <- function(
       ) |>
       ggplot2::ggsave(
         filename = plot_paths[[prov_abbr]],
-        height = fig_dims$h,
+        height = h,
         width = fig_dims$w,
         units = fig_dims$u,
         dpi = 300
@@ -124,7 +133,8 @@ make_fcst_zone_grids <- function(
       stat = "Median",
       small_text = TRUE,
       caption = plot_caption
-    )
+    )+
+    ggplot2::labs(subtitle = "Median")
 }
 
 make_grid_plot <- function(
