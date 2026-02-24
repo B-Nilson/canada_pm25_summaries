@@ -139,7 +139,7 @@ make_site_boxplot_data <- function(overall_summary) {
     tidyr::complete(
       prov_terr = levels(prov_terr) |> factor(levels = levels(prov_terr)),
       monitor
-    ) |> 
+    ) |>
     dplyr::mutate(
       prov_terr = prov_terr |>
         factor(
