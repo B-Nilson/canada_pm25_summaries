@@ -161,7 +161,7 @@ make_grid_plot <- function(
     ggplot2::labs(
       y = ylab,
       x = xlab,
-      fill = bquote(atop(.(paste(stat, "PM"))[2.5], "(" * mu * g ~ m^-3 * ")")),
+      fill = bquote("PM"[2.5] ~ "(" * mu * g ~ m^-3 * ")"),
       caption = caption
     )
   if (x == "discrete") {
