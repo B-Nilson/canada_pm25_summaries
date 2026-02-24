@@ -216,25 +216,16 @@ build_map_summary <- function(
   }
 
   template <- 'There was <strong>%s FEM monitors</strong> and <strong>%s PA monitors</strong> in Canada
-with a %s mean PM<sub>2.5</sub> concentration <strong>exceeding 100 {{< pm_units >}}</strong> *(very high AQHI risk)* (@tbl-overall_table_fem_and_pa, @fig-site_mean_map_fem_and_pa).
-
-%s
-
-%s
+with a %s mean PM<sub>2.5</sub> concentration <strong>exceeding 100 {{< pm_units >}}</strong>
+*(very high AQHI risk)* (@tbl-overall_table_fem_and_pa, @fig-site_mean_map_fem_and_pa).%s%s
 
 There was <strong>%s FEM monitors</strong> and <strong>%s PA monitors</strong> in Canada
-with a %s mean PM<sub>2.5</sub> concentration <strong>between 60 and 100 {{< pm_units >}}</strong> *(high AQHI risk)*
-  
-%s
-
-%s
+with a %s mean PM<sub>2.5</sub> concentration <strong>between 60 and 100 {{< pm_units >}}</strong>
+*(high AQHI risk)*.%s%s
   
 There was <strong>%s FEM monitors</strong> and <strong>%s PA monitors</strong> in Canada
-with a %s mean PM<sub>2.5</sub> concentration <strong>between 30 and 60 {{< pm_units >}}</strong> *(moderate AQHI risk)*
-  
-%s
-
-%s
+with a %s mean PM<sub>2.5</sub> concentration <strong>between 30 and 60 {{< pm_units >}}</strong>
+*(moderate AQHI risk)*.%s%s
   
 %s'
 
@@ -250,36 +241,18 @@ with a %s mean PM<sub>2.5</sub> concentration <strong>between 30 and 60 {{< pm_u
       aqhi_p_counts$overall$FEM[4],
       aqhi_p_counts$overall$PA[4],
       average_text,
-      paste0(
-        ifelse(nrow(very_high_fem_by_prov), "* ", ""),
-        format_count_summary(very_high_fem_by_prov, "FEM", "exceeding 100")
-      ),
-      paste0(
-        ifelse(nrow(very_high_pa_by_prov), "* ", ""),
-        format_count_summary(very_high_pa_by_prov, "PA", "exceeding 100")
-      ),
+      format_count_summary(very_high_fem_by_prov, "FEM", "exceeding 100"),
+      format_count_summary(very_high_pa_by_prov, "PA", "exceeding 100"),
       aqhi_p_counts$overall$FEM[3],
       aqhi_p_counts$overall$PA[3],
       average_text,
-      paste0(
-        ifelse(nrow(high_fem_by_prov), "* ", ""),
-        format_count_summary(high_fem_by_prov, "FEM", "between 60 and 100")
-      ),
-      paste0(
-        ifelse(nrow(high_pa_by_prov), "* ", ""),
-        format_count_summary(high_pa_by_prov, "PA", "between 60 and 100")
-      ),
+      format_count_summary(high_fem_by_prov, "FEM", "between 60 and 100"),
+      format_count_summary(high_pa_by_prov, "PA", "between 60 and 100"),
       aqhi_p_counts$overall$FEM[2],
       aqhi_p_counts$overall$PA[2],
       average_text,
-      paste0(
-        ifelse(nrow(mod_fem_by_prov), "* ", ""),
-        format_count_summary(mod_fem_by_prov, "FEM", "between 30 and 60")
-      ),
-      paste0(
-        ifelse(nrow(mod_pa_by_prov), "* ", ""),
-        format_count_summary(mod_pa_by_prov, "PA", "between 30 and 60")
-      ),
+      format_count_summary(mod_fem_by_prov, "FEM", "between 30 and 60"),
+      format_count_summary(mod_pa_by_prov, "PA", "between 30 and 60"),
       wd_text
     ) |>
     make_summary_chunk() |>

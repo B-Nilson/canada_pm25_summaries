@@ -316,7 +316,7 @@ format_count_summary <- function(
   range_text = "exceeding 100"
 ) {
   if (nrow(dat) > 1) {
-    x <- paste0("<strong>", dat[[monitor]], "</strong>") |>
+    x <- paste0(" <strong>", dat[[monitor]], "</strong>") |>
       paste(
         unlist(dat[, 'prov_terr']),
         sep = paste0(" ", monitor, " monitor(s) in ")
@@ -327,20 +327,20 @@ format_count_summary <- function(
       paste0(
         ', and ',
         dplyr::last(x),
-        " with a mean PM<sub>2.5</sub> concentration over the past 24 hours <strong> ",
+        " had a mean PM<sub>2.5</sub> concentration ",
         range_text,
-        " &mu;g m<sup>-3</sup></strong>"
+        " {{< pm_units >}}."
       )
   } else if (nrow(dat) == 1) {
-    paste0("<strong>", dat[[monitor]], "</strong>") |>
+    paste0(" <strong>", dat[[monitor]], "</strong>") |>
       paste(
         unlist(dat[, 'prov_terr']),
         sep = paste0(" ", monitor, " monitor(s) in ")
       ) |>
       paste0(
-        " with a mean PM<sub>2.5</sub> concentration over the past 24 hours <strong> ",
+        " had a mean PM<sub>2.5</sub> concentration ",
         range_text,
-        " &mu;g m<sup>-3</sup></strong>"
+        " {{< pm_units >}}."
       )
   } else {
     ""
