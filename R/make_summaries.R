@@ -51,7 +51,7 @@ make_summaries <- function(
     summaries$donuts <- summaries$overall |>
       save_aqhi_donuts_plots(
         monitor_groups = monitor_groups,
-        stats = c("mean", "max"),
+        stats = c("median", "max"),
         avg = type |>
           dplyr::recode_values(
             from = c("daily", "monthly"),
@@ -88,7 +88,8 @@ make_overall_summary <- function(obs, meta_cols) {
         dplyr::any_of(obs_cols),
         list(
           mean = safe_mean,
-          max = \(x) handyr::max(x, na.rm = TRUE)
+          max = \(x) handyr::max(x, na.rm = TRUE),
+          median = \(x) median(x, na.rm = TRUE)
         )
       ),
       n_hours_observed = sum(!is.na(pm25)),

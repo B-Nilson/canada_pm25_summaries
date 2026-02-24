@@ -1,7 +1,7 @@
 save_aqhi_donuts_plots <- function(
   overall_summary,
   monitor_groups,
-  stats = c("mean", "max"),
+  stats = c("median", "max"),
   avg = "24-hour",
   report_dir,
   figure_dir = "plots",

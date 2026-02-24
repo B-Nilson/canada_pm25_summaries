@@ -67,11 +67,11 @@ max_date <- obs$date |> base::max()
 # plots created and saved in make_summaries()
 
 # Define plot summary text (figure titles essentially)
-plot_text_template <- "Distribution of 24-hour mean concentrations at %s PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a 24-hour mean within that concentration range." |>
+plot_text_template <- "Monitor counts and frequencies of median AQHI risk levels for %s PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a median AQHI risk at that level for this report." |>
   sprintf(monitor_groups)
 prov_donuts_text <- list(
-  mean = plot_text_template,
-  max = plot_text_template |> stringr::str_replace_all(" mean ", " max ")
+  median = plot_text_template,
+  max = plot_text_template |> stringr::str_replace_all(" median ", " max ")
 ) |>
   lapply(\(x) as.list(x) |> setNames(monitor_groups))
 
@@ -292,7 +292,7 @@ old_report_dropdown <- report_dir |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, summaries$donuts$paths$mean, prov_donuts_text$mean, report_dir, plot_timestamp = plot_timestamp)`
+`r build_tabs(monitor_groups, summaries$donuts$paths$median, prov_donuts_text$median, report_dir, plot_timestamp = plot_timestamp)`
 
 ## Max PM<sub>2.5</sub>
 

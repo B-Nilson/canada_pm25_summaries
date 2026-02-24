@@ -116,14 +116,14 @@ build_prov_donut_summary <- function(
 ) {
   average_text <- list(daily = "24-hour", monthly = "1-month")[[type]]
 
-  template <- 'There was <strong>%s FEM sites</strong> and <strong>%s PA sites</strong> reporting PM<sub>2.5</sub> in Canada for this report (@fig-monitor_donuts_mean_fem_and_pa, @fig-monitor_donuts_max_fem_and_pa). 
+  template <- 'There was <strong>%s FEM sites</strong> and <strong>%s PA sites</strong> reporting PM<sub>2.5</sub> in Canada for this report (@fig-monitor_donuts_median_fem_and_pa, @fig-monitor_donuts_max_fem_and_pa). 
 
-- <strong>%s</strong> of the FEM sites in Canada have a %s mean exceeding 100 {{< pm_units >}},
+- <strong>%s</strong> of the FEM sites in Canada have a %s median exceeding 100 {{< pm_units >}},
 <strong>%s</strong> are between 60 and 100 {{< pm_units >}},
-and <strong>%s</strong> are between 30 and 60 {{< pm_units >}} (@fig-monitor_donuts_mean_fem_only). 
-<strong>%s</strong> of the PA sites in Canada have a %s mean exceeding 100 {{< pm_units >}},
+and <strong>%s</strong> are between 30 and 60 {{< pm_units >}} (@fig-monitor_donuts_median_fem_only). 
+<strong>%s</strong> of the PA sites in Canada have a %s median exceeding 100 {{< pm_units >}},
 <strong>%s</strong> are between 60 and 100 {{< pm_units >}},
-and <strong>%s</strong> are between 30 and 60 {{< pm_units >}} (@fig-monitor_donuts_mean_pa_only).
+and <strong>%s</strong> are between 30 and 60 {{< pm_units >}} (@fig-monitor_donuts_median_pa_only).
   
 - <strong>%s</strong> of the FEM sites in Canada have a %s maximum exceeding 100 {{< pm_units >}},
 <strong>%s</strong> are between 60 and 100 {{< pm_units >}},
@@ -134,16 +134,16 @@ and <strong>%s</strong> are between 30 and 60 {{< pm_units >}} (@fig-monitor_don
 
   template |>
     sprintf(
-      sum(prov_donuts_text$p$fem$mean$n),
-      sum(prov_donuts_text$p$pa$mean$n),
-      prov_donuts_text$p$fem$mean$p[4] |> paste0("%"),
+      sum(prov_donuts_text$p$fem$median$n),
+      sum(prov_donuts_text$p$pa$median$n),
+      prov_donuts_text$p$fem$median$p[4] |> paste0("%"),
       average_text,
-      prov_donuts_text$p$fem$mean$p[3] |> paste0("%"),
-      prov_donuts_text$p$fem$mean$p[2] |> paste0("%"),
-      prov_donuts_text$p$pa$mean$p[4] |> paste0("%"),
+      prov_donuts_text$p$fem$median$p[3] |> paste0("%"),
+      prov_donuts_text$p$fem$median$p[2] |> paste0("%"),
+      prov_donuts_text$p$pa$median$p[4] |> paste0("%"),
       average_text,
-      prov_donuts_text$p$pa$mean$p[3] |> paste0("%"),
-      prov_donuts_text$p$pa$mean$p[2] |> paste0("%"),
+      prov_donuts_text$p$pa$median$p[3] |> paste0("%"),
+      prov_donuts_text$p$pa$median$p[2] |> paste0("%"),
 
       prov_donuts_text$p$fem$max$p[4] |> paste0("%"),
       average_text,

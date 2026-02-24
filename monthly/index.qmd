@@ -279,10 +279,10 @@ old_report_dropdown <- report_dir |>
 ```{r prov_donuts}
 
 # Define plot summary text (figure titles essentially)
-plot_text_template <- "Distribution of monthly mean concentrations at %s PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a monthly mean within that concentration range." |>
+plot_text_template <- "Distribution of monthly median concentrations at %s PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a monthly median within that concentration range." |>
   sprintf(monitor_groups)
 prov_donuts_text <- list(
-  mean = plot_text_template,
+  median = plot_text_template,
   max = plot_text_template |> stringr::str_replace_all(" mean ", " max ")
 ) |>
   lapply(\(x) as.list(x) |> setNames(monitor_groups))
@@ -290,7 +290,7 @@ prov_donuts_text <- list(
 # Make summary data for autmated text for this section
 prov_donuts_text$p <- c(pa = "PA", fem = "FEM") |>
   lapply(\(network) {
-    summaries$donuts$data$mean |>
+    summaries$donuts$data$median |>
       dplyr::filter(monitor == network) |>
       dplyr::group_by(monitor, aqhi_p) |>
       dplyr::summarise(n = sum(n), .groups = "drop") |>
@@ -306,7 +306,7 @@ prov_donuts_text$p <- c(pa = "PA", fem = "FEM") |>
 #### FEM and PA
 
 ```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$mean_fem_and_pa |>
+summaries$donuts$paths$median_fem_and_pa |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(prov_donuts_text$mean$`FEM and PA`)
 ```
@@ -320,7 +320,7 @@ summaries$donuts$paths$max_fem_and_pa |>
 #### FEM Only
 
 ```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$mean_fem_only |>
+summaries$donuts$paths$median_fem_only |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(prov_donuts_text$mean$`FEM Only`)
 ```
@@ -334,7 +334,7 @@ summaries$donuts$paths$max_fem_only |>
 #### PA Only
 
 ```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$mean_pa_only |>
+summaries$donuts$paths$median_pa_only |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(prov_donuts_text$mean$`PA Only`)
 ```
