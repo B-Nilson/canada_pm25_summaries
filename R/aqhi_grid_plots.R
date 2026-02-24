@@ -6,7 +6,7 @@ make_and_save_prov_terr_grids <- function(
   plot_timestamp,
   xlab = "Hour of Day",
   plot_captions,
-  fig_dims = list(h = 4, w = 11, u = 'in')
+  fig_dims = list(h = 3.5, w = 11, u = 'in')
 ) {
   monitor_groups_cleaned <- monitor_groups |>
     stringr::str_to_lower() |>
