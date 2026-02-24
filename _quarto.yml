@@ -1,7 +1,7 @@
 project:
   title: "canada_pm25_summaries"
   execute-dir: project
-  post-render: R/post_render.R
+  pre-render: R/pre_render.R
 
 knitr:
   opts_chunk: 
