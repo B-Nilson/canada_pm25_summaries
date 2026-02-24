@@ -101,13 +101,13 @@ make_prov_terr_grids <- function(
           monitor == monitor_group | monitor_group == "FEM and PA"
         ) |>
         make_grid_plot(xlab = xlab, stat = "", caption = caption) +
-        ggplot2::labs(title = stat |> stringr::str_to_title())
+        ggplot2::labs(subtitle = stat |> stringr::str_to_title())
       if (!is_last_stat) {
         plot <- plot + ggplot2::theme(legend.position = "none")
       }
       return(plot)
     }) |>
-    patchwork::wrap_plots(nrow = 1, guides = "collect")
+    patchwork::wrap_plots(nrow = 1, guides = "collect", axis_titles = "collect")
 }
 
 make_fcst_zone_grids <- function(
