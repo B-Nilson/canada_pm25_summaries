@@ -5,7 +5,8 @@ make_and_save_overall_map <- function(
   include_active_fires = FALSE,
   report_dir,
   plot_dir,
-  lib_dir = "libs"
+  lib_dir = "libs",
+  map_timestamps
 ) {
   map_data <- overall_summary |>
     make_map_data()
@@ -29,7 +30,8 @@ make_and_save_overall_map <- function(
   pd |>
     make_overall_map(
       zone_summary = zone_summary,
-      include_active_fires = include_active_fires
+      include_active_fires = include_active_fires,
+      map_timestamps = map_timestamps
     ) |>
     aqmapr::save_map(
       save_to = plot_path,
@@ -44,7 +46,8 @@ make_overall_map <- function(
   pd,
   zone_summary,
   include_active_fires = TRUE,
-  mean_pm25_col = 'mean_pm25_24hr_mean'
+  mean_pm25_col = 'mean_pm25_24hr_mean',
+  map_timestamps
 ) {
   layers <- list(
     "FEM observations" = pd |> dplyr::filter(monitor == "FEM"),
@@ -81,6 +84,7 @@ make_overall_map <- function(
 
   map <- leaflet::leaflet(height = 600, width = "100%") |>
     leaflet::addProviderTiles(leaflet::providers$OpenStreetMap) |>
+    add_map_date_range(date_range = map_timestamps) |>
     leaflet::addMarkers(
       data = layers[[1]],
       lng = ~lng,
@@ -158,6 +162,28 @@ make_overall_map <- function(
       )
   }
   return(map)
+}
+
+add_map_date_range <- function(map, date_range) {
+  date_range_placeholders <- date_range |>
+    lubridate::with_tz(tzone = "UTC") |>
+    format("%Y-%m-%dT%H:%M:%SZ")
+  map |>
+    # includes JS, will be replaced by next control
+    aqmapr::add_map_timestamp(timestamp = date_range[1]) |>
+    # Add custom timestamp with both dates
+    leaflet::addControl(
+      html = paste0(
+        '<big><strong>From: ',
+        date_range_placeholders[1],
+        '</strong></big><br>',
+        '<big><strong>Up to: ',
+        date_range_placeholders[2],
+        '</strong></big>'
+      ),
+      layerId = "map_timestamp",
+      position = "bottomleft"
+    )
 }
 
 make_map_data <- function(
