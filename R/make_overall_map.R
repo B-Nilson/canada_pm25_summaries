@@ -67,13 +67,16 @@ make_overall_map <- function(
     na.color = "#bbbbbb"
   )
 
-  pm_legend <- paste(
-    sep = "<br>",
-    '<div style="margin-bottom:3px"><strong><span>24-hour Mean',
-    'PM<sub>2.5</sub> (μg m<sup>-3</sup>)</span></strong></div>',
-    '<i style="background: %s; opacity: 1"></i> [%s - %s)' |>
-      sprintf(aqhi_colours, aqhi_mins, aqhi_maxs) |>
-      paste(collapse = "<br>")
+  pm_legend <- paste0(
+    '<div style="margin-bottom:3px"><strong><span>',
+    "24-hour Mean<br>PM<sub>2.5</sub> (μg m<sup>-3</sup>)",
+    "</span></strong></div>",
+    paste(
+      sep = "<br>",
+      '<i style="background: %s; opacity: 1"></i> [%s - %s)' |>
+        sprintf(aqhi_colours, aqhi_mins, aqhi_maxs) |>
+        paste(collapse = "<br>")
+    )
   )
 
   map <- leaflet::leaflet(height = 600, width = "100%") |>
