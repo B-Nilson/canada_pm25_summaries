@@ -306,8 +306,7 @@ make_overall_summary_table <- function(
   display_names <- list(
     name = "Name",
     monitor = "Type",
-    prov_terr = "P/T",
-    fcst_zone = "Forecast Zone",
+    fcst_zone = "Region",
     nearest_community = "Name",
     nc_dist_km = "Distance",
     n_hours_above_30 = gt::md("30 &mu;g/m<sup>3</sup>"),
@@ -324,6 +323,7 @@ make_overall_summary_table <- function(
           levels = levels(prov_terr),
           labels = canadata::provinces_and_territories$abbreviation
         ),
+      fcst_zone = prov_terr |> paste0(": ", fcst_zone),
       aqmap_link = make_aqmap_link(lat = lat, lng = lng),
       name = "<a title='%s' href='%s'>%s</a>" |>
         sprintf(name |> htmltools::htmlEscape(), aqmap_link, name),
@@ -337,7 +337,6 @@ make_overall_summary_table <- function(
     gt::opt_interactive(use_filters = TRUE) |>
     gt::cols_width(
       monitor ~ gt::px(62),
-      prov_terr ~ gt::px(60),
       fcst_zone ~ gt::px(130),
       nearest_community ~ gt::px(120),
       nc_dist_km ~ gt::px(90),
@@ -348,7 +347,7 @@ make_overall_summary_table <- function(
     ) |>
     gt::tab_spanner(
       label = "Monitoring Site",
-      columns = c("name", "monitor", "prov_terr", "fcst_zone")
+      columns = c("name", "monitor", "fcst_zone")
     ) |>
     gt::tab_spanner(
       label = gt::md("PM<sub>2.5</sub> Concentration (&mu;g m<sup>-3</sup>)"),
