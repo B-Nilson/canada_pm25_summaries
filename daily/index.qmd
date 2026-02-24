@@ -78,11 +78,14 @@ prov_donuts_text <- list(
 # Make summary data for autmated text for this section
 prov_donuts_text$p <- c(pa = "PA", fem = "FEM") |>
   lapply(\(network) {
-    summaries$donuts$data$mean |>
-      dplyr::filter(monitor == network) |>
-      dplyr::group_by(monitor, aqhi_p) |>
-      dplyr::summarise(n = sum(n), .groups = "drop") |>
-      dplyr::mutate(p = round(n / sum(n) * 100, 1))
+    summaries$donuts$data |>
+      lapply(\(stat_data) {
+        stat_data |>
+          dplyr::filter(monitor == network) |>
+          dplyr::group_by(monitor, aqhi_p) |>
+          dplyr::summarise(n = sum(n), .groups = "drop") |>
+          dplyr::mutate(p = round(n / sum(n) * 100, 1))
+      })
   })
 
 ```
