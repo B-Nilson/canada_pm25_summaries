@@ -310,21 +310,21 @@ old_report_dropdown <- report_dir |>
 
 ### When did PM<sub>2.5</sub> events occur?
 
+`r build_prov_grid_summary(grid_data, type = "daily")`
+
+`r build_fcst_grid_summary(fcst_grid_data, type = "daily")`
+
 `r tab_explainers$scale_tabs`
 
 :::: panel-tabset
 
 ## Province Level
 
-`r build_prov_grid_summary(grid_data, type = "daily")`
-
 `r tab_explainers$network_tabs`
 
 `r build_tabs(monitor_groups, prov_grid_paths, prov_grid_texts, report_dir)`
 
 ## Region Level 
-
-`r build_fcst_grid_summary(fcst_grid_data, type = "daily")`
 
 `r tab_explainers$prov_terr_tabs`
 
