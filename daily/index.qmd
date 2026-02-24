@@ -47,6 +47,10 @@ plot_timestamp <- date_range[2] |>
   format("%F-%Hz")
 plot_captions <- date_range |>
   make_plot_captions(networks = names(monitor_groups))
+fig_caption_date_range <- date_range |>
+  lubridate::with_tz("UTC") |>
+  format("%b %d, %Y %H:%M UTC") |>
+  paste(collapse = " to ")
 
 summaries <- obs |>
   make_summaries(
@@ -67,8 +71,8 @@ max_date <- obs$date |> base::max()
 # plots created and saved in make_summaries()
 
 # Define plot summary text (figure titles essentially)
-plot_text_template <- "Monitor counts and frequencies of median AQHI risk levels for %s PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a median AQHI risk at that level for this report." |>
-  sprintf(monitor_groups)
+plot_text_template <- "Monitor counts and frequencies of median AQHI risk levels for %s fine particulate matter (PM<sub>2.5</sub>) concentrations for monitoring sites within each province/territory for %s. The number within each circle indicates the total monitors with data in that area during the report period. Percentages indicate the proportion of those monitors with a median AQHI risk at that level for this report." |>
+  sprintf(names(monitor_groups), fig_caption_date_range)
 prov_donuts_text <- list(
   median = plot_text_template,
   max = plot_text_template |> stringr::str_replace_all(" median ", " max ")
@@ -103,8 +107,12 @@ map_path <- summaries$overall |>
     map_timestamps = date_range
   )
 # Define plot summary text (figure titles essentially)
-map_text <- "Here is an interactive map showing 24-hour mean PM<sub>2.5</sub> concentrations from FEM and PA monitoring sites in Canada for the past 24 hours. 
-Canadian forecast zones are shown coloured by the mean 24-hour concentration of the monitors within the zone. Toggle layers displayed in the top right menu."
+map_text <- "Interactive map of 24-hour mean fine particulate matter (PM<sub>2.5</sub>) concentrations
+from regulatory (FEM; diamonds) and PurpleAir (PA; circles) monitoring sites in Canada for %s. 
+Canadian forecast zones are shown coloured by the mean of the 24-hour mean concentrations from all monitors within the zone.
+Hover over a monitor or click on a forecast zone for additional details.
+Layers can be controlled in the top right menu." |>
+  sprintf(fig_caption_date_range)
 
 map_card <- map_path |>
   stringr::str_replace(stringr::fixed(report_dir), "./") |>
@@ -125,11 +133,12 @@ overall_summary_table <- summaries$overall |>
     plot_timestamp = plot_timestamp
   )
 
-table_caption <- "Canadian PM<sub>2.5</sub> monitor observation summaries. 
-The table is interactive, filterable, and has multiple pages.
-If you click the link on a monitor name it will take you to that monitor's location on [AQmap](https://aqmap.ca/)."
+table_caption <- "Canadian regulatory (FEM) and PurpleAir (PA) monitor fine-particulate matter (PM<sub>2.5</sub>) observation summary for %s. 
+The table is sortable, filterable, and has multiple pages.
+Click the link on a monitor name to view that monitor's location on [AQmap](https://aqmap.ca/)." |>
+  sprintf(fig_caption_date_range)
 
-overall_summary_table$card <-  overall_summary_table$path |>
+overall_summary_table$card <- overall_summary_table$path |>
   stringr::str_replace(stringr::fixed(report_dir), "./") |>
   plot_card(
     text = table_caption,
@@ -163,11 +172,10 @@ boxplots <- summaries$overall |>
 boxplot_paths <- boxplots$paths
 
 # Define plot summary text (figure titles essentially)
-boxplot_texts = paste0(
-  "Each boxplot summarises the distribution of 24-hour monitoring site (",
-  monitor_groups,
-  ") mean PM<sub>2.5</sub> concentrations for that province/territory. Blue points for individual sites are displayed for any monitors higher than that regions 75th percentile. Hover over the blue points (if present) to see details about that specific site; hover over the boxplot (away from the points) to see the min/median/max and 25th/75th percentiles for that province. See the menu in the top right of the plot for more."
-) |>
+boxplot_texts <- "Distributions of site-mean fine particulate matter (PM<sub>2.5</sub>) concentrations for %s monitors in each province/territory from %s.
+Blue points show any sites with a mean concentration higher than that regions 75th percentile, with additional details displayed when hovered over. Hover over the boxplot (away from the points) to see the min/median/max and 25th/75th percentiles for that province. 
+See the menu in the top right of the plot for more." |>
+  sprintf(names(monitor_groups), fig_caption_date_range) |>
   as.list() |>
   setNames(monitor_groups)
 
@@ -192,12 +200,12 @@ prov_grid_paths <- grid_data |>
 
 # Define plot summary text (figure titles essentially)
 prov_grid_texts <- paste(
-  "Median and maximum hourly PM<sub>2.5</sub> concentrations",
-  "for all %s monitoring sites in each province/territory.",
+  "Median and maximum hourly fine particulate matter (PM<sub>2.5</sub>) concentrations",
+  "for all %s monitoring sites in each province/territory from %s.",
   "The median is useful for identifying large scale impacts across the province/territory,",
-  "while the maximum can be used to identify impacts in at least one area of the province/territory."
+  "while the maximum can be used to identify impacts in at least one area."
 ) |>
-  sprintf(names(monitor_groups)) |>
+  sprintf(names(monitor_groups), fig_caption_date_range) |>
   setNames(monitor_groups) |>
   as.list()
 
@@ -222,11 +230,11 @@ fcst_grid_paths <- fcst_grid_data |>
 
 # Define plot summary text (figure titles essentially)
 fcst_grid_texts <- paste(
-  "Hourly median PM<sub>2.5</sub> concentrations for all monitors (FEM and PA) within each forecast zone for %s.",
+  "Hourly median fine particulate matter (PM<sub>2.5</sub>) concentrations for all regulatory (FEM) and PurpleAir (PA) monitors within each %s forecast zone for %s.",
   "A white cell indicates there was no data for that hour from any monitor within that zone.",
-  "Zones are grouped into those with and those without data and are sorted alphabetically."
+  "Zones are grouped into those with and those without monitors and are sorted alphabetically."
 ) |>
-  sprintf(provinces_n_territories) |>
+  sprintf(provinces_n_territories, fig_caption_date_range) |>
   setNames(provinces_n_territories) |>
   as.list()
 
@@ -243,10 +251,10 @@ community_table <- summaries$community |>
     plot_timestamp = plot_timestamp
   )
 
-table_caption <- "Canadian communities with at least 1 nearby PM<sub>2.5</sub> monitor
-reporting PM<sub>2.5</sub> concentrations in the past 24 hours. 
-The table is interactive, filterable, and has multiple pages.
-If you click the link on a community name it will take you to that community on [AQmap](https://aqmap.ca/)."
+table_caption <- "Canadian communities with at least one nearby regulatory (FEM) or PurpleAir (PA) fine particulate matter (PM<sub>2.5</sub>) monitor with data from %s. 
+The table is sortable, filterable, and has multiple pages.
+Click on a name to view that community on [AQmap](https://aqmap.ca/)." |>
+  sprintf(fig_caption_date_range)
 community_table$card <- community_table$path |>
   stringr::str_replace(stringr::fixed(report_dir), "./") |>
   plot_card(
