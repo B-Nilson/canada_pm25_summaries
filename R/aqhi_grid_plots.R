@@ -150,7 +150,7 @@ make_grid_plot <- function(
   aqhi_colours <- aqhi::get_aqhi_colours(aqhi_values)
   gg <- plot_data |>
     ggplot2::ggplot(ggplot2::aes(x = x, y = y, fill = fill)) +
-    ggplot2::geom_tile(colour = "black") +
+    ggplot2::geom_tile(colour = "black", show.legend = TRUE) +
     ggplot2::scale_y_discrete(expand = ggplot2::expansion(0)) +
     ggplot2::scale_fill_manual(
       values = aqhi_colours |> setNames(c(1:10, "+")),
