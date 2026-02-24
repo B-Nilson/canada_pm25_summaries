@@ -321,7 +321,9 @@ build_prov_grid_summary <- function(
         dplyr::summarise(n = sum(as.numeric(fill) > 3, na.rm = TRUE)) |>
         dplyr::filter(n >= 3) |>
         dplyr::arrange(dplyr::desc(n)) |>
-        dplyr::summarise(text = join_list_sentence(y, type = "provinces/territories")) |>
+        dplyr::summarise(
+          text = join_list_sentence(y, type = "provinces/territories")
+        ) |>
         dplyr::pull(text)
     })
 
@@ -417,12 +419,12 @@ build_community_summary <- function(
       head(1)
   )
 
-  template <- "%s (a community in %s with %s FEM and %s PA monitors within at least %s km)
+  template <- "*%s* (a community in %s with %s FEM and %s PA monitors within at least %s km)
 had the highest observed hourly PM<sub>2.5</sub> concentration in Canada for this report (%s {{< pm_units >}}) (@tbl-community_summary). 
-%s (a community in %s with %s FEM and %s PA monitors within at least %s km) 
+*%s* (a community in %s with %s FEM and %s PA monitors within at least %s km) 
 had the highest %s mean in Canada (%s {{< pm_units >}}).
 
-%s (a community in %s with %s FEM and %s PA monitors within at least %s km)
+*%s* (a community in %s with %s FEM and %s PA monitors within at least %s km)
 had %s hours where at least one monitor exceeded 100 {{< pm_units >}}, 
 %s hours where at least one monitor exceeded 60 {{< pm_units >}}, 
 and %s hours where at least one monitor exceeded 30 {{< pm_units >}}."
