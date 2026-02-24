@@ -5,7 +5,8 @@ make_and_save_overall_map <- function(
   include_active_fires = FALSE,
   report_dir,
   plot_dir,
-  lib_dir = "libs"
+  lib_dir = "libs",
+  map_timestamps
 ) {
   map_data <- overall_summary |>
     make_map_data()
@@ -29,7 +30,8 @@ make_and_save_overall_map <- function(
   pd |>
     make_overall_map(
       zone_summary = zone_summary,
-      include_active_fires = include_active_fires
+      include_active_fires = include_active_fires,
+      map_timestamps = map_timestamps
     ) |>
     aqmapr::save_map(
       save_to = plot_path,
@@ -44,7 +46,8 @@ make_overall_map <- function(
   pd,
   zone_summary,
   include_active_fires = TRUE,
-  mean_pm25_col = 'mean_pm25_24hr_mean'
+  mean_pm25_col = 'mean_pm25_24hr_mean',
+  map_timestamps
 ) {
   layers <- list(
     "FEM observations" = pd |> dplyr::filter(monitor == "FEM"),
@@ -67,17 +70,21 @@ make_overall_map <- function(
     na.color = "#bbbbbb"
   )
 
-  pm_legend <- paste(
-    sep = "<br>",
-    '<div style="margin-bottom:3px"><strong><span>24-hour Mean',
-    'PM<sub>2.5</sub> (μg m<sup>-3</sup>)</span></strong></div>',
-    '<i style="background: %s; opacity: 1"></i> [%s - %s)' |>
-      sprintf(aqhi_colours, aqhi_mins, aqhi_maxs) |>
-      paste(collapse = "<br>")
+  pm_legend <- paste0(
+    '<div style="margin-bottom:3px"><strong><span>',
+    "24-hour Mean<br>PM<sub>2.5</sub> (μg m<sup>-3</sup>)",
+    "</span></strong></div>",
+    paste(
+      sep = "<br>",
+      '<i style="background: %s; opacity: 1"></i> [%s - %s)' |>
+        sprintf(aqhi_colours, aqhi_mins, aqhi_maxs) |>
+        paste(collapse = "<br>")
+    )
   )
 
   map <- leaflet::leaflet(height = 600, width = "100%") |>
     leaflet::addProviderTiles(leaflet::providers$OpenStreetMap) |>
+    add_map_date_range(date_range = map_timestamps) |>
     leaflet::addMarkers(
       data = layers[[1]],
       lng = ~lng,
@@ -155,6 +162,28 @@ make_overall_map <- function(
       )
   }
   return(map)
+}
+
+add_map_date_range <- function(map, date_range) {
+  date_range_placeholders <- date_range |>
+    lubridate::with_tz(tzone = "UTC") |>
+    format("%Y-%m-%dT%H:%M:%SZ")
+  map |>
+    # includes JS, will be replaced by next control
+    aqmapr::add_map_timestamp(timestamp = date_range[1]) |>
+    # Add custom timestamp with both dates
+    leaflet::addControl(
+      html = paste0(
+        '<big><strong>From: ',
+        date_range_placeholders[1],
+        '</strong></big><br>',
+        '<big><strong>Up to: ',
+        date_range_placeholders[2],
+        '</strong></big>'
+      ),
+      layerId = "map_timestamp",
+      position = "bottomleft"
+    )
 }
 
 make_map_data <- function(
@@ -277,8 +306,7 @@ make_overall_summary_table <- function(
   display_names <- list(
     name = "Name",
     monitor = "Type",
-    prov_terr = "P/T",
-    fcst_zone = "Forecast Zone",
+    fcst_zone = "Region",
     nearest_community = "Name",
     nc_dist_km = "Distance",
     n_hours_above_30 = gt::md("30 &mu;g/m<sup>3</sup>"),
@@ -295,8 +323,10 @@ make_overall_summary_table <- function(
           levels = levels(prov_terr),
           labels = canadata::provinces_and_territories$abbreviation
         ),
+      fcst_zone = prov_terr |> paste0(": ", fcst_zone),
       aqmap_link = make_aqmap_link(lat = lat, lng = lng),
-      name = "<a href='%s'>%s</a>" |> sprintf(aqmap_link, name),
+      name = "<a title='%s' href='%s'>%s</a>" |>
+        sprintf(name |> htmltools::htmlEscape(), aqmap_link, name),
       dplyr::across(c(fcst_zone, name, nearest_community), \(x) abbrev_text(x))
     ) |>
     dplyr::select(dplyr::all_of(names(display_names))) |>
@@ -304,10 +334,9 @@ make_overall_summary_table <- function(
 
   table <- table_data |>
     gt::gt() |>
-    gt::opt_interactive() |>
+    gt::opt_interactive(use_filters = TRUE) |>
     gt::cols_width(
       monitor ~ gt::px(62),
-      prov_terr ~ gt::px(60),
       fcst_zone ~ gt::px(130),
       nearest_community ~ gt::px(120),
       nc_dist_km ~ gt::px(90),
@@ -318,7 +347,7 @@ make_overall_summary_table <- function(
     ) |>
     gt::tab_spanner(
       label = "Monitoring Site",
-      columns = c("name", "monitor", "prov_terr", "fcst_zone")
+      columns = c("name", "monitor", "fcst_zone")
     ) |>
     gt::tab_spanner(
       label = gt::md("PM<sub>2.5</sub> Concentration (&mu;g m<sup>-3</sup>)"),

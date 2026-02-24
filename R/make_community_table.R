@@ -7,8 +7,7 @@ make_community_table <- function(
 ) {
   display_names <- list(
     nearest_community = "Name",
-    prov_terr = "P/T",
-    fcst_zone = "Forecast Zone",
+    fcst_zone = "Region",
     n_fem = "FEM",
     n_pa = "PA",
     nc_dist_km_network_mean_comm_mean = "Mean Dist.",
@@ -29,6 +28,7 @@ make_community_table <- function(
           levels = levels(prov_terr),
           labels = canadata::provinces_and_territories$abbreviation
         ),
+      fcst_zone = prov_terr |> paste0(": ", fcst_zone),
       n_pa = n_monitors |> stringr::str_extract("PA: (\\d+)", group = 1),
       n_fem = n_monitors |> stringr::str_extract("FEM: (\\d+)", group = 1),
       dplyr::across(c(n_pa, n_fem), \(x) {
@@ -36,8 +36,8 @@ make_community_table <- function(
       }),
       aqmap_link = nc_lat |>
         make_aqmap_link(lng = nc_lng, zoom = 12, lang = "EN"),
-      nearest_community = "<a href='%s'>%s</a>" |>
-        sprintf(aqmap_link, nearest_community),
+      nearest_community = "<a title='%s' href='%s'>%s</a>" |>
+        sprintf(nearest_community |> htmltools::htmlEscape(), aqmap_link, nearest_community),
       dplyr::across(c(fcst_zone, nearest_community), \(x) abbrev_text(x))
     ) |>
     dplyr::select(dplyr::all_of(names(display_names))) |>
@@ -45,10 +45,9 @@ make_community_table <- function(
 
   community_table <- table_data |>
     gt::gt() |>
-    gt::opt_interactive() |>
+    gt::opt_interactive(use_filters = TRUE) |>
     gt::cols_width(
       nearest_community ~ gt::px(120),
-      prov_terr ~ gt::px(60),
       fcst_zone ~ gt::px(130),
       n_pa ~ gt::px(50),
       n_fem ~ gt::px(60),
@@ -60,7 +59,7 @@ make_community_table <- function(
     ) |>
     gt::tab_spanner(
       label = "Community Details",
-      columns = c("nearest_community", "prov_terr", "fcst_zone")
+      columns = c("nearest_community", "fcst_zone")
     ) |>
     gt::tab_spanner(
       label = gt::md("PM<sub>2.5</sub> Monitoring Sites"),
