@@ -420,7 +420,8 @@ plot_card <- function(
   iframe = FALSE,
   title = NA,
   iframe_height = 615,
-  is_table = FALSE
+  is_table = FALSE,
+  plot_timestamp
 ) {
   img <- ifelse(
     iframe,
@@ -457,7 +458,9 @@ $text
       gsub(
         "[^a-zA-Z0-9_\\-\\.]",
         "",
-        tools::file_path_sans_ext(basename(plot_src))
+        basename(plot_src) |>
+          tools::file_path_sans_ext() |>
+          stringr::str_remove(stringr::fixed(paste0("_", plot_timestamp)))
       )
     )
 }

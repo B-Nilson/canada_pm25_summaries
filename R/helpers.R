@@ -16,7 +16,8 @@ build_tabs <- function(
   tables = NULL,
   table_captions = NULL,
   iframe = FALSE,
-  iframe_height = 600
+  iframe_height = 600,
+  plot_timestamp
 ) {
   chunks <- tab_names |>
     sapply(\(tab_name) {
@@ -25,7 +26,8 @@ build_tabs <- function(
         plot_card(
           plot_captions[[tab_name]],
           iframe = iframe,
-          iframe_height = iframe_height[1]
+          iframe_height = iframe_height[1],
+          plot_timestamp = plot_timestamp
         )
       "## %s\n%s" |> sprintf(tab_name, card)
     })
@@ -42,7 +44,8 @@ build_tabs <- function(
                 table_captions[[tab_name]],
                 iframe = TRUE,
                 is_table = TRUE,
-                iframe_height = iframe_height[2]
+                iframe_height = iframe_height[2],
+                plot_timestamp = plot_timestamp
               ) |>
               stringr::str_replace(
                 "</iframe>",

@@ -107,7 +107,8 @@ map_card <- map_path |>
   plot_card(
     text = map_text,
     iframe = TRUE,
-    iframe_height = 617
+    iframe_height = 617,
+    plot_timestamp = plot_timestamp
   )
 
 # Make and save tables
@@ -130,7 +131,8 @@ overall_summary_table$card <-  overall_summary_table$path |>
     text = table_caption,
     iframe = TRUE,
     is_table = TRUE,
-    iframe_height = 526
+    iframe_height = 526,
+    plot_timestamp = plot_timestamp
   ) |>
   stringr::str_replace(
     "</iframe>",
@@ -247,7 +249,8 @@ community_table$card <- community_table$path |>
     text = table_caption,
     iframe = TRUE,
     is_table = TRUE,
-    iframe_height = 526
+    iframe_height = 526,
+    plot_timestamp = plot_timestamp
   ) |>
   stringr::str_replace(
     "</iframe>",
@@ -286,13 +289,13 @@ old_report_dropdown <- report_dir |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, summaries$donuts$paths$mean, prov_donuts_text$mean, report_dir)`
+`r build_tabs(monitor_groups, summaries$donuts$paths$mean, prov_donuts_text$mean, report_dir, plot_timestamp = plot_timestamp)`
 
 ## Max PM<sub>2.5</sub>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, summaries$donuts$paths$max, prov_donuts_text$max, report_dir)`
+`r build_tabs(monitor_groups, summaries$donuts$paths$max, prov_donuts_text$max, report_dir, plot_timestamp = plot_timestamp)`
 
 ::::
 
@@ -322,13 +325,13 @@ old_report_dropdown <- report_dir |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, prov_grid_paths, prov_grid_texts, report_dir)`
+`r build_tabs(monitor_groups, prov_grid_paths, prov_grid_texts, report_dir, plot_timestamp = plot_timestamp)`
 
 ## Region Level 
 
 `r tab_explainers$prov_terr_tabs`
 
-`r build_tabs(provinces_n_territories, fcst_grid_paths, fcst_grid_texts, report_dir)`
+`r build_tabs(provinces_n_territories, fcst_grid_paths, fcst_grid_texts, report_dir, plot_timestamp = plot_timestamp)`
 
 ::::
 
@@ -338,4 +341,4 @@ old_report_dropdown <- report_dir |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, boxplot_paths, boxplot_texts, report_dir, iframe = TRUE, iframe_height = 526)`
+`r build_tabs(monitor_groups, boxplot_paths, boxplot_texts, report_dir, iframe = TRUE, iframe_height = 526, plot_timestamp = plot_timestamp)`
