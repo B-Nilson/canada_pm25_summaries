@@ -34,23 +34,6 @@ make_aqmap_link <- function(lat, lng, zoom = 12, lang = "EN") {
   )
 }
 
-# TODO: replace with handyr::sentence_range()
-shorten_number_list <- function(x) {
-  if (length(x) == 0) {
-    return("")
-  }
-  paste(
-    tapply(x, cumsum(c(1, diff(x) != 1)), \(i) {
-      ifelse(
-        length(i) > 2,
-        paste0(head(i, 1), '-', tail(i, 1)),
-        paste(i, collapse = ', ')
-      )
-    }),
-    collapse = ', '
-  )
-}
-
 join_list_sentence <- function(l, oxford = FALSE, type = "regions") {
   if (length(l) == 0) {
     return(paste("No", type))

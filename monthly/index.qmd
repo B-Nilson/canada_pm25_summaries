@@ -1060,7 +1060,7 @@ dat1 = summaries$overall |>
       unique() |>
       as.numeric() |>
       sort() |>
-      shorten_number_list()
+      handyr::sentence_range()
   ) |>
   dplyr::left_join(
     fcst_zones |> dplyr::select(fcst_zone, zone_prov = prov_terrs),
