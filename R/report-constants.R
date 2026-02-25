@@ -1,4 +1,5 @@
 # Run Control ------
+.default_report_date <- "2026-01-02 00" |> lubridate::ymd_h(tz = "UTC")
 
 #Change local->server when running on AQmap server
 run_location <- "server"

@@ -4,6 +4,7 @@ output_dirs <- c("daily", "monthly", "seasonal") |>
   file.path("index_files")
 
 for (output_dir in output_dirs) {
+  dir.create(output_dir, showWarnings = FALSE)
   for (input_dir in input_dirs) {
     if (!dir.exists(input_dir)) {
       next
