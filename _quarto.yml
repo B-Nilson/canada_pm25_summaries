@@ -1,6 +1,8 @@
 project:
   title: "canada_pm25_summaries"
   execute-dir: project
+  pre-render: R/pre_render.R
+  post-render: R/post_render.R
 
 knitr:
   opts_chunk: 
@@ -19,7 +21,6 @@ format:
     embed-resources: false
     output-file: index.html
     lib-dir: libs
-    post-render: R/post_render.R
     mainfont: Inter, sans-serif
     include-in-header:
       - text: |
