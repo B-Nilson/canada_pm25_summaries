@@ -65,13 +65,13 @@ handle_old_reports <- function(
     }
   }
 
-  existing_reports_parsed <- existing_reports |>
-    parse_report_name(type = type)
+  existing_report_display_names <- existing_reports |>
+    get_report_display_names(type = type)
 
   existing_reports |>
     stringr::str_replace(report_dir, ".") |> # make relative to report
     make_old_reports_dropdown(
-      report_names = existing_reports_parsed,
+      report_names = existing_report_display_names,
       button_label = "Select previous reports",
       dropdown_label = "Select a Report"
     )

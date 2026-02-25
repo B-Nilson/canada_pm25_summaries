@@ -1,7 +1,7 @@
 ---
 params:
   report: !expr source("../R/set_params.R"); set_params(type = "seasonal")
-title: "Canadian PM<sub>2.5</sub> Observations Seasonal Summary for <mark class='bg-info'>`r params$report$name_parsed`</mark>"
+title: "Canadian PM<sub>2.5</sub> Observations Seasonal Summary for <mark class='bg-info'>`r params$report$display_name`</mark>"
 subtitle: | 
   Non-validated, auto-QA/QCed data representing `r params$report$date_ranges$utc`<br>
   `r params$report$date_ranges$vancouver` in Vancouver |

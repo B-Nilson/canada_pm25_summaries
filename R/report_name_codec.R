@@ -1,35 +1,38 @@
-parse_report_name <- function(report_name, type) {
+# "2026-02-12-day" -> "2026 Feb 12 (day)"
+get_report_display_names <- function(
+  report_file_names,
+  type = c("daily", "monthly", "seasonal")[1]
+) {
   date_fmt <- dplyr::case_when(
     type == "daily" ~ "%Y-%m-%d %H",
     type %in% c("monthly", "seasonal") ~ "%Y-%m"
   )
-  if (type != "seasonal") {
-    drpdwn_date_fmt <- type |>
+  display_names <- report_file_names |>
+    stringr::str_remove("\\.html")
+
+  if (type == "seasonal") {
+    display_names <- display_names |> stringr::str_replace("-", " ")
+  } else {
+    display_fmt <- type |>
       dplyr::recode_values(
         from = c("daily", "monthly"),
         to = c("%Y %b %d (%H)", "%B %Y")
       )
-
-    past_day <- type == "daily" & stringr::str_detect(report_name, "-night$")
-    reports_parsed <- report_name |>
-      stringr::str_remove("\\.html") |>
+    past_day <- type == "daily" &
+      stringr::str_detect(report_file_names, "-night$")
+    display_names <- (display_names |>
       stringr::str_replace("-day$", " 23") |>
       stringr::str_replace("-night$", " 11") |>
       lubridate::parse_date_time(date_fmt) -
-      lubridate::days(ifelse(past_day, 1, 0))
-    reports_parsed <- reports_parsed |>
-      format(drpdwn_date_fmt)
-
+      lubridate::days(ifelse(past_day, 1, 0))) |>
+      format(display_fmt)
     if (type == "daily") {
-      reports_parsed <- reports_parsed |>
+      display_names <- display_names |>
         stringr::str_replace("\\(11\\)$", "(night)") |>
         stringr::str_replace("\\(23\\)$", "(day)")
     }
-  } else {
-    reports_parsed <- report_name |>
-      stringr::str_replace("-", " ") |>
-      stringr::str_remove("\\.html")
   }
+  return(display_names)
 }
 
 get_report_name <- function(
