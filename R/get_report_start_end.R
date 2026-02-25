@@ -103,7 +103,10 @@ get_last_report_date <- function(
     return(NULL)
   }
 
-  last_report_name |> get_report_end_dates()
+  last_report_name |>
+    basename() |>
+    get_report_display_names(type = type) |>
+    get_report_end_dates()
 }
 
 get_previous_report_file_name <- function(
