@@ -5,10 +5,11 @@ get_report_start_end <- function(
   months_in_seasons = list(
     "Summer" = 5:10,
     "Winter" = c(11:12, 1:4)
-  )
+  ),
+  default_date = lubridate::now(tzone = "UTC")
 ) {
+  default_date <- default_date |> lubridate::with_tz("UTC")
   index_exists <- file.exists(file.path(report_dir, "index.html"))
-  now <- lubridate::now(tzone = "UTC")
   last_report_date <- report_dir |>
     get_last_report_date(
       type = type,
@@ -17,7 +18,9 @@ get_report_start_end <- function(
     )
 
   if (type == "daily") {
-    max_date <- now |> lubridate::floor_date("12 hours") - lubridate::hours(1)
+    max_date <- default_date |>
+      lubridate::floor_date("12 hours") -
+      lubridate::hours(1)
     if (!is.null(last_report_date)) {
       max_date <- pmin(
         last_report_date + lubridate::hours(12),
@@ -26,7 +29,9 @@ get_report_start_end <- function(
     }
     min_date <- max_date - lubridate::hours(23)
   } else if (type == "monthly") {
-    max_date <- now |> lubridate::floor_date("1 month") - lubridate::hours(1)
+    max_date <- default_date |>
+      lubridate::floor_date("1 month") -
+      lubridate::hours(1)
 
     if (run_future) {
       max_date <- (max_date + lubridate::hours(2)) |>
@@ -44,7 +49,8 @@ get_report_start_end <- function(
 
     min_date <- max_date |> lubridate::floor_date("1 months")
   } else if (type == "seasonal") {
-    max_date <- (now - lubridate::days(ifelse(run_future, 0, 30 * 6))) |>
+    max_date <- (default_date -
+      lubridate::days(ifelse(run_future, 0, 30 * 6))) |>
       get_season(months_in_season = months_in_seasons) |>
       get_season_end(months_in_seasons = months_in_seasons)
 

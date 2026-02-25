@@ -27,7 +27,11 @@ source("R/report-constants.R")
 report_dir <- report_dir |> file.path("daily")
 
 date_range <- report_dir |>
-  get_report_start_end(type = "daily", run_future = run_current_day)
+  get_report_start_end(
+    type = "daily",
+    run_future = run_current_day,
+    default_date = .default_report_date
+  )
 
 old_report_dropdown <- report_dir |>
   handle_old_reports(report_pattern = "[day,night]\\.html$")

@@ -28,7 +28,11 @@ report_dir <- report_dir |> file.path("monthly")
 report_dir_esc <- report_dir_esc |> file.path("daily")
 
 date_range <- report_dir |>
-  get_report_start_end(type = "monthly", run_future = run_current_month)
+  get_report_start_end(
+    type = "monthly",
+    run_future = run_current_month,
+    default_date = .default_report_date
+  )
 
 old_report_dropdown <- report_dir |>
   handle_old_reports(report_pattern = "\\d\\.html$")

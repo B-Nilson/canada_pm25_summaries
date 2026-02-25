@@ -7,7 +7,8 @@ set_params <- function(type) {
   date_range <- file.path(".", type) |>
     get_report_start_end(
       type = type,
-      months_in_seasons = months_in_seasons
+      months_in_seasons = months_in_seasons,
+      default_date = .default_report_date
     )
   report_date <- base::max(date_range) |> format("%Y-%m-%d")
   report_name <- base::max(date_range) |> get_report_file_names(type = type)

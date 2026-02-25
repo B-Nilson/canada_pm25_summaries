@@ -30,7 +30,8 @@ date_range <- report_dir |>
   get_report_start_end(
     type = "seasonal",
     months_in_seasons = months_in_seasons,
-    run_future = run_current_season
+    run_future = run_current_season,
+    default_date = .default_report_date
   )
 
 old_report_dropdown <- report_dir |>
