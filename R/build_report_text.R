@@ -259,6 +259,43 @@ with a %s mean PM<sub>2.5</sub> concentration <strong>between 30 and 60 {{< pm_u
     knitr::asis_output()
 }
 
+format_count_summary <- function(
+  dat,
+  monitor = "FEM",
+  range_text = "exceeding 100"
+) {
+  if (nrow(dat) > 1) {
+    x <- paste0(" <strong>", dat[[monitor]], "</strong>") |>
+      paste(
+        unlist(dat[, 'prov_terr']),
+        sep = paste0(" ", monitor, " monitor(s) in ")
+      )
+
+    x[-length(x)] |>
+      paste(collapse = ", ") |>
+      paste0(
+        ', and ',
+        dplyr::last(x),
+        " had a mean PM<sub>2.5</sub> concentration ",
+        range_text,
+        " {{< pm_units >}}."
+      )
+  } else if (nrow(dat) == 1) {
+    paste0(" <strong>", dat[[monitor]], "</strong>") |>
+      paste(
+        unlist(dat[, 'prov_terr']),
+        sep = paste0(" ", monitor, " monitor(s) in ")
+      ) |>
+      paste0(
+        " had a mean PM<sub>2.5</sub> concentration ",
+        range_text,
+        " {{< pm_units >}}."
+      )
+  } else {
+    ""
+  }
+}
+
 # TODO: cleanup
 build_boxplot_summary <- function(
   boxplot_vals,
