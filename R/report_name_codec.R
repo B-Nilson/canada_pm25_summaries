@@ -29,7 +29,7 @@ get_report_file_names <- function(
   }
 }
 
-# "2026-02-12-day" -> "2026 Feb 12 (day)"
+# "2026-02-11-day" -> "2026 Feb 11 (day)"
 get_report_display_names <- function(
   report_file_names,
   type = c("daily", "monthly", "seasonal")[1]
@@ -49,13 +49,10 @@ get_report_display_names <- function(
         from = c("daily", "monthly"),
         to = c("%Y %b %d (%H)", "%B %Y")
       )
-    past_day <- type == "daily" &
-      stringr::str_detect(report_file_names, "-night$")
     display_names <- (display_names |>
       stringr::str_replace("-day$", " 23") |>
       stringr::str_replace("-night$", " 11") |>
-      lubridate::parse_date_time(date_fmt) -
-      lubridate::days(ifelse(past_day, 1, 0))) |>
+      lubridate::parse_date_time(date_fmt)) |>
       format(display_fmt)
     if (type == "daily") {
       display_names <- display_names |>
