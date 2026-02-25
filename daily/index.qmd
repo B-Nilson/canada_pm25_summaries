@@ -29,6 +29,9 @@ report_dir <- report_dir |> file.path("daily")
 date_range <- report_dir |>
   get_report_start_end(type = "daily", run_future = run_current_day)
 
+old_report_dropdown <- report_dir |>
+  handle_old_reports(report_pattern = "[day,night]\\.html$")
+
 ```
 
 ```{r load_data}
@@ -269,17 +272,6 @@ community_table$card <- community_table$path |>
     paste0("</iframe>\n", community_table$dl_button)
   ) |>
   knitr::asis_output()
-
-```
-
-```{r handleOldReports, include= FALSE, echo= FALSE}
-
-old_report_dropdown <- report_dir |>
-  handle_old_reports(
-    report_pattern = "[a,b]\\.html$",
-    max_date = date_range[2],
-    type = "daily"
-  )
 
 ```
 

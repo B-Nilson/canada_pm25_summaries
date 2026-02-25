@@ -1,10 +1,7 @@
 handle_old_reports <- function(
   report_dir,
   historic_dir = "historic",
-  data_dir = "data",
-  figure_dir = "plots",
   report_pattern = "\\d\\.html$",
-  max_date,
   type = c("daily", "monthly", "seasonal")[1]
 ) {
   index_path <- report_dir |> file.path("index.html")
@@ -17,52 +14,6 @@ handle_old_reports <- function(
     names(existing_reports) <- existing_reports |>
       basename() |>
       stringr::str_remove("\\.html")
-  }
-
-  # Rename index.html and move plots/data if not done so already
-  if (index_exists) {
-    previous_report <- max_date |>
-      get_previous_report_name(
-        type = type,
-        months_in_seasons = months_in_seasons
-      )
-
-    historic_dir <- report_dir |> file.path(historic_dir)
-    need_to_rename <- (length(existing_reports) &
-      !previous_report %in% names(existing_reports)) |
-      length(existing_reports) == 0
-    if (need_to_rename) {
-      new_path <- historic_dir |>
-        file.path(paste0(previous_report, ".html"))
-      index_path |> file.copy(new_path)
-      existing_reports <- existing_reports |> c(new_path)
-      names(existing_reports)[length(existing_reports)] <- previous_report
-
-      # Copy libs
-      historic_dir |>
-        file.path("index_files") |>
-        dir.create(showWarnings = FALSE)
-      report_dir |>
-        file.path("index_files") |>
-        file.copy(
-          to = historic_dir,
-          recursive = TRUE
-        )
-
-      # Copy data and plots
-      dir.create(historic_dir |> file.path(data_dir), showWarnings = FALSE)
-      report_dir |>
-        file.path(data_dir) |>
-        file.copy(to = historic_dir, recursive = TRUE)
-      dir.create(historic_dir |> file.path(figure_dir), showWarnings = FALSE)
-      report_dir |>
-        file.path(figure_dir) |>
-        file.copy(to = historic_dir, recursive = TRUE)
-    } else {
-      "Either no historic reports, or the report for %s already exists - not renaming index.html." |>
-        sprintf(previous_report) |>
-        warning()
-    }
   }
 
   existing_report_display_names <- existing_reports |>
