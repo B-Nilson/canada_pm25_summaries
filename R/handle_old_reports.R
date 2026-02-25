@@ -5,11 +5,15 @@ handle_old_reports <- function(
   type = c("daily", "monthly", "seasonal")[1]
 ) {
   index_path <- report_dir |> file.path("index.html")
-  index_exists <- file.exists(index_path)
+  index_report_name <- index_path |> extract_file_report_name()
   existing_reports <- report_dir |>
     file.path(historic_dir) |>
     list.files(pattern = report_pattern, full.names = TRUE) |>
     sort(decreasing = TRUE)
+  existing_reports <- existing_reports[
+    get_report_display_names(basename(existing_reports), type = type) !=
+      index_report_name
+  ]
   if (length(existing_reports) > 0) {
     names(existing_reports) <- existing_reports |>
       basename() |>

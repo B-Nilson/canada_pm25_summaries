@@ -101,3 +101,14 @@ end_dates_2 <- end_dates |>
   get_report_display_names(type = "daily") |>
   get_report_end_dates()
 stopifnot(end_dates == end_dates_2)
+
+# get report name from within html file report
+extract_file_report_name <- function(file_path) {
+  readLines(file_path) |>
+    suppressWarnings() |>
+    stringr::str_subset("<h1 class=\"title\">") |>
+    stringr::str_extract(
+      "<mark class=\"bg-info\">(.*)</mark></h1>",
+      group = 1
+    )
+}

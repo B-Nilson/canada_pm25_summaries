@@ -70,13 +70,8 @@ copy_index_to_historic <- function(
   }
 
   # Extract report name from title in file and convert to file name
-  report_file_name <- readLines(inputs[1]) |>
-    suppressWarnings() |>
-    stringr::str_subset("<h1 class=\"title\">") |>
-    stringr::str_extract(
-      "<mark class=\"bg-info\">(.*)</mark></h1>",
-      group = 1
-    ) |>
+  report_file_name <- inputs[1] |>
+    extract_file_report_name() |>
     get_report_end_dates() |>
     get_report_file_names(type = report_dir) |>
     paste0(".html")
