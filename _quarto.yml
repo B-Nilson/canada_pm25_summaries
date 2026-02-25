@@ -17,6 +17,7 @@ knitr:
 format:
   html: 
     page-layout: full
+    theme: css/theme.scss
     css: "index_files/css/report_stylesheet.css"
     embed-resources: false
     output-file: index.html
