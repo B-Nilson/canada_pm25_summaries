@@ -9,13 +9,13 @@ subtitle: |
 date: "`r params$report$date`"
 citation: 
   id: daily-report
-  title: "24hr Canada PM2.5 Summary"
+  title: "Daily Canada PM2.5 Summary: {RNAME}"
   url: https://aqmap.ca/aqmap/reports/daily
   publisher: "University of Northern British Columbia, Environment and Climate Change Canada"
 
 format:
   html:
-    pagetitle: "24hr Canada PM2.5 Summary"
+    pagetitle: "Daily Canada PM2.5 Summary"
 ---
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
