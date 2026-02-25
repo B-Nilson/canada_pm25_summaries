@@ -10,7 +10,7 @@ date: "`r params$report$date`"
 citation: 
   id: daily-report
   title: "Daily Canada PM2.5 Summary: {RNAME}"
-  url: https://aqmap.ca/aqmap/reports/daily
+  url: https://aqmap.ca/aqmap/reports/daily/historic/{RFILE}.html
   publisher: "University of Northern British Columbia, Environment and Climate Change Canada"
 
 format:

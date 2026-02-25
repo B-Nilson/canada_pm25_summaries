@@ -9,8 +9,8 @@ subtitle: |
 date: "`r params$report$date`"
 citation: 
   id: monthly-report
-  title: "Monthly Canada PM2.5 Summary"
-  url: https://aqmap.ca/aqmap/reports/monthly
+  title: "Monthly Canada PM2.5 Summary: {RNAME}"
+  url: https://aqmap.ca/aqmap/reports/monthly/historic/{RFILE}.html
   publisher: "University of Northern British Columbia, Environment and Climate Change Canada"
 
 format:
