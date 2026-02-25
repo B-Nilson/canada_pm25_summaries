@@ -94,6 +94,15 @@ get_report_end_dates <- function(
   }
 }
 
+# test to ensure codec is circular
+end_dates <- c("2026-02-12 23", "2026-02-13 11") |>
+  lubridate::ymd_h(tz = "UTC")
+end_dates_2 <- end_dates |>
+  get_report_file_names(type = "daily") |>
+  get_report_display_names(type = "daily") |>
+  get_report_end_dates()
+stopifnot(end_dates == end_dates_2)
+
 get_previous_report_name <- function(
   current_report_date,
   type,
