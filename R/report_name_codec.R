@@ -1,3 +1,34 @@
+
+# 2026-02-11 23 -> "2026-02-11-day"
+get_report_file_name <- function(
+  report_end_date,
+  type = c("daily", "monthly", "seasonal")[1],
+  months_in_seasons = list(
+    "Summer" = 5:10,
+    "Winter" = c(11:12, 1:4)
+  )
+) {
+  date_fmt <- type |>
+    dplyr::recode_values(
+      from = c("daily", "monthly", "seasonal"),
+      to = c("%Y-%m-%d %H", "%Y-%m", NA)
+    )
+
+  if (type == "daily") {
+    (report_end_date - lubridate::days(1)) |>
+      lubridate::ceiling_date("12 hours") |>
+      format(date_fmt) |>
+      stringr::str_replace(" 00$", "-day") |>
+      stringr::str_replace(" 12$", "-night")
+  } else if (type == "monthly") {
+    report_end_date |> format(date_fmt)
+  } else if (type == "seasonal") {
+    report_end_date |>
+      get_season(months_in_seasons = months_in_seasons) |>
+      tolower()
+  }
+}
+
 # "2026-02-12-day" -> "2026 Feb 12 (day)"
 get_report_display_names <- function(
   report_file_names,
@@ -33,36 +64,6 @@ get_report_display_names <- function(
     }
   }
   return(display_names)
-}
-
-# 2026-02-11 23 -> "2026-02-11-day"
-get_report_file_name <- function(
-  report_end_date,
-  type = c("daily", "monthly", "seasonal")[1],
-  months_in_seasons = list(
-    "Summer" = 5:10,
-    "Winter" = c(11:12, 1:4)
-  )
-) {
-  date_fmt <- type |>
-    dplyr::recode_values(
-      from = c("daily", "monthly", "seasonal"),
-      to = c("%Y-%m-%d %H", "%Y-%m", NA)
-    )
-
-  if (type == "daily") {
-    (report_end_date - lubridate::days(1)) |>
-      lubridate::ceiling_date("12 hours") |>
-      format(date_fmt) |>
-      stringr::str_replace(" 00$", "-day") |>
-      stringr::str_replace(" 12$", "-night")
-  } else if (type == "monthly") {
-    report_end_date |> format(date_fmt)
-  } else if (type == "seasonal") {
-    report_end_date |>
-      get_season(months_in_seasons = months_in_seasons) |>
-      tolower()
-  }
 }
 
 get_previous_report_name <- function(
