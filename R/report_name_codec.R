@@ -63,6 +63,37 @@ get_report_display_names <- function(
   return(display_names)
 }
 
+# "2026 Feb 11 (day)" -> 2026-02-11 23:00:00
+get_report_end_dates <- function(
+  report_display_names
+) {
+  type <- dplyr::case_when(
+    report_display_names |>
+      stringr::str_detect("day|night") ~ "daily",
+    report_display_names |>
+      stringr::str_detect("Summer|Winter") ~ "seasonal",
+    .default = "monthly"
+  )[1]
+
+  if (type == "seasonal") {
+    report_display_names |>
+      get_season_end(months_in_seasons = months_in_seasons)
+  } else {
+    date_fmt <- type |>
+      dplyr::recode_values(
+        from = c("daily", "monthly"),
+        to = c("%Y %b %d (%H)", "%B %Y")
+      )
+    past_day <- type == "daily" &
+      stringr::str_detect(report_display_names, "night")
+    report_display_names |>
+      stringr::str_replace("\\(day\\)", "23") |>
+      stringr::str_replace("\\(night\\)", "11") |>
+      lubridate::parse_date_time(date_fmt) +
+      lubridate::days(ifelse(past_day, 1, 0))
+  }
+}
+
 get_previous_report_name <- function(
   current_report_date,
   type,
