@@ -99,6 +99,15 @@ copy_index_to_historic <- function(
       overwrite = TRUE
     )
   }
+
+  # remove historic/ from report selector dropdown
+  readLines(outputs[1]) |>
+    stringr::str_replace_all(
+      pattern = stringr::fixed("/historic/"),
+      replacement = "/"
+    ) |>
+    writeLines(outputs[1])
+
   invisible()
 }
 
