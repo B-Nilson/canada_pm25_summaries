@@ -106,6 +106,27 @@ get_last_report_date <- function(
   last_report_name |> get_report_end_dates()
 }
 
+get_previous_report_file_name <- function(
+  current_report_date,
+  type,
+  months_in_seasons = list(
+    "Summer" = 5:10,
+    "Winter" = c(11:12, 1:4)
+  )
+) {
+  if (type == "daily") {
+    period <- lubridate::hours(12)
+  } else if (type == "monthly") {
+    period <- lubridate::days(32)
+  } else if (type == "seasonal") {
+    period <- lubridate::days(183)
+  } else {
+    stop("Other types not supported!")
+  }
+  (current_report_date - period) |>
+    get_report_file_name(type = type, months_in_seasons = months_in_seasons)
+}
+
 get_season_end <- function(
   season,
   months_in_seasons = list(
