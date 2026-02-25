@@ -124,7 +124,7 @@ get_previous_report_file_name <- function(
     stop("Other types not supported!")
   }
   (current_report_date - period) |>
-    get_report_file_name(type = type, months_in_seasons = months_in_seasons)
+    get_report_file_names(type = type, months_in_seasons = months_in_seasons)
 }
 
 get_season_end <- function(
