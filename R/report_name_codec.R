@@ -103,7 +103,7 @@ end_dates_2 <- end_dates |>
   get_report_end_dates()
 stopifnot(end_dates == end_dates_2)
 
-get_previous_report_name <- function(
+get_previous_report_file_name <- function(
   current_report_date,
   type,
   months_in_seasons = list(

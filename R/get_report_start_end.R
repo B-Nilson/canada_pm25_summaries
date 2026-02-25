@@ -93,7 +93,7 @@ get_last_report_date <- function(
   if (index_exists) {
     if (is.na(last_report_name)) {
       last_report_name <- lubridate::now(tzone = "UTC") |>
-        get_previous_report_name(
+        get_previous_report_file_name(
           type = type,
           months_in_seasons = months_in_seasons
         )
