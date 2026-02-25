@@ -1,7 +1,7 @@
 
-# 2026-02-11 23 -> "2026-02-11-day"
-get_report_file_name <- function(
-  report_end_date,
+# 2026-02-11 23:00:00 -> "2026-02-11-day"
+get_report_file_names <- function(
+  report_end_dates,
   type = c("daily", "monthly", "seasonal")[1],
   months_in_seasons = list(
     "Summer" = 5:10,
@@ -15,15 +15,15 @@ get_report_file_name <- function(
     )
 
   if (type == "daily") {
-    (report_end_date - lubridate::days(1)) |>
+    (report_end_dates - lubridate::days(1)) |>
       lubridate::ceiling_date("12 hours") |>
       format(date_fmt) |>
       stringr::str_replace(" 00$", "-day") |>
       stringr::str_replace(" 12$", "-night")
   } else if (type == "monthly") {
-    report_end_date |> format(date_fmt)
+    report_end_dates |> format(date_fmt)
   } else if (type == "seasonal") {
-    report_end_date |>
+    report_end_dates |>
       get_season(months_in_seasons = months_in_seasons) |>
       tolower()
   }
