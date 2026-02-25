@@ -832,7 +832,7 @@ plot_paths = paste0(
   setNames(monitor_groups)
 # Define text for below plots (figure title essentially)
 plot_texts = paste0(
-  "Each boxplot summarises the distribution of 1-month community counts of hours with PM<sub>2.5</sub> concentrations above 100 {{< pm_units >}} for at least one monitoring site (",
+  "Each boxplot summarises the distribution of 1-month community counts of hours with PM<sub>2.5</sub> concentrations above 100 {{< var units.pm >}} for at least one monitoring site (",
   monitor_groups,
   ") in that community for each province/territory. Blue points for individual communities are displayed for any communities with counts higher than that regions 75th percentile. Hover over the blue points (if present) to see details about that specific community; hover over the boxplot (away from the points) to see the min/median/max and 25th/75th percentiles for that province/territory. See the menu in the top right for more."
 ) |>
@@ -1006,7 +1006,7 @@ table
 
 ::: card-body
 
-The "worst day" for PM<sub>2.5</sub> concentrations **for each province**. The "worst day" is determined by the day with the most number of observation sites (FEM or PA) having a daily mean exceeding 100 {{< pm_units >}} with ties broken by the highest mean of the site daily mean concentrations across the province/territory.
+The "worst day" for PM<sub>2.5</sub> concentrations **for each province**. The "worst day" is determined by the day with the most number of observation sites (FEM or PA) having a daily mean exceeding 100 {{< var units.pm >}} with ties broken by the highest mean of the site daily mean concentrations across the province/territory.
 
 :::
 
@@ -1027,7 +1027,7 @@ table2
 
 ::: card-body
 
-The "worst day" for PM<sub>2.5</sub> concentrations **for each forecast zone**. Click on the arrow beside a prov./terr. name to expand the table to view the zones for that area. The "worst day" is determined by the day with the most number of observation sites (FEM or PA) having a daily mean exceeding 100 {{< pm_units >}} with ties broken by the highest mean of the site daily mean concentrations across the province/territory.
+The "worst day" for PM<sub>2.5</sub> concentrations **for each forecast zone**. Click on the arrow beside a prov./terr. name to expand the table to view the zones for that area. The "worst day" is determined by the day with the most number of observation sites (FEM or PA) having a daily mean exceeding 100 {{< var units.pm >}} with ties broken by the highest mean of the site daily mean concentrations across the province/territory.
 
 :::
 
