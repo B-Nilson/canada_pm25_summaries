@@ -44,12 +44,14 @@ body {
   padding-bottom: 0rem;
 }
 
-.nav-tabs > li > a {
+.nav-tabs>li>a {
   text-decoration: none;
   cursor: pointer;
 }
 
-.nav, .nav-tabs, .active {
+.nav,
+.nav-tabs,
+.active {
   cursor: pointer;
 }
 
@@ -87,7 +89,8 @@ h2 {
   font-size: 1.6rem;
 }
 
-.h3, h3 {
+.h3,
+h3 {
   font-size: calc(1rem + .6vw);
 }
 
@@ -95,7 +98,9 @@ h4 {
   font-size: 1.2rem;
 }
 
-p, summary, details {
+p,
+summary,
+details {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
 }

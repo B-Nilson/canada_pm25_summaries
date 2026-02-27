@@ -313,33 +313,39 @@ table = reactable(
 )
 
 tmp = daily_monitor_counts |>
-    dplyr::group_by(prov_terr, date) |>
-    dplyr::summarise(n = sum(n)) |>
-    dplyr::group_by(prov_terr) |>
-    dplyr::summarise(change = n[date == max(date)] - n[date == min(date)],
-              rel_change = change / max(n))
+  dplyr::group_by(prov_terr, date) |>
+  dplyr::summarise(n = sum(n)) |>
+  dplyr::group_by(prov_terr) |>
+  dplyr::summarise(
+    change = n[date == max(date)] - n[date == min(date)],
+    rel_change = change / max(n)
+  )
 text = list(
-  most = table_data |> dplyr::mutate(t = FEM+PA) |> 
-    dplyr::arrange(desc(t)) |> dplyr::pull(`
+  most = table_data |>
+    dplyr::mutate(t = FEM + PA) |>
+    dplyr::arrange(desc(t)) |>
+    dplyr::pull(
+      `
 Prov. / Terr.
-`) |>
+`
+    ) |>
     head(3),
   change = tmp |>
     list(
-      abs = (arrange(tmp, desc(change))|> dplyr::pull(prov_terr))[1:3],
-      rel = (arrange(tmp, desc(rel_change))|> dplyr::pull(prov_terr))[1:3]
+      abs = (arrange(tmp, desc(change)) |> dplyr::pull(prov_terr))[1:3],
+      rel = (arrange(tmp, desc(rel_change)) |> dplyr::pull(prov_terr))[1:3]
     ),
-  tot = daily_monitor_counts|>
+  tot = daily_monitor_counts |>
     dplyr::group_by(date, monitor2) |>
-    dplyr::summarise(n = sum(n))|>
+    dplyr::summarise(n = sum(n)) |>
     dplyr::group_by(monitor2) |>
     dplyr::summarise(
       min = n[date == min(date)],
       max = n[date == max(date)],
-      change = max-min,
-              rel_change = change / max(n)) |>
+      change = max - min,
+      rel_change = change / max(n)
+    ) |>
     dplyr::arrange(monitor2)
-    
 )
 
 ```
@@ -366,7 +372,7 @@ The network of FEM monitors in Canada changed by `r text$tot$change[3]` this sea
 #### Daily Monitor Counts
 
 ```{r include=TRUE, results = 'asis'}
-plot_path |> 
+plot_path |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(monitor_count_text)
 ```
@@ -390,96 +396,168 @@ plot_paths = list()
 # Season zone mean/max map
 seasonal_zone_summaries = obs |>
   dplyr::group_by(prov_terr, fcst_zone) |>
-  dplyr::summarise(zone_mean_pm25 = mean(pm25, na.rm = TRUE), 
-            zone_max_pm25 = max(pm25, na.rm = TRUE),
-            n_hours = sum(!is.na(pm25)),
-            n = length(unique(paste(monitor, site_id))),
-            n_pa = sum(unique(paste(monitor, site_id)) |> 
-                         startsWith("PA"), na.rm = TRUE),
-            n_fem = n-n_pa,
-            days = difftime(
-              max(date[!is.na(pm25)]),
-              min(date[!is.na(pm25)]), "days"
-            ) |> as.numeric() |> round(1),
-            date_range = paste0(
-              min(date[!is.na(pm25)]) |> format("%F %Hz"), " - ",
-              max(date[!is.na(pm25)]) |> format("%F %Hz")
-            )) |>
+  dplyr::summarise(
+    zone_mean_pm25 = mean(pm25, na.rm = TRUE),
+    zone_max_pm25 = max(pm25, na.rm = TRUE),
+    n_hours = sum(!is.na(pm25)),
+    n = length(unique(paste(monitor, site_id))),
+    n_pa = sum(
+      unique(paste(monitor, site_id)) |>
+        startsWith("PA"),
+      na.rm = TRUE
+    ),
+    n_fem = n - n_pa,
+    days = difftime(
+      max(date[!is.na(pm25)]),
+      min(date[!is.na(pm25)]),
+      "days"
+    ) |>
+      as.numeric() |>
+      round(1),
+    date_range = paste0(
+      min(date[!is.na(pm25)]) |> format("%F %Hz"),
+      " - ",
+      max(date[!is.na(pm25)]) |> format("%F %Hz")
+    )
+  ) |>
   dplyr::group_by(prov_terr) |>
   dplyr::mutate(
-    min_zone_mean = min(zone_mean_pm25, na.rm = TRUE) |>round(1),
-    mean_zone_mean = mean(zone_mean_pm25, na.rm = TRUE) |>round(1),
-    max_zone_mean = max(zone_mean_pm25, na.rm = TRUE) |>round(1)
+    min_zone_mean = min(zone_mean_pm25, na.rm = TRUE) |> round(1),
+    mean_zone_mean = mean(zone_mean_pm25, na.rm = TRUE) |> round(1),
+    max_zone_mean = max(zone_mean_pm25, na.rm = TRUE) |> round(1)
   ) |>
   dplyr::ungroup() |>
   dplyr::filter(!is.na(fcst_zone)) |>
   dplyr::full_join(fcst_zones |> dplyr::select(fcst_zone), by = "fcst_zone") |> # TODO: what if duplicate fcst zone name between provinces?
   dplyr::mutate(
-    n = handyr::swap(n, what = NA, with = 0), 
-    n_fem = handyr::swap(n_fem, what = NA, with = 0), 
+    n = handyr::swap(n, what = NA, with = 0),
+    n_fem = handyr::swap(n_fem, what = NA, with = 0),
     n_pa = handyr::swap(n_pa, what = NA, with = 0),
     label = paste0(
-               "<big><strong>",fcst_zone,"</strong></big>", "<br>",
-               date_range," <b>(",days," days)</b>","<br>",
-               "<b>",n, " monitors</b> (FEM: ",n_fem,", PA: ",n_pa, ")<br>",
-               "Seasonal mean PM<sub>2.5</sub>: <b>", handyr::swap(round(zone_mean_pm25,1), NA, with = "-"), " {{< var units.pm >}}</b><br>",
-               "Seasonal max PM<sub>2.5</sub>: <b>", handyr::swap(round(zone_max_pm25,1), NA, with = "-"), " {{< var units.pm >}}</b>"
-             ) |>
-      stringr::str_replace("NA <b>(NA days)</b>", "No data.")) |>
-    sf::st_as_sf()
+      "<big><strong>",
+      fcst_zone,
+      "</strong></big>",
+      "<br>",
+      date_range,
+      " <b>(",
+      days,
+      " days)</b>",
+      "<br>",
+      "<b>",
+      n,
+      " monitors</b> (FEM: ",
+      n_fem,
+      ", PA: ",
+      n_pa,
+      ")<br>",
+      "Seasonal mean PM<sub>2.5</sub>: <b>",
+      handyr::swap(round(zone_mean_pm25, 1), NA, with = "-"),
+      " {{< var units.pm >}}</b><br>",
+      "Seasonal max PM<sub>2.5</sub>: <b>",
+      handyr::swap(round(zone_max_pm25, 1), NA, with = "-"),
+      " {{< var units.pm >}}</b>"
+    ) |>
+      stringr::str_replace("NA <b>(NA days)</b>", "No data.")
+  ) |>
+  sf::st_as_sf()
 
 pal = colorBin(
-    palette = leg_ugm3$colours,
-    bins = c(leg_ugm3$breaks,Inf),
-    right = FALSE, na.color = "#ADADAD"#"#bbbbbb"
-  )
+  palette = leg_ugm3$colours,
+  bins = c(leg_ugm3$breaks, Inf),
+  right = FALSE,
+  na.color = "#ADADAD" #"#bbbbbb"
+)
 
-legend_title = paste0(report_season, "<br>Max PM<sub>2.5</sub> ({{< var units.pm >}})")
-pm_legend = paste0('<div style="margin-bottom:3px"><strong><span>',
-                   legend_title, "</span></strong></div>",
-                   '<i style="background:#ADADAD;opacity:1;"></i> No Data.<br>',
-                   paste0('<i style="background:', leg_ugm3$colours,
-                          ';opacity:1;"></i> [',
-                          leg_ugm3$breaks, " – ",
-                          c(leg_ugm3$breaks[-1], "Inf"),
-                          ")") |>
-                       paste(collapse = "<br>"))
-max_map = leaflet(height=605) |>
+legend_title = paste0(
+  report_season,
+  "<br>Max PM<sub>2.5</sub> ({{< var units.pm >}})"
+)
+pm_legend = paste0(
+  '<div style="margin-bottom:3px"><strong><span>',
+  legend_title,
+  "</span></strong></div>",
+  '<i style="background:#ADADAD;opacity:1;"></i> No Data.<br>',
+  paste0(
+    '<i style="background:',
+    leg_ugm3$colours,
+    ';opacity:1;"></i> [',
+    leg_ugm3$breaks,
+    " – ",
+    c(leg_ugm3$breaks[-1], "Inf"),
+    ")"
+  ) |>
+    paste(collapse = "<br>")
+)
+max_map = leaflet(height = 605) |>
   addProviderTiles(providers$OpenStreetMap) |>
-  addPolygons(data= seasonal_zone_summaries, 
-              weight = 1, color = 'black', fillColor = ~pal(zone_max_pm25),
-              fillOpacity = 0.8, label = ~lapply(label,HTML)) |>
-    addControl(pm_legend, position = "bottomleft")
+  addPolygons(
+    data = seasonal_zone_summaries,
+    weight = 1,
+    color = 'black',
+    fillColor = ~ pal(zone_max_pm25),
+    fillOpacity = 0.8,
+    label = ~ lapply(label, HTML)
+  ) |>
+  addControl(pm_legend, position = "bottomleft")
 
 
-legend_title = paste0(report_season, "<br>Mean PM<sub>2.5</sub> ({{< var units.pm >}})")
-pm_legend = paste0('<div style="margin-bottom:3px"><strong><span>',
-                   legend_title, "</span></strong></div>",
-                   '<i style="background:#ADADAD;opacity:1;"></i> No Data.<br>',
-                   paste0('<i style="background:', leg_ugm3$colours,
-                          ';opacity:1;"></i> [',
-                          leg_ugm3$breaks, " – ",
-                          c(leg_ugm3$breaks[-1], "Inf"),
-                          ")") |>
-                       paste(collapse = "<br>"))
-mean_map = leaflet(height=605) |>
+legend_title = paste0(
+  report_season,
+  "<br>Mean PM<sub>2.5</sub> ({{< var units.pm >}})"
+)
+pm_legend = paste0(
+  '<div style="margin-bottom:3px"><strong><span>',
+  legend_title,
+  "</span></strong></div>",
+  '<i style="background:#ADADAD;opacity:1;"></i> No Data.<br>',
+  paste0(
+    '<i style="background:',
+    leg_ugm3$colours,
+    ';opacity:1;"></i> [',
+    leg_ugm3$breaks,
+    " – ",
+    c(leg_ugm3$breaks[-1], "Inf"),
+    ")"
+  ) |>
+    paste(collapse = "<br>")
+)
+mean_map = leaflet(height = 605) |>
   addProviderTiles(providers$OpenStreetMap) |>
-  addPolygons(data= seasonal_zone_summaries, 
-              weight = 1, color = 'black', fillColor = ~pal(zone_mean_pm25),
-              fillOpacity = 0.8, label = ~lapply(label,HTML)) |>
-    addControl(pm_legend, position = "bottomleft")
+  addPolygons(
+    data = seasonal_zone_summaries,
+    weight = 1,
+    color = 'black',
+    fillColor = ~ pal(zone_mean_pm25),
+    fillOpacity = 0.8,
+    label = ~ lapply(label, HTML)
+  ) |>
+  addControl(pm_legend, position = "bottomleft")
 
-plot_paths$mean_map = paste0("../../deployments/reports/seasonal/plots/", report_season, "_zone_mean_map.html")
-htmltools::save_html(mean_map, plot_paths$mean_map, libdir="./libs")
-plot_paths$max_map = paste0("../../deployments/reports/seasonal/plots/", report_season, "_zone_max_map.html")
-htmltools::save_html(max_map, plot_paths$max_map, libdir="./libs")
+plot_paths$mean_map = paste0(
+  "../../deployments/reports/seasonal/plots/",
+  report_season,
+  "_zone_mean_map.html"
+)
+htmltools::save_html(mean_map, plot_paths$mean_map, libdir = "./libs")
+plot_paths$max_map = paste0(
+  "../../deployments/reports/seasonal/plots/",
+  report_season,
+  "_zone_max_map.html"
+)
+htmltools::save_html(max_map, plot_paths$max_map, libdir = "./libs")
 
 # Daily zone mean ts
 daily_zone_means = obs |>
-  dplyr::group_by(date = lubridate::floor_date(date, "days"), prov_terr, fcst_zone) |>
-  dplyr::summarise(zone_mean_pm25 = mean(pm25, na.rm = TRUE), 
-            n_hours = sum(!is.na(pm25))) |>
-  dplyr::mutate(zone_mean_pm25 = ifelse(n_hours < 6, NA,zone_mean_pm25)) |>
+  dplyr::group_by(
+    date = lubridate::floor_date(date, "days"),
+    prov_terr,
+    fcst_zone
+  ) |>
+  dplyr::summarise(
+    zone_mean_pm25 = mean(pm25, na.rm = TRUE),
+    n_hours = sum(!is.na(pm25))
+  ) |>
+  dplyr::mutate(zone_mean_pm25 = ifelse(n_hours < 6, NA, zone_mean_pm25)) |>
   dplyr::group_by(date, prov_terr) |>
   dplyr::mutate(
     min_zone_mean = min(zone_mean_pm25, na.rm = TRUE),
@@ -491,48 +569,86 @@ gg = daily_zone_means |>
   ggplot(aes(x = date)) +
   # geom_ribbon(aes(ymin = min_zone_mean, ymax = max_zone_mean), alpha = 0.5) +
   # geom_line(aes(y = mean_zone_mean)) +
-  geom_point(aes(y = zone_mean_pm25, colour = "Individual Forecast Zone"), alpha = 0.8, size = 0.5) +
+  geom_point(
+    aes(y = zone_mean_pm25, colour = "Individual Forecast Zone"),
+    alpha = 0.8,
+    size = 0.5
+  ) +
   geom_line(aes(y = mean_zone_mean, colour = "Mean of Forecast Zones")) +
-  scale_colour_manual(values = c("Individual Forecast Zone" = "grey", 
-                                 "Mean of Forecast Zones"= "black")) +
+  scale_colour_manual(
+    values = c(
+      "Individual Forecast Zone" = "grey",
+      "Mean of Forecast Zones" = "black"
+    )
+  ) +
   facet_wrap("prov_terr", scales = "free", ncol = 3) +
-  scale_x_datetime(expand = expansion(0), breaks = summary_months, date_labels = "%b.")+
+  scale_x_datetime(
+    expand = expansion(0),
+    breaks = summary_months,
+    date_labels = "%b."
+  ) +
   ggpubr::theme_pubr(border = TRUE) +
-  theme(legend.position = c(0.85, 0.08), legend.direction = "horizontal",
-          axis.text.x = element_text(hjust = -0.2), 
-          axis.text = element_text(size = 8),
-          panel.spacing.x=unit(0.2, "lines"),panel.spacing.y=unit(0.2, "lines"),
-          strip.text = element_text(size = 8))+
-  guides(colour = guide_legend(nrow = 2, 
-         override.aes = list(linewidth =  c(
-           "Individual Forecast Zone" = 0, 
-           "Mean of Forecast Zones"= 0.5),
-           size = c(
-           "Individual Forecast Zone" = 1, 
-           "Mean of Forecast Zones"= 0),
-           linetype =  c(
-           "Individual Forecast Zone" = "blank", 
-           "Mean of Forecast Zones"= "solid")))) + 
-  labs(y = bquote("Daily Mean PM"[2.5]~"("*mu*"g m"^-3*")"), 
-       x = element_blank(),
-       colour = element_blank(),
-       caption = plot_captions$`
+  theme(
+    legend.position = c(0.85, 0.08),
+    legend.direction = "horizontal",
+    axis.text.x = element_text(hjust = -0.2),
+    axis.text = element_text(size = 8),
+    panel.spacing.x = unit(0.2, "lines"),
+    panel.spacing.y = unit(0.2, "lines"),
+    strip.text = element_text(size = 8)
+  ) +
+  guides(
+    colour = guide_legend(
+      nrow = 2,
+      override.aes = list(
+        linewidth = c(
+          "Individual Forecast Zone" = 0,
+          "Mean of Forecast Zones" = 0.5
+        ),
+        size = c(
+          "Individual Forecast Zone" = 1,
+          "Mean of Forecast Zones" = 0
+        ),
+        linetype = c(
+          "Individual Forecast Zone" = "blank",
+          "Mean of Forecast Zones" = "solid"
+        )
+      )
+    )
+  ) +
+  labs(
+    y = bquote("Daily Mean PM"[2.5] ~ "(" * mu * "g m"^-3 * ")"),
+    x = element_blank(),
+    colour = element_blank(),
+    caption = plot_captions$`
 FEM
 and
 PA
-`)
+`
+  )
 
-plot_paths$ts = paste0("../../deployments/reports/seasonal/plots/",report_season,
-                       "_daily_zone_means.png")
-ggsave(gg, filename = plot_paths$ts,
-       width = fig_dims$w, height = fig_dims$h, units = fig_dims$u, dpi = 300)
+plot_paths$ts = paste0(
+  "../../deployments/reports/seasonal/plots/",
+  report_season,
+  "_daily_zone_means.png"
+)
+ggsave(
+  gg,
+  filename = plot_paths$ts,
+  width = fig_dims$w,
+  height = fig_dims$h,
+  units = fig_dims$u,
+  dpi = 300
+)
 
 # Make summary data for autmated text for this section
 
 # Table of monitor counts, data completeness, and flagging rate
 with_tooltip <- function(value, tooltip, ...) {
-  div(style = "text-decoration: underline; text-decoration-style: dotted; cursor: help",
-      tippy(value, tooltip, ...))
+  div(
+    style = "text-decoration: underline; text-decoration-style: dotted; cursor: help",
+    tippy(value, tooltip, ...)
+  )
 }
 
 # Table of sesasonal summaries
@@ -540,98 +656,165 @@ event_count = events |>
   dplyr::group_by(prov_terr, fcst_zone) |>
   dplyr::mutate(n_zone_events = length(event_id)) |>
   dplyr::group_by(prov_terr) |>
-  dplyr::summarise(event_count = n(), 
-            zones_w_events = length(unique(fcst_zone)),
-            mean_events_per_zone = mean(n_zone_events) |> round(1),
-            mean_event_duration = mean(duration) |>
-              as.numeric(units = "days") |> round(1),
-            max_event_duration = max(duration) |>
-              as.numeric(units = "days") |> round(1))
+  dplyr::summarise(
+    event_count = n(),
+    zones_w_events = length(unique(fcst_zone)),
+    mean_events_per_zone = mean(n_zone_events) |> round(1),
+    mean_event_duration = mean(duration) |>
+      as.numeric(units = "days") |>
+      round(1),
+    max_event_duration = max(duration) |>
+      as.numeric(units = "days") |>
+      round(1)
+  )
 table_data = obs |>
   dplyr::group_by(prov_terr, fcst_zone, date) |>
   dplyr::summarise(zonal_pm25 = mean(pm25, na.rm = TRUE)) |>
   dplyr::group_by(prov_terr, fcst_zone) |>
   dplyr::mutate(
-    zonal_high_hours = sum(zonal_pm25>=60, na.rm = TRUE),
-    zonal_vhigh_hours = sum(zonal_pm25>=100, na.rm = TRUE)) |>
+    zonal_high_hours = sum(zonal_pm25 >= 60, na.rm = TRUE),
+    zonal_vhigh_hours = sum(zonal_pm25 >= 100, na.rm = TRUE)
+  ) |>
   dplyr::group_by(prov_terr) |>
   dplyr::summarise(
     mean_zonal_pm25 = mean(zonal_pm25, na.rm = TRUE) |> round(1),
     max_zonal_pm25 = max(zonal_pm25, na.rm = TRUE) |> round(1),
     percent_98_pm25 = quantile(zonal_pm25, 0.98, na.rm = TRUE) |> round(1),
-    mean_zonal_high_hours = mean(zonal_high_hours,na.rm = TRUE) |> round(1),
-    mean_zonal_vhigh_hours = mean(zonal_vhigh_hours,na.rm = TRUE) |> round(1)
+    mean_zonal_high_hours = mean(zonal_high_hours, na.rm = TRUE) |> round(1),
+    mean_zonal_vhigh_hours = mean(zonal_vhigh_hours, na.rm = TRUE) |> round(1)
   ) |>
   dplyr::full_join(event_count, by = "prov_terr") |>
-  dplyr::rename("Prov./Terr." = prov_terr,
-         "Mean" = mean_zonal_pm25, "Max" = max_zonal_pm25, "98th Percentile" = percent_98_pm25,
-         "Mean Hours >= 60" = mean_zonal_high_hours, "Mean Hours >= 100" = mean_zonal_vhigh_hours,
-         "Count" = event_count, "Mean Count" = mean_events_per_zone, 
-         "Zones w/ Events" = zones_w_events,
-         "Mean Duration (days)" = mean_event_duration,
-         "Max Duration (days)" = max_event_duration) 
+  dplyr::rename(
+    "Prov./Terr." = prov_terr,
+    "Mean" = mean_zonal_pm25,
+    "Max" = max_zonal_pm25,
+    "98th Percentile" = percent_98_pm25,
+    "Mean Hours >= 60" = mean_zonal_high_hours,
+    "Mean Hours >= 100" = mean_zonal_vhigh_hours,
+    "Count" = event_count,
+    "Mean Count" = mean_events_per_zone,
+    "Zones w/ Events" = zones_w_events,
+    "Mean Duration (days)" = mean_event_duration,
+    "Max Duration (days)" = max_event_duration
+  )
 
-table = reactable(data = table_data, defaultPageSize = 13,
-            columns = list(
-              `
+table = reactable(
+  data = table_data,
+  defaultPageSize = 13,
+  columns = list(
+    `
 Mean
 ` = reactable::colDef(
-                header = with_tooltip("Mean", "Average of the forecast zone seasonal mean PM2.5 concentrations within each province/territory")),
-              `
+      header = with_tooltip(
+        "Mean",
+        "Average of the forecast zone seasonal mean PM2.5 concentrations within each province/territory"
+      )
+    ),
+    `
 Max
 ` = reactable::colDef(
-                header = with_tooltip("Max", "Maximum of the forecast zone seasonal mean PM2.5 concentrations within each province/territory")),
-              `
+      header = with_tooltip(
+        "Max",
+        "Maximum of the forecast zone seasonal mean PM2.5 concentrations within each province/territory"
+      )
+    ),
+    `
 98
 th
 Percentile
 ` = reactable::colDef(
-                header = with_tooltip("98th Percentile", "98th Percentile of the forecast zone seasonal mean PM2.5 concentrations within each province/territory")),
-              `
+      header = with_tooltip(
+        "98th Percentile",
+        "98th Percentile of the forecast zone seasonal mean PM2.5 concentrations within each province/territory"
+      )
+    ),
+    `
 Mean
 Hours >= 60
 ` = reactable::colDef(
-                header = with_tooltip("Mean Hours >= 60", "Average of the forecast zone seasonal counts of hourly PM2.5 concentrations of 60 ug/mm3 or greater (High - Very High risk) within each province/territory")),
-              `
+      header = with_tooltip(
+        "Mean Hours >= 60",
+        "Average of the forecast zone seasonal counts of hourly PM2.5 concentrations of 60 ug/mm3 or greater (High - Very High risk) within each province/territory"
+      )
+    ),
+    `
 Mean
 Hours >= 100
 ` = reactable::colDef(
-                header = with_tooltip("Mean Hours >= 100", "Average of the forecast zone seasonal counts of hourly PM2.5 concentrations of 100 ug/mm3 or greater (Very High risk) within each province/territory")),
-              `
+      header = with_tooltip(
+        "Mean Hours >= 100",
+        "Average of the forecast zone seasonal counts of hourly PM2.5 concentrations of 100 ug/mm3 or greater (Very High risk) within each province/territory"
+      )
+    ),
+    `
 Count
 ` = reactable::colDef(
-                header = with_tooltip("Count", "Total number of elevated PM2.5 events detected within the province/territory")),
-              `
+      header = with_tooltip(
+        "Count",
+        "Total number of elevated PM2.5 events detected within the province/territory"
+      )
+    ),
+    `
 Mean
 Count
 ` = reactable::colDef(
-                header = with_tooltip("Mean Count", "Average of the number of elevated PM2.5 events detected within each forecast zone in the province/territory")),
-              `
+      header = with_tooltip(
+        "Mean Count",
+        "Average of the number of elevated PM2.5 events detected within each forecast zone in the province/territory"
+      )
+    ),
+    `
 Zones
 w / Events
 ` = reactable::colDef(
-                header = with_tooltip("Zones w/ Events", "Count of the number of forecast zones with at least one elevated PM2.5 event")),
-              `
+      header = with_tooltip(
+        "Zones w/ Events",
+        "Count of the number of forecast zones with at least one elevated PM2.5 event"
+      )
+    ),
+    `
 Mean
 Duration(days)
 ` = reactable::colDef(
-                header = with_tooltip("Mean Duration (days)", "Average duration of elevated PM2.5 events this season in the province/territory")),
-              `
+      header = with_tooltip(
+        "Mean Duration (days)",
+        "Average duration of elevated PM2.5 events this season in the province/territory"
+      )
+    ),
+    `
 Max
 Duration(days)
 ` = reactable::colDef(
-                header = with_tooltip("Max Duration (days)", "Maximum duration of elevated PM2.5 events this season in the province/territory"))
-            ),
-            columnGroups = list(
-              reactable::colGroup(name = "", columns = c("Prov./Terr.")),
-              reactable::colGroup(name = "Forecast Zone Mean PM2.5", 
-                       columns = c("Mean", "Max", "98th Percentile",
-                                   "Mean Hours >= 60", "Mean Hours >= 100")),
-              reactable::colGroup(name = "Forecast Zone PM2.5 Events", 
-                       columns = c("Count", "Zones w/ Events","Mean Count", "Mean Duration (days)",
-                                   "Max Duration (days)"))
-            )
+      header = with_tooltip(
+        "Max Duration (days)",
+        "Maximum duration of elevated PM2.5 events this season in the province/territory"
+      )
+    )
+  ),
+  columnGroups = list(
+    reactable::colGroup(name = "", columns = c("Prov./Terr.")),
+    reactable::colGroup(
+      name = "Forecast Zone Mean PM2.5",
+      columns = c(
+        "Mean",
+        "Max",
+        "98th Percentile",
+        "Mean Hours >= 60",
+        "Mean Hours >= 100"
+      )
+    ),
+    reactable::colGroup(
+      name = "Forecast Zone PM2.5 Events",
+      columns = c(
+        "Count",
+        "Zones w/ Events",
+        "Mean Count",
+        "Mean Duration (days)",
+        "Max Duration (days)"
+      )
+    )
   )
+)
 
 ```
 
@@ -923,7 +1106,10 @@ table = reactable(
     )
   ),
   columnGroups = list(
-    reactable::colGroup(name = "Location", columns = c("Prov./Terr.", "Forecast Zone")),
+    reactable::colGroup(
+      name = "Location",
+      columns = c("Prov./Terr.", "Forecast Zone")
+    ),
     reactable::colGroup(
       name = "Event Timeline",
       columns = c(
@@ -933,7 +1119,10 @@ table = reactable(
         # "Rank (Zone)", "Rank (Prov/Terr)"
       )
     ),
-    reactable::colGroup(name = "PM2.5 Monitors", columns = c("# of FEMs", "# of PAs")),
+    reactable::colGroup(
+      name = "PM2.5 Monitors",
+      columns = c("# of FEMs", "# of PAs")
+    ),
     reactable::colGroup(
       name = "PM2.5 Concentration (ug/m3)",
       columns = c("Min.", "Max.", "Mean", "Mean * Duration")
@@ -945,39 +1134,47 @@ table = reactable(
 
 ```{r}
 months = unique(format(hours_to_summarise, "%B"))
-m_data = lapply(months, \(m){
+m_data = lapply(months, \(m) {
   lapply(pd, \(df) dplyr::filter(df, format(date, "%B") %in% m))
-}) |> setNames(months)
+}) |>
+  setNames(months)
 
 
-texts = lapply(months, \(month){
-  m_data = names(pd) |> 
-    handyr::for_each(.as_list = TRUE, .bind = TRUE, \(stat){
+texts = lapply(months, \(month) {
+  m_data = names(pd) |>
+    handyr::for_each(.as_list = TRUE, .bind = TRUE, \(stat) {
       df = pd[[stat]]
       dplyr::filter(df, format(date, "%B") %in% month) |>
         dplyr::mutate(stat = stat)
-    }
-  )
-  
+    })
+
   e_data = table_data |>
-    dplyr::filter( format(Start, "%B") %in% month |  format(End, "%B") %in% month)
+    dplyr::filter(format(Start, "%B") %in% month | format(End, "%B") %in% month)
   e_prov_counts = e_data |>
-    dplyr::group_by(`
+    dplyr::group_by(
+      `
 Prov. / Terr.
-`) |>
+`
+    ) |>
     dplyr::summarise(n = n()) |>
     dplyr::arrange(desc(n)) |>
     head(3)
   e_prov_max_dur = e_data |>
-    dplyr::group_by(`
+    dplyr::group_by(
+      `
 Prov. / Terr.
-`) |>
-    dplyr::summarise(dur = max(`
+`
+    ) |>
+    dplyr::summarise(
+      dur = max(
+        `
 Duration(days)
-`)) |>
+`
+      )
+    ) |>
     dplyr::arrange(desc(dur)) |>
     head(3)
-  
+
   t = m_data |>
     dplyr::filter(aqhip != "No Data.") |>
     dplyr::group_by(prov_terr, stat, aqhip) |>
@@ -985,52 +1182,98 @@ Duration(days)
       n = mean(n),
       n_zones = max(n_zones),
       p = mean(p)
-      ) |>
+    ) |>
     dplyr::arrange(desc(aqhip), desc(p))
-  
+
   m_summary = paste0(
-    "In ", month, " there was ",nrow(e_data)," detected events in Canada where the daily max PM<sub>2.5</sub> concentration in a forecast zone exceeded 30 {{< var units.pm >}} for more than 1 day in a row. The most events this month occurred in ", paste(e_prov_counts$`
+    "In ",
+    month,
+    " there was ",
+    nrow(e_data),
+    " detected events in Canada where the daily max PM<sub>2.5</sub> concentration in a forecast zone exceeded 30 {{< var units.pm >}} for more than 1 day in a row. The most events this month occurred in ",
+    paste(
+      e_prov_counts$`
 Prov. / Terr.
-`[1:2], collapse = ", ") |> paste("and", e_prov_counts$`
+`[1:2],
+      collapse = ", "
+    ) |>
+      paste(
+        "and",
+        e_prov_counts$`
 Prov. / Terr.
-`[3])," (",paste(min(e_prov_counts$n), "-", max(e_prov_counts$n))," events). The longest events this month occurred in ",paste(e_prov_max_dur$`
+`[3]
+      ),
+    " (",
+    paste(min(e_prov_counts$n), "-", max(e_prov_counts$n)),
+    " events). The longest events this month occurred in ",
+    paste(
+      e_prov_max_dur$`
 Prov. / Terr.
-`[1:2], collapse = ", ") |> paste("and", e_prov_max_dur$`
+`[1:2],
+      collapse = ", "
+    ) |>
+      paste(
+        "and",
+        e_prov_max_dur$`
 Prov. / Terr.
-`[3]), " (max ",paste(min(e_prov_max_dur$dur), "-", max(e_prov_max_dur$dur))," days long). "
+`[3]
+      ),
+    " (max ",
+    paste(min(e_prov_max_dur$dur), "-", max(e_prov_max_dur$dur)),
+    " days long). "
   )
-  
-  p_texts = sapply(prov_pretty, \(prov){
-    p_m_data = m_data |> dplyr::filter(prov_terr == prov) |>
+
+  p_texts = sapply(prov_pretty, \(prov) {
+    p_m_data = m_data |>
+      dplyr::filter(prov_terr == prov) |>
       dplyr::filter(aqhip != "No Data.", stat == "max") |>
       dplyr::group_by(aqhip) |>
-      dplyr::summarise(worst_day = date[n == max(n)][1],
-                p =  p[n == max(n)][1]) |>
+      dplyr::summarise(
+        worst_day = date[n == max(n)][1],
+        p = p[n == max(n)][1]
+      ) |>
       dplyr::arrange(desc(aqhip)) |>
-      dplyr::mutate(desc = stringr::str_extract(aqhip, "\\[(\\d*\\-\\d*)",group = 1),
-             desc = ifelse(is.na(desc),"exceeding 100",paste("between", desc)))
-    p_e_data = e_data |> dplyr::filter(`
+      dplyr::mutate(
+        desc = stringr::str_extract(aqhip, "\\[(\\d*\\-\\d*)", group = 1),
+        desc = ifelse(is.na(desc), "exceeding 100", paste("between", desc))
+      )
+    p_e_data = e_data |>
+      dplyr::filter(
+        `
 Prov. / Terr.
-` == prov) |>
-      dplyr::arrange(desc(`
+` ==
+          prov
+      ) |>
+      dplyr::arrange(desc(
+        `
 Mean * Duration
-`))
-    
-    if(nrow(p_m_data)==1 & p_m_data$aqhip[1] == "Low [0-30)"){
-       paste0(
-        "In ",prov," this month, no forecast zones with observations had a day exceeding 30 {{< var units.pm >}}."
-       )
-    }else{
+`
+      ))
+
+    if (nrow(p_m_data) == 1 & p_m_data$aqhip[1] == "Low [0-30)") {
       paste0(
-        "In ",prov,", the worst day this month was ", format(p_m_data$worst_day[1], "%b %d"), ", where ", round(p_m_data$p[1]*100,1),"% of forecast zones had a maximum daily PM<sub>2.5</sub> concentration ", p_m_data$desc[1], " {{< var units.pm >}}."
+        "In ",
+        prov,
+        " this month, no forecast zones with observations had a day exceeding 30 {{< var units.pm >}}."
+      )
+    } else {
+      paste0(
+        "In ",
+        prov,
+        ", the worst day this month was ",
+        format(p_m_data$worst_day[1], "%b %d"),
+        ", where ",
+        round(p_m_data$p[1] * 100, 1),
+        "% of forecast zones had a maximum daily PM<sub>2.5</sub> concentration ",
+        p_m_data$desc[1],
+        " {{< var units.pm >}}."
       )
     }
-    
-    
   })
 
   paste0(
-    m_summary, "\n\n",
+    m_summary,
+    "\n\n",
     p_texts |> paste(collapse = " ")
   )
 })
@@ -1046,11 +1289,12 @@ Mean * Duration
 
 ```{r include = TRUE, results="asis"}
 
-for(t in texts){
+for (t in texts) {
   cat(t, "\n\n---\n\n")
 }
 
-```
+``
+`
   
 </details>
 
@@ -1363,7 +1607,11 @@ for (pt in names(prov_pretty)) {
     labs(
       y = bquote("Hourly PM"[2.5] ~ "Concentration (" * mu * "g m"^-3 * ")"),
       x = element_blank(),
-      caption = plot_captions$`FEM and PA`,
+      caption = plot_captions$`
+FEM
+and
+PA
+`,
       colour = bquote("PM"[2.5] ~ "Monitor")
     ) +
     guides(
@@ -1450,7 +1698,10 @@ texts = sapply(prov_pretty, \(prov) {
     paste0(
       "In ",
       prov,
-      " during the `r report_season` season, no events of continued elevated PM<sub>2.5</sub> occurred where observations were available."
+      " during the `
+r
+report_season
+` season, no events of continued elevated PM<sub>2.5</sub> occurred where observations were available."
     )
   } else {
     paste0(
@@ -1498,7 +1749,8 @@ for(t in texts){
   cat(t, "\n\n---\n\n")
 }
 
-```
+`
+``
   
 </details>
 
@@ -1732,8 +1984,14 @@ table = reactable(
   #   `Mean` = reactable::colDef(header = with_tooltip("Mean", "Average of the forecast zone seasonal mean PM2.5 concentrations within each province/territory")),
   # ),
   columnGroups = list(
-    reactable::colGroup(name = "Location", columns = c("Community", "Prov./Terr.")),
-    reactable::colGroup(name = "PM2.5 Monitors", columns = c("# of FEMs", "# of PAs")),
+    reactable::colGroup(
+      name = "Location",
+      columns = c("Community", "Prov./Terr.")
+    ),
+    reactable::colGroup(
+      name = "PM2.5 Monitors",
+      columns = c("# of FEMs", "# of PAs")
+    ),
     reactable::colGroup(
       name = "Hours",
       columns = c("With Obs. (Any)", "Above 60 (High)", "Above 100 (V. High)")

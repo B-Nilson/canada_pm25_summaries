@@ -39,7 +39,7 @@ iframe {
 }
 
 /* Figure button tweak */
-figure > div > button {
+figure>div>button {
   float: left;
   margin-left: 0.2rem !important;
   margin-bottom: 0.2rem !important;

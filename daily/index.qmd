@@ -76,7 +76,7 @@ max_date <- obs$date |> base::max()
 ```{r fig_titles}
 
 plot_text_template <- "Monitor counts and frequencies of median AQHI risk levels for %s {{< var terms.pm25 >}} concentrations for monitoring sites within each province/territory for %s. The number within each circle indicates the total monitors with data in that area during the report period. Percentages indicate the proportion of those monitors with a median AQHI risk at that level for this report." |>
-  sprintf(names(monitor_groups), fig_caption_date_range) |> 
+  sprintf(names(monitor_groups), fig_caption_date_range) |>
   stringr::str_replace_all(" PA ", " {{< var terms.PA >}} ") |>
   stringr::str_replace_all(" FEM ", " {{< var terms.FEM >}} ")
 prov_donuts_text <- list(
