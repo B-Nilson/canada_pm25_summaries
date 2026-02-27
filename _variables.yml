@@ -1,2 +1,7 @@
 units: 
   pm: "&mu;g m<sup>-3</sup>"
+
+terms:
+  pm25: "fine particulate matter (PM<sub>2.5</sub>)"
+  PA: "PurpleAir (PA)"
+  FEM: "regulatory (FEM)"
