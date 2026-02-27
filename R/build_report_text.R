@@ -134,25 +134,25 @@ and <strong>%s</strong> are between 30 and 60 {{< var units.pm >}} (@fig-monitor
 
   template |>
     sprintf(
-      sum(prov_donuts_text$p$fem$median$n),
-      sum(prov_donuts_text$p$pa$median$n),
-      prov_donuts_text$p$fem$median$p[4] |> paste0("%"),
+      sum(prov_donuts_text$fem$median$n),
+      sum(prov_donuts_text$pa$median$n),
+      prov_donuts_text$fem$median[4] |> paste0("%"),
       average_text,
-      prov_donuts_text$p$fem$median$p[3] |> paste0("%"),
-      prov_donuts_text$p$fem$median$p[2] |> paste0("%"),
-      prov_donuts_text$p$pa$median$p[4] |> paste0("%"),
+      prov_donuts_text$fem$median$p[3] |> paste0("%"),
+      prov_donuts_text$fem$median$p[2] |> paste0("%"),
+      prov_donuts_text$pa$median$p[4] |> paste0("%"),
       average_text,
-      prov_donuts_text$p$pa$median$p[3] |> paste0("%"),
-      prov_donuts_text$p$pa$median$p[2] |> paste0("%"),
+      prov_donuts_text$pa$median$p[3] |> paste0("%"),
+      prov_donuts_text$pa$median$p[2] |> paste0("%"),
 
-      prov_donuts_text$p$fem$max$p[4] |> paste0("%"),
+      prov_donuts_text$fem$max$p[4] |> paste0("%"),
       average_text,
-      prov_donuts_text$p$fem$max$p[3] |> paste0("%"),
-      prov_donuts_text$p$fem$max$p[2] |> paste0("%"),
-      prov_donuts_text$p$pa$max$p[4] |> paste0("%"),
+      prov_donuts_text$fem$max$p[3] |> paste0("%"),
+      prov_donuts_text$fem$max$p[2] |> paste0("%"),
+      prov_donuts_text$pa$max$p[4] |> paste0("%"),
       average_text,
-      prov_donuts_text$p$pa$max$p[3] |> paste0("%"),
-      prov_donuts_text$p$pa$max$p[2] |> paste0("%")
+      prov_donuts_text$pa$max$p[3] |> paste0("%"),
+      prov_donuts_text$pa$max$p[2] |> paste0("%")
     ) |>
     make_summary_chunk() |>
     knitr::asis_output()

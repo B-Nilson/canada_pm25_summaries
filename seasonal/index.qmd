@@ -57,6 +57,10 @@ report_season <- date_range[2] |>
   get_season(months_in_seasons = months_in_seasons)
 plot_captions <- date_range |>
   make_plot_captions(networks = names(monitor_groups))
+fig_caption_date_range <- date_range |>
+  lubridate::with_tz("UTC") |>
+  format("%b %d, %Y %H:%M UTC") |>
+  paste(collapse = " to ")
 
 # summaries <- obs |>
 #   make_summaries(type = "seasonal", fcst_zones = fcst_zones, meta_cols = meta_cols)
@@ -66,46 +70,68 @@ events <- get_pm_events(obs, c("prov_terr", "fcst_zone"))
 ```
 
 ```{r fig_titles}
-
-monitor_count_text = 'Daily counts of active fine particulate matter (PM<sub>2.5</sub>) monitors in each Canadian province/territory. 
-
-The National Air Pollution Service (NAPS) Federal Equivelant Method (FEM) monitors are the gold standard for hourly observations. The PurpleAir (PA) low cost monitors are not as accurate, but are cheaper/easier to install allowing for a larger network. These PA monitors are recorded as either owned by Environment and Climate Change Canada\'s Air Quality Science Units (ECCC AQSU) or by anyone else ("Non-ECCC").
-
-Note: Sudden drops in monitors counts may be the result of our automated quality control and/or gaps in our database.'
-
-zone_summary_texts <- list(
-  mean_map = 'Interactive map of seasonal mean PM<sub>2.5</sub> concentrations ({{< var units.pm >}}) by Canadian forecast zone. Hover over a zone for more information.',
-  max_map = 'Interactive map of seasonal max PM<sub>2.5</sub> concentrations ({{< var units.pm >}}) by Canadian forecast zone. Hover over a zone for more information.',
-  ts = 'Daily mean PM<sub>2.5</sub> concentrations ({{< var units.pm >}}) by Canadian forecast zone for each province/territory. The black line indicates the daily mean of the forcast zone averages.',
-  zone_map = 'Note: Not all forecast zones have observation data. See `When / where did event occur?` for a daily record of forecast zones with data by province/territory'
+quarto_captions <- list(
+  monitor_counts = paste(
+    "Daily counts of active PA and FEM PM2.5 monitors in each Canadian p/t for %s.",
+    "PA monitors are recorded as either owned by Environment and Climate Change Canada\'s Air Quality Science Units (ECCC AQSU) or by anyone else (\"Non-ECCC\").",
+    "*Note: Sudden drops in monitors counts may be the result of our automated quality control and/or gaps in our database.*"
+  ) |>
+    sprintf(fig_caption_date_range),
+  mean_map = 'Interactive map of seasonal mean PM2.5 concentrations ({{< var units.pm >}}) by Canadian forecast zone for %s. Hover over a zone for more information.' |>
+    sprintf(fig_caption_date_range),
+  max_map = 'Interactive map of seasonal max PM2.5 concentrations ({{< var units.pm >}}) by Canadian forecast zone for %s. Hover over a zone for more information.' |>
+    sprintf(fig_caption_date_range),
+  zone_ts = 'Daily mean PM2.5 concentrations ({{< var units.pm >}}) by Canadian forecast zone for each p/t for %s. The black line indicates the daily mean of the forcast zone averages.' |>
+    sprintf(fig_caption_date_range),
+  events_max = paste(
+    "Daily percentage of forecast zones within each p/t with a daily maximum PM2.5 concentration within each AQHI+ risk group.",
+    "White space indicates the percentage of forecast zones without observation data that day.",
+    "See `Events Table` for a break down of events within each forecast zone for %s."
+  ) |>
+    sprintf(fig_caption_date_range),
+  events_median = paste(
+    "Daily percentage of forecast zones within each p/t with a daily median PM2.5 concentration within each AQHI+ risk group.",
+    "White space indicates the percentage of forecast zones without observation data that day.",
+    "See `Events Table` for a break down of events within each forecast zone for %s."
+  ) |>
+    sprintf(fig_caption_date_range),
+  worst_events = paste(
+    "Hourly PM2.5 concentrations from all FEM and PA monitors in the forecast zone for a selection of the worst events in %s for %s.",
+    "Each event panel is labelled with the forecast zone name followed by the date range of the event. Summary text is included in the top left.",
+    "*Note: Forecast zones vary in size, larger zones may have greater variation in observations due to physical distances between monitors.*"
+  ) |>
+    sprintf(provinces_n_territories, fig_caption_date_range) |>
+    setNames(names(prov_pretty)),
+  community_exceeds_60 = paste(
+    "Number of hours each community with nearby observation data had a mean PM2.5 concentration above 60 {{< var units.pm >}} in each p/t for %s.",
+    "A monitor must be within 25 km of a community and not closer to a different community to be considered located in that community."
+  ) |>
+    sprintf(fig_caption_date_range),
+  community_exceeds_100 = paste(
+    "Number of hours each community with nearby observation data had a mean PM2.5 concentration above 100 {{< var units.pm >}} for each p/t.",
+    "A monitor must be within 25 km of a community and not closer to a different community to be considered located in that community."
+  ) |>
+    sprintf(fig_caption_date_range)
 )
 
-event_texts = list(
-  max = 'Daily percentage of forecast zones within each province/territory with a daily maximum PM<sub>2.5</sub> concentration within each AQHI+ risk group. White space indicates the percentage of forecast zones without observation data that day.
-
-See `Events Table` for a break down of events within each forecast zone.',
-  median = 'Daily percentage of forecast zones within each province/territory with a daily median PM<sub>2.5</sub> concentration within each AQHI+ risk group. White space indicates the percentage of forecast zones without observation data that day.
-
-See `Events Table` for a break down of events within each forecast zone.'
-)
-worst_event_texts = paste0(
-  "Hourly PM<sub>2.5</sub> concentrations from all FEM and PA monitors in the forecast zone for a selection of the worst events this season in ",
-  prov_pretty,
-  '. 
-
-Federal Equivelant Method (FEM) monitors are the gold standard for hourly observations. The PurpleAir (PA) low cost monitors are not as accurate, but are cheaper/easier to install allowing for a larger network.
-                    
-Each event panel is labelled with the forecast zone name followed by the date range of the event. Summary text is included in the top left. 
-
-Note: Forecast zones vary in size, larger zones may have greater variation in observations due to physical distances between monitors.'
-) |>
-  as.list() |>
-  setNames(names(prov_pretty))
-
-community_exceed_texts = list(
-  exceeds_60 = 'Number of hours each community with nearby observation data had a mean PM<sub>2.5</sub> concentration above 60 {{< var units.pm >}} for each province/territory. A monitor must be within 25 km of a community and not closer to a different community to be considered located in that community.',
-  exceeds_100 = 'Number of hours each community with nearby observation data had a mean PM<sub>2.5</sub> concentration above 100 {{< var units.pm >}} for each province/territory. A monitor must be within 25 km of a community and not closer to a different community to be considered located in that community.'
-)
+# Insert terms defined in _variables.yml
+quarto_captions <- quarto_captions |>
+  lapply(\(caption_vec) {
+    caption_vec <- caption_vec |>
+      # first occurence only
+      stringr::str_replace(" AQmap", " {{< var terms.aqmap >}}") |>
+      stringr::str_replace(" PM2.5", " {{< var terms.pm25.long >}}") |>
+      stringr::str_replace(" PA", " {{< var terms.PA >}}") |>
+      stringr::str_replace(" FEM", " {{< var terms.FEM >}}") |>
+      # all other occurences if any
+      stringr::str_replace_all(" PM2.5", " {{< var terms.pm25.short >}}") |> 
+      stringr::str_replace_all(" p/t", " {{< var terms.pt >}}")
+    if (length(caption_vec) > 1) {
+      as.list(caption_vec)
+    } else {
+      caption_vec
+    }
+  })
 
 ```
 
@@ -374,7 +400,7 @@ The network of FEM monitors in Canada changed by `r text$tot$change[3]` this sea
 ```{r include=TRUE, results = 'asis'}
 plot_path |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(monitor_count_text)
+  plot_card(quarto_captions$monitor_counts)
 ```
 
 |
@@ -882,7 +908,7 @@ The worst impacts this season occurred in `r text$daily2$prov_terr[1]`, `r text$
 ```{r include=TRUE, results = 'asis'}
 plot_paths$mean_map |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(zone_summary_texts$mean_map, iframe = TRUE, iframe_height = 625)
+  plot_card(quarto_captions$mean_map, iframe = TRUE, iframe_height = 625)
 ```
 
 |
@@ -891,7 +917,7 @@ plot_paths$mean_map |>
 ```{r include=TRUE, results = 'asis'}
 plot_paths$max_map |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(zone_summary_texts$max_map, iframe = TRUE, iframe_height = 625)
+  plot_card(quarto_captions$max_map, iframe = TRUE, iframe_height = 625)
 ```
 
 |
@@ -901,7 +927,7 @@ plot_paths$max_map |>
 ```{r include=TRUE, results = 'asis'}
 plot_paths$ts |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(zone_summary_texts$ts)
+  plot_card(quarto_captions$zone_ts)
 ```
 
 |
@@ -1308,7 +1334,7 @@ for (t in texts) {
 ```{r include=TRUE, results = 'asis'}
 plot_paths$max |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(event_texts$max)
+  plot_card(quarto_captions$events_max)
 ```
 
 |
@@ -1318,7 +1344,7 @@ plot_paths$max |>
 ```{r include=TRUE, results = 'asis'}
 plot_paths$median |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(event_texts$median)
+  plot_card(quarto_captions$events_median)
 ```
 
 |
@@ -1767,7 +1793,7 @@ for (p in names(prov_pretty)) {
   cat(
     plot_paths[[p]] |>
       stringr::str_replace(report_dir_esc, "./") |>
-      plot_card(worst_event_texts[[p]]),
+      plot_card(quarto_captions$worst_events[[p]]),
     "\n"
   )
 }
@@ -2090,7 +2116,7 @@ text$provs_over_60 = paste0(
 ```{r include=TRUE, results = 'asis'}
 plot_paths$exceeds_100 |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(community_exceed_texts$exceeds_100, iframe = TRUE)
+  plot_card(quarto_captions$community_exceeds_100, iframe = TRUE)
 ```
 
 |
@@ -2100,7 +2126,7 @@ plot_paths$exceeds_100 |>
 ```{r include=TRUE, results = 'asis'}
 plot_paths$exceeds_60 |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(community_exceed_texts$exceeds_60, iframe = TRUE)
+  plot_card(quarto_captions$community_exceeds_60, iframe = TRUE)
 ```
 
 |

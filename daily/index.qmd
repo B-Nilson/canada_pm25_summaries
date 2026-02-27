@@ -75,62 +75,81 @@ max_date <- obs$date |> base::max()
 
 ```{r fig_titles}
 
-plot_text_template <- "Monitor counts and frequencies of median AQHI risk levels for %s {{< var terms.pm25 >}} concentrations for monitoring sites within each province/territory for %s. The number within each circle indicates the total monitors with data in that area during the report period. Percentages indicate the proportion of those monitors with a median AQHI risk at that level for this report." |>
-  sprintf(names(monitor_groups), fig_caption_date_range) |>
-  stringr::str_replace_all(" PA ", " {{< var terms.PA >}} ") |>
-  stringr::str_replace_all(" FEM ", " {{< var terms.FEM >}} ")
-prov_donuts_text <- list(
-  median = plot_text_template,
-  max = plot_text_template |> stringr::str_replace_all(" median ", " max ")
+donut_texts <- paste(
+  "Monitor counts and frequencies of median AQHI risk levels for %s PM2.5 concentrations for monitoring sites within each p/t for %s.",
+  "The number within each circle indicates the total monitors with data in that area during the report period.",
+  "Percentages indicate the proportion of those monitors with a median AQHI risk at that level for this report."
 ) |>
-  lapply(\(x) as.list(x) |> setNames(monitor_groups))
-
-map_text <- "Interactive map of 24-hour mean {{< var terms.pm25 >}} concentrations
-from {{< var terms.FEM >}} and {{< var terms.PA >}} monitoring sites (shown as diamons and cirles, repsectively) within Canada for %s. 
-Canadian forecast zones are shown coloured by the mean of the 24-hour mean concentrations from all monitors within the zone.
-Hover over a monitor or click on a forecast zone for additional details.
-Layers can be controlled in the top right menu." |>
-  sprintf(fig_caption_date_range)
-
-overall_table_caption <- "Canadian {{< var terms.FEM >}} and {{< var terms.PA >}} monitor {{< var terms.pm25 >}} observation summary for %s. 
-The table is sortable, filterable, and has multiple pages.
-Click the link on a monitor name to view that monitor's location on [AQmap](https://aqmap.ca/)." |>
-  sprintf(fig_caption_date_range)
-
-boxplot_texts <- "Distributions of site-mean {{< var terms.pm25 >}} concentrations for %s monitors in each province/territory from %s.
-Blue points show any sites with a mean concentration higher than that region's 75th percentile, with additional details displayed when hovered over. Hover over the boxplot (away from the points) to see the min/median/max and 25th/75th percentiles for that province. 
-See the menu in the top right of the plot for more." |>
   sprintf(names(monitor_groups), fig_caption_date_range) |>
-  stringr::str_replace_all(" PA ", " {{< var terms.PA >}} ") |>
-  stringr::str_replace_all(" FEM ", " {{< var terms.FEM >}} ") |>
-  as.list() |>
   setNames(monitor_groups)
 
-prov_grid_texts <- paste(
-  "Median and maximum hourly {{< var terms.pm25 >}} concentrations",
-  "for all %s monitoring sites in each province/territory from %s.",
-  "The median is useful for identifying large scale impacts across the province/territory,",
-  "while the maximum can be used to identify impacts in at least one area."
-) |>
-  sprintf(names(monitor_groups), fig_caption_date_range) |>
-  stringr::str_replace_all(" PA ", " {{< var terms.PA >}} ") |>
-  stringr::str_replace_all(" FEM ", " {{< var terms.FEM >}} ") |>
-  setNames(monitor_groups) |>
-  as.list()
+table_helper <- "The table is sortable, filterable, and has multiple pages."
 
-fcst_grid_texts <- paste(
-  "Hourly median {{< var terms.pm25 >}} concentrations for all {{< var terms.FEM >}} and {{< var terms.PA >}} monitors within each %s forecast zone for %s.",
-  "A white cell indicates there was no data for that hour from any monitor within that zone.",
-  "Zones are grouped into those with and those without monitors and are sorted alphabetically."
-) |>
-  sprintf(provinces_n_territories, fig_caption_date_range) |>
-  setNames(provinces_n_territories) |>
-  as.list()
+quarto_captions <- list(
+  median_donuts = donut_texts,
+  max_donuts = donut_texts |> stringr::str_replace_all(" median ", " max "),
+  map = paste(
+    "Interactive map of 24-hour mean PM2.5 concentrations from FEM and PA monitoring sites (shown as diamonds and cirles, repsectively) within Canada for %s.",
+    "Canadian forecast zones are shown coloured by the mean of the 24-hour mean concentrations from all monitors within the zone.",
+    "Hover over a monitor or click on a forecast zone for additional details.",
+    "Layers can be controlled in the top right menu."
+  ) |>
+    sprintf(fig_caption_date_range),
+  overall_table = paste(
+    "Canadian FEM and PA monitor PM2.5 observation summary for %s.",
+    table_helper,
+    "Click the link on a monitor name to view that monitor's location on AQmap."
+  ) |>
+    sprintf(fig_caption_date_range),
+  boxplots = paste(
+    "Distributions of site-mean PM2.5 concentrations for %s monitors in each p/t from %s.",
+    "Blue points show any sites with a mean concentration higher than that region's 75th percentile, with additional details displayed on hover.",
+    "Hover over the boxplot (away from the points) to see the min/median/max and 25th/75th percentiles for that province.",
+    "See the menu in the top right of the plot for more."
+  ) |>
+    sprintf(names(monitor_groups), fig_caption_date_range) |>
+    setNames(monitor_groups),
+  prov_grids = paste(
+    "Median and maximum hourly PM2.5 concentrations",
+    "for all %s monitoring sites in each p/t from %s.",
+    "The median is useful for identifying large scale impacts across the p/t,",
+    "while the maximum can be used to identify impacts in at least one area."
+  ) |>
+    sprintf(names(monitor_groups), fig_caption_date_range) |>
+    setNames(monitor_groups),
+  zone_grids = paste(
+    "Hourly median PM2.5 concentrations for all FEM and PA monitors within each %s forecast zone for %s.",
+    "A white cell indicates there was no data for that hour from any monitor within that zone.",
+    "Zones are grouped into those with and those without monitors and are sorted alphabetically."
+  ) |>
+    sprintf(provinces_n_territories, fig_caption_date_range) |>
+    setNames(provinces_n_territories),
+  community_table = paste(
+    "Canadian communities with at least one nearby FEM or PA PM2.5 monitor with data from %s.",
+    table_helper,
+    "Click on a name to view that community on AQmap."
+  ) |>
+    sprintf(fig_caption_date_range)
+)
 
-community_table_caption <- "Canadian communities with at least one nearby {{< var terms.FEM >}} or {{< var terms.PA >}} {{< var terms.pm25 >}} monitor with data from %s. 
-The table is sortable, filterable, and has multiple pages.
-Click on a name to view that community on [AQmap](https://aqmap.ca/)." |>
-  sprintf(fig_caption_date_range)
+# Insert terms defined in _variables.yml
+quarto_captions <- quarto_captions |>
+  lapply(\(caption_vec) {
+    caption_vec <- caption_vec |>
+      # first occurence only
+      stringr::str_replace(" AQmap", " {{< var terms.aqmap >}}") |>
+      stringr::str_replace(" PM2.5", " {{< var terms.pm25.long >}}") |>
+      stringr::str_replace(" PA", " {{< var terms.PA >}}") |>
+      stringr::str_replace(" FEM", " {{< var terms.FEM >}}") |>
+      # all other occurences if any
+      stringr::str_replace_all(" PM2.5", " {{< var terms.pm25.short >}}") |> 
+      stringr::str_replace_all(" p/t", " {{< var terms.pt >}}")
+    if (length(caption_vec) > 1) {
+      as.list(caption_vec)
+    } else {
+      caption_vec
+    }
+  })
 
 ```
 
@@ -140,7 +159,7 @@ Click on a name to view that community on [AQmap](https://aqmap.ca/)." |>
 # plots created and saved in make_summaries()
 # Make summary data for automated text for this section
 # TODO: move to build_prov_donut_summary()
-prov_donuts_text$p <- c(pa = "PA", fem = "FEM") |>
+prov_donuts_text <- c(pa = "PA", fem = "FEM") |>
   lapply(\(network) {
     summaries$donuts$data |>
       lapply(\(stat_data) {
@@ -170,7 +189,7 @@ map_path <- summaries$overall |>
 map_card <- map_path |>
   stringr::str_replace(stringr::fixed(report_dir), "./") |>
   plot_card(
-    text = map_text,
+    text = quarto_captions$map,
     iframe = TRUE,
     iframe_height = 617,
     plot_timestamp = plot_timestamp
@@ -189,7 +208,7 @@ overall_summary_table <- summaries$overall |>
 overall_summary_table$card <- overall_summary_table$path |>
   stringr::str_replace(stringr::fixed(report_dir), "./") |>
   plot_card(
-    text = overall_table_caption,
+    text = quarto_captions$overall_table,
     iframe = TRUE,
     is_table = TRUE,
     iframe_height = 590,
@@ -271,7 +290,7 @@ community_table <- summaries$community |>
 community_table$card <- community_table$path |>
   stringr::str_replace(stringr::fixed(report_dir), "./") |>
   plot_card(
-    text = community_table_caption,
+    text = quarto_captions$community_table,
     iframe = TRUE,
     is_table = TRUE,
     iframe_height = 590,
@@ -303,13 +322,13 @@ community_table$card <- community_table$path |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, summaries$donuts$paths$median, prov_donuts_text$median, report_dir, plot_timestamp = plot_timestamp)`
+`r build_tabs(monitor_groups, summaries$donuts$paths$median, quarto_captions$median_donuts, report_dir, plot_timestamp = plot_timestamp)`
 
 ## Max PM<sub>2.5</sub>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, summaries$donuts$paths$max, prov_donuts_text$max, report_dir, plot_timestamp = plot_timestamp)`
+`r build_tabs(monitor_groups, summaries$donuts$paths$max, quarto_captions$max_donuts, report_dir, plot_timestamp = plot_timestamp)`
 
 ::::
 
@@ -339,13 +358,13 @@ community_table$card <- community_table$path |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, prov_grid_paths, prov_grid_texts, report_dir, plot_timestamp = plot_timestamp)`
+`r build_tabs(monitor_groups, prov_grid_paths, quarto_captions$prov_grids, report_dir, plot_timestamp = plot_timestamp)`
 
 ## Region Level 
 
 `r tab_explainers$prov_terr_tabs`
 
-`r build_tabs(provinces_n_territories, fcst_grid_paths, fcst_grid_texts, report_dir, plot_timestamp = plot_timestamp)`
+`r build_tabs(provinces_n_territories, fcst_grid_paths, quarto_captions$zone_grids, report_dir, plot_timestamp = plot_timestamp)`
 
 ::::
 
@@ -355,4 +374,4 @@ community_table$card <- community_table$path |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, boxplots$paths, boxplot_texts, report_dir, iframe = TRUE, iframe_height = 526, plot_timestamp = plot_timestamp)`
+`r build_tabs(monitor_groups, boxplots$paths, quarto_captions$boxplots, report_dir, iframe = TRUE, iframe_height = 526, plot_timestamp = plot_timestamp)`

@@ -55,6 +55,10 @@ plot_timestamp <- date_range[2] |>
   format("%Y-%m")
 plot_captions <- date_range |>
   make_plot_captions(networks = names(monitor_groups))
+fig_caption_date_range <- date_range |>
+  lubridate::with_tz("UTC") |>
+  format("%b %d, %Y %H:%M UTC") |>
+  paste(collapse = " to ")
 
 summaries <- obs |>
   make_summaries(
@@ -70,70 +74,112 @@ summaries <- obs |>
 
 ```{r fig_titles}
 
-# Define plot summary text (figure titles essentially)
-plot_text_template <- "Distribution of monthly median concentrations at %s PM<sub>2.5</sub> monitoring sites within each province/territory. The number within each circle indicates the total number of monitors with data in that area. Percents indicate the amount of those monitors with a monthly median within that concentration range." |>
-  sprintf(monitor_groups)
-prov_donuts_text <- list(
-  median = plot_text_template,
-  max = plot_text_template |> stringr::str_replace_all(" mean ", " max ")
+donuts_caption <- paste(
+  "Distribution of monthly median concentrations at %s PM2.5 monitoring sites within each p/t.",
+  "The number within each circle indicates the total number of monitors with data in that area.",
+  "Percentages indicate the amount of those monitors with a monthly median within that concentration range."
 ) |>
-  lapply(\(x) as.list(x) |> setNames(monitor_groups))
+  sprintf(monitor_groups) |>
+  setNames(monitor_groups)
 
-coverage_text = paste(
-  "Estimated percentage of Canadian %c within 25 km of a",
-  "regulatory (FEM) and/or low-cost PurpleAir (PA) PM<sub>2.5</sub> monitor",
-  "during the month of",
-  format(date_range[2], "%B, %Y."),
-  "The patterned section shows overlapping coverage of the two networks (i.e. %c covered by both networks).",
-  "Data for %c sourced from %s."
+coverage_types <- c(
+  total = "total population",
+  fnic = "First Nation & Inuit communities",
+  urban = "urban population",
+  rural = "rural population"
 )
 
-boxplot_texts = paste0(
-  "Each boxplot summarises the distribution of monthly monitoring site (",
-  monitor_groups,
-  ") mean PM<sub>2.5</sub> concentrations for that province/territory. Blue points for individual sites are displayed for any monitors higher than that regions 75th percentile. Hover over the blue points (if present) to see details about that specific site; hover over the boxplot (away from the points) to see the min/median/max and 25th/75th percentiles for that province. See the menu in the top right of the plot for more."
-) |>
-  as.list() |>
-  setNames(monitor_groups)
+coverage_sources <- c(
+  total = "[the gridded 2016 census](https://open.canada.ca/data/en/dataset/c6c48391-fd2f-4d8a-93c8-eb74f58a859b)",
+  fnic = "[First Nation](https://open.canada.ca/data/en/dataset/b6567c5c-8339-4055-99fa-63f92114d9e4) and [Inuit](https://open.canada.ca/data/en/dataset/2bcf34b5-4e9a-431b-9e43-1eace6c873bd) communities",
+  urban = "[the gridded 2016 census](https://open.canada.ca/data/en/dataset/c6c48391-fd2f-4d8a-93c8-eb74f58a859b)",
+  rural = "[the gridded 2016 census](https://open.canada.ca/data/en/dataset/c6c48391-fd2f-4d8a-93c8-eb74f58a859b)"
+)
 
-daily_zone_text = "Interactive map summarizing the daily mean concentrations from both FEM and PA monitors by forecast zone for the month. You can use the control menu in the top right to step through the days in the month. If you hover over a forecast zone a summary popup will appear for that zone for the displayed day."
-monthly_zone_text = "Interactive map summarizing the monthly mean concentrations from both FEM and PA monitors by forecast zone. On the left the mean values are presented, and max values are presented on the right. If you hover over a forecast zone a summary popup will appear for that zone."
+quarto_captions <- list(
+  median_donuts = donuts_caption,
+  max_donuts = donuts_caption |> stringr::str_replace_all(" median ", " max "),
+  coverage = paste(
+    "Estimated percentage of Canadian %s within 25 km of a FEM or PA PM2.5 monitor for %s",
+    "The patterned section shows overlapping coverage of the two networks (i.e. %s covered by both networks).",
+    "Data for %s from %s"
+  ) |>
+    sprintf(
+      coverage_types,
+      fig_caption_date_range,
+      coverage_types,
+      coverage_types,
+      coverage_types,
+      coverage_sources
+    ) |>
+    setNames(names(coverage_types)),
+  boxplots = paste0(
+    "Each boxplot summarises the distribution of monthly mean %s monitoring site PM2.5 concentrations for that p/t for %s.",
+    "Blue points for individual sites are displayed for any monitors higher than that regions 75th percentile.",
+    "Hover over the blue points (if present) to see details about that specific site; hover over the boxplot (away from the points) to see the min/median/max and 25th/75th percentiles for that p/t.",
+    "See the menu in the top right of the plot for more."
+  ) |>
+    sprintf(names(monitor_group), fig_caption_date_range) |>
+    setNames(monitor_groups),
+  daily_zones = paste(
+    "Interactive map summarizing the daily mean concentrations from both FEM and PA monitors by forecast zone for %s.",
+    "You can use the control menu in the top right to step through each day.",
+    "If you hover over a forecast zone a summary popup will appear for that zone for the displayed day."
+  ) |>
+    sprintf(fig_caption_date_range),
+  monthly_zones = paste(
+    "Interactive map summarizing the monthly mean (left) and maximum (right) concentrations from both FEM and PA monitors by forecast zone for %s.",
+    "If you hover over a forecast zone a summary popup will appear for that zone."
+  ) |>
+    sprintf(fig_caption_date_range),
+  prov_grids = paste(
+    "Median and maximum daily PM2.5 concentrations for all %s monitoring sites in each p/t.",
+    "The median is useful for identifying large scale impacts across the p/t,",
+    "while the maximum can be used to identify impacts in at least one area of the p/t."
+  ) |>
+    sprintf(names(monitor_groups)) |>
+    setNames(monitor_groups),
+  zone_grids = paste(
+    "Daily median PM2.5 concentrations for all FEM and PA monitors within each forecast zone in %s for %s.",
+    "A white cell indicates there was no data for that day from any monitor within that zone.",
+    "Zones are grouped into those with and those without data and are sorted alphabetically."
+  ) |>
+    sprintf(provinces_n_territories, fig_caption_date_range) |>
+    setNames(provinces_n_territories),
+  community_boxplots = paste0(
+    "Each boxplot summarises the distribution of hours with PM2.5 concentrations above 100 {{< var units.pm >}} for at least one %s monitoring site in each community for each p/t for %s.",
+    "Blue points are displayed for any communities with counts higher than that regions 75th percentile.",
+    "Hover over the blue points (if present) to see details about that specific community; hover over the boxplot (away from the points) to see the min/median/max and 25th/75th percentiles for that p/t.",
+    "See the menu in the top right for more."
+  ) |>
+    sprintf(names(monitor_groups), fig_caption_date_range) |> 
+    setNames(monitor_groups)
+)
 
-# Define plot summary text (figure titles essentially)
-prov_grid_texts <- paste(
-  "Median and maximum daily PM<sub>2.5</sub> concentrations",
-  "for all %s monitoring sites in each province/territory.",
-  "The median is useful for identifying large scale impacts across the province/territory,",
-  "while the maximum can be used to identify impacts in at least one area of the province/territory."
-) |>
-  sprintf(names(monitor_groups)) |>
-  setNames(monitor_groups) |>
-  as.list()
-
-# Define plot summary text (figure titles essentially)
-fcst_grid_texts <- paste(
-  "Daily median PM<sub>2.5</sub> concentrations for all monitors (FEM and PA) within each forecast zone for %s.",
-  "A white cell indicates there was no data for that day from any monitor within that zone.",
-  "Zones are grouped into those with and those without data and are sorted alphabetically."
-) |>
-  sprintf(provinces_n_territories) |>
-  setNames(provinces_n_territories) |>
-  as.list()
-
-# Define text for below plots (figure title essentially)
-community_boxplot_texts = paste0(
-  "Each boxplot summarises the distribution of 1-month community counts of hours with PM<sub>2.5</sub> concentrations above 100 {{< var units.pm >}} for at least one monitoring site (",
-  monitor_groups,
-  ") in that community for each province/territory. Blue points for individual communities are displayed for any communities with counts higher than that regions 75th percentile. Hover over the blue points (if present) to see details about that specific community; hover over the boxplot (away from the points) to see the min/median/max and 25th/75th percentiles for that province/territory. See the menu in the top right for more."
-) |>
-  as.list() |>
-  setNames(monitor_groups)
+# Insert terms defined in _variables.yml
+quarto_captions <- quarto_captions |>
+  lapply(\(caption_vec) {
+    caption_vec <- caption_vec |>
+      # first occurence only
+      stringr::str_replace(" AQmap", " {{< var terms.aqmap >}}") |>
+      stringr::str_replace(" PM2.5", " {{< var terms.pm25.long >}}") |>
+      stringr::str_replace(" PA", " {{< var terms.PA >}}") |>
+      stringr::str_replace(" FEM", " {{< var terms.FEM >}}") |>
+      # all other occurences if any
+      stringr::str_replace_all(" PM2.5", " {{< var terms.pm25.short >}}") |> 
+      stringr::str_replace_all(" p/t", " {{< var terms.pt >}}")
+    if (length(caption_vec) > 1) {
+      as.list(caption_vec)
+    } else {
+      caption_vec
+    }
+  })
 
 ```
 
 ```{r getNetworkCoverage}
 
-pop_rds = "../resources/spatial/canada_gridded_pop_census_2016.rds"
+      pop_rds = "../resources/spatial/canada_gridded_pop_census_2016.rds"
 # If pop rds doesnt exist
 if (!file.exists(pop_rds)) {
   neg_to_zero = \(x) ifelse(x < 0, 0, x)
@@ -338,7 +384,7 @@ coverage = dplyr::bind_rows(pop_coverage, fnic_coverage)
 ```{r prov_donuts}
 
 # Make summary data for autmated text for this section
-prov_donuts_text$p <- c(pa = "PA", fem = "FEM") |>
+prov_donuts_text <- c(pa = "PA", fem = "FEM") |>
   lapply(\(network) {
     summaries$donuts$data$median |>
       dplyr::filter(monitor == network) |>
@@ -358,13 +404,13 @@ prov_donuts_text$p <- c(pa = "PA", fem = "FEM") |>
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$median_fem_and_pa |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$mean$`FEM and PA`)
+  plot_card(quarto_captions$median_donuts$`FEM and PA`)
 ```
 
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$max_fem_and_pa |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$max$`FEM and PA`)
+  plot_card(quarto_captions$max_donuts$`FEM and PA`)
 ```
 
 #### FEM Only
@@ -372,13 +418,13 @@ summaries$donuts$paths$max_fem_and_pa |>
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$median_fem_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$mean$`FEM Only`)
+  plot_card(quarto_captions$median_donuts$`FEM Only`)
 ```
 
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$max_fem_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$max$`FEM Only`)
+  plot_card(quarto_captions$max_donuts$`FEM Only`)
 ```
 
 #### PA Only
@@ -386,13 +432,13 @@ summaries$donuts$paths$max_fem_only |>
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$median_pa_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$mean$`PA Only`)
+  plot_card(quarto_captions$median_donuts$`PA Only`)
 ```
 
 ```{r include=TRUE, results = 'asis'}
 summaries$donuts$paths$max_pa_only |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_donuts_text$max$`PA Only`)
+  plot_card(quarto_captions$max_donuts$`PA Only`)
 ```
 
 ### Who had access to nearby observations? {.panel-tabset}
@@ -510,14 +556,7 @@ coverage_dl = td |>
 ```{r include=TRUE, results = 'asis'}
 plot_paths$total |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(
-    coverage_text |>
-      stringr::str_replace_all("%c", "total population") |>
-      stringr::str_replace_all(
-        "%s",
-        "the gridded 2016 census: https://open.canada.ca/data/en/dataset/c6c48391-fd2f-4d8a-93c8-eb74f58a859b"
-      )
-  )
+  plot_card(quarto_captions$coverage$total)
 ```
 
 #### First Nations and Inuit Communities
@@ -525,14 +564,7 @@ plot_paths$total |>
 ```{r include=TRUE, results = 'asis'}
 plot_paths$fnic |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(
-    plot_text |>
-      stringr::str_replace_all("%c", "First Nation and Inuit communities") |>
-      stringr::str_replace_all(
-        "%s",
-        "https://open.canada.ca/data/en/dataset/b6567c5c-8339-4055-99fa-63f92114d9e4 and https://open.canada.ca/data/en/dataset/2bcf34b5-4e9a-431b-9e43-1eace6c873bd"
-      )
-  )
+  plot_card(quarto_captions$coverage$fnic)
 ```
 
 #### Urban Population
@@ -540,14 +572,7 @@ plot_paths$fnic |>
 ```{r include=TRUE, results = 'asis'}
 plot_paths$urban |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(
-    plot_text |>
-      stringr::str_replace_all("%c", "urban population") |>
-      stringr::str_replace_all(
-        "%s",
-        "the gridded 2016 census: https://open.canada.ca/data/en/dataset/c6c48391-fd2f-4d8a-93c8-eb74f58a859b"
-      )
-  )
+  plot_card(quarto_captions$coverage$urban)
 ```
 
 #### Rural Population
@@ -555,14 +580,7 @@ plot_paths$urban |>
 ```{r include=TRUE, results = 'asis'}
 plot_paths$rural |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(
-    plot_text |>
-      stringr::str_replace_all("%c", "rural population") |>
-      stringr::str_replace_all(
-        "%s",
-        "the gridded 2016 census: https://open.canada.ca/data/en/dataset/c6c48391-fd2f-4d8a-93c8-eb74f58a859b"
-      )
-  )
+  plot_card(quarto_captions$coverage$rural)
 ```
 
 #### Coverage Table
@@ -635,7 +653,7 @@ htmltools::save_html(map, plot2_path, libdir = "./libs")
 ```{r include=TRUE, results = 'asis'}
 plot_path |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(daily_zone_text, iframe = TRUE, plot_title)
+  plot_card(quarto_captions$daily_zones, iframe = TRUE, plot_title)
 ```
 
 #### Monthly
@@ -643,7 +661,12 @@ plot_path |>
 ```{r include=TRUE, results = 'asis'}
 plot2_path |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(monthly_zone_text, iframe = TRUE, plot2_title, iframe_height = 625)
+  plot_card(
+    quarto_captions$monthly_zones,
+    iframe = TRUE,
+    plot2_title,
+    iframe_height = 625
+  )
 ```
 
 ### Where and when did PM<sub>2.5</sub> events occur? {.panel-tabset}
@@ -681,7 +704,7 @@ plot_paths <- grid_data |>
 ```{r grids_both, include=TRUE, results = 'asis'}
 plot_paths[['FEM and PA']] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_grid_texts[['FEM and PA']])
+  plot_card(quarto_captions$prov_grids[['FEM and PA']])
 ```
 
 ##### FEM Only
@@ -689,7 +712,7 @@ plot_paths[['FEM and PA']] |>
 ```{r grids_fem, include=TRUE, results = 'asis'}
 plot_paths[['FEM']] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_grid_texts[['FEM Only']])
+  plot_card(quarto_captions$prov_grids[['FEM Only']])
 ```
 
 ##### PA Only
@@ -697,7 +720,7 @@ plot_paths[['FEM']] |>
 ```{r grids_pa, include=TRUE, results = 'asis'}
 plot_paths[['PA']] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(prov_grid_texts[['PA Only']])
+  plot_card(quarto_captions$prov_grids[['PA Only']])
 ```
 
 #### Region Level {.panel-tabset}
@@ -733,7 +756,7 @@ for (pt_name in names(provinces_n_territories)) {
   cat(
     plot_paths[[pt_abbr]] |>
       stringr::str_replace(report_dir_esc, "./") |>
-      plot_card(fcst_grid_texts[[pt_abbr]]),
+      plot_card(quarto_captions$zone_grids[[pt_abbr]]),
     "\n"
   )
 }
@@ -769,7 +792,7 @@ plot_paths <- boxplots$paths
 ```{r include=TRUE, results = 'asis'}
 plot_paths[["FEM and PA"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(boxplot_texts[["FEM and PA"]], iframe = TRUE)
+  plot_card(quarto_captions$boxplots[["FEM and PA"]], iframe = TRUE)
 ```
 
 #### FEM Only
@@ -777,7 +800,7 @@ plot_paths[["FEM and PA"]] |>
 ```{r include=TRUE, results = 'asis'}
 plot_paths[["FEM"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(boxplot_texts[["FEM Only"]], iframe = TRUE)
+  plot_card(quarto_captions$boxplots[["FEM Only"]], iframe = TRUE)
 ```
 
 #### PA Only
@@ -785,7 +808,7 @@ plot_paths[["FEM"]] |>
 ```{r include=TRUE, results = 'asis'}
 plot_paths[["PA"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(boxplot_texts[["PA Only"]], iframe = TRUE)
+  plot_card(quarto_captions$boxplots[["PA Only"]], iframe = TRUE)
 ```
 
 ### Which communities [with data] had very high PM<sub>2.5</sub>? {.panel-tabset}
@@ -856,7 +879,7 @@ plot_paths = paste0(
 ```{r include=TRUE, results = 'asis'}
 plot_paths[["FEM and PA"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(community_boxplot_texts[["FEM and PA"]], iframe = TRUE)
+  plot_card(quarto_captions$community_boxplots[["FEM and PA"]], iframe = TRUE)
 ```
 
 #### FEM Only
@@ -864,7 +887,7 @@ plot_paths[["FEM and PA"]] |>
 ```{r include=TRUE, results = 'asis'}
 plot_paths[["FEM Only"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(community_boxplot_texts[["FEM Only"]], iframe = TRUE)
+  plot_card(quarto_captions$community_boxplots[["FEM Only"]], iframe = TRUE)
 ```
 
 #### PA Only
@@ -872,7 +895,7 @@ plot_paths[["FEM Only"]] |>
 ```{r include=TRUE, results = 'asis'}
 plot_paths[["PA Only"]] |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(community_boxplot_texts[["PA Only"]], iframe = TRUE)
+  plot_card(quarto_captions$community_boxplots[["PA Only"]], iframe = TRUE)
 ```
 
 ### What was the worst day this month? {.panel-tabset}
