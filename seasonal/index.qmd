@@ -65,6 +65,50 @@ events <- get_pm_events(obs, c("prov_terr", "fcst_zone"))
 
 ```
 
+```{r fig_titles}
+
+monitor_count_text = 'Daily counts of active fine particulate matter (PM<sub>2.5</sub>) monitors in each Canadian province/territory. 
+
+The National Air Pollution Service (NAPS) Federal Equivelant Method (FEM) monitors are the gold standard for hourly observations. The PurpleAir (PA) low cost monitors are not as accurate, but are cheaper/easier to install allowing for a larger network. These PA monitors are recorded as either owned by Environment and Climate Change Canada\'s Air Quality Science Units (ECCC AQSU) or by anyone else ("Non-ECCC").
+
+Note: Sudden drops in monitors counts may be the result of our automated quality control and/or gaps in our database.'
+
+zone_summary_texts <- list(
+  mean_map = 'Interactive map of seasonal mean PM<sub>2.5</sub> concentrations ({{< var units.pm >}}) by Canadian forecast zone. Hover over a zone for more information.',
+  max_map = 'Interactive map of seasonal max PM<sub>2.5</sub> concentrations ({{< var units.pm >}}) by Canadian forecast zone. Hover over a zone for more information.',
+  ts = 'Daily mean PM<sub>2.5</sub> concentrations ({{< var units.pm >}}) by Canadian forecast zone for each province/territory. The black line indicates the daily mean of the forcast zone averages.',
+  zone_map = 'Note: Not all forecast zones have observation data. See `When / where did event occur?` for a daily record of forecast zones with data by province/territory'
+)
+
+event_texts = list(
+  max = 'Daily percentage of forecast zones within each province/territory with a daily maximum PM<sub>2.5</sub> concentration within each AQHI+ risk group. White space indicates the percentage of forecast zones without observation data that day.
+
+See `Events Table` for a break down of events within each forecast zone.',
+  median = 'Daily percentage of forecast zones within each province/territory with a daily median PM<sub>2.5</sub> concentration within each AQHI+ risk group. White space indicates the percentage of forecast zones without observation data that day.
+
+See `Events Table` for a break down of events within each forecast zone.'
+)
+worst_event_texts = paste0(
+  "Hourly PM<sub>2.5</sub> concentrations from all FEM and PA monitors in the forecast zone for a selection of the worst events this season in ",
+  prov_pretty,
+  '. 
+
+Federal Equivelant Method (FEM) monitors are the gold standard for hourly observations. The PurpleAir (PA) low cost monitors are not as accurate, but are cheaper/easier to install allowing for a larger network.
+                    
+Each event panel is labelled with the forecast zone name followed by the date range of the event. Summary text is included in the top left. 
+
+Note: Forecast zones vary in size, larger zones may have greater variation in observations due to physical distances between monitors.'
+) |>
+  as.list() |>
+  setNames(names(prov_pretty))
+
+community_exceed_texts = list(
+  exceeds_60 = 'Number of hours each community with nearby observation data had a mean PM<sub>2.5</sub> concentration above 60 {{< var units.pm >}} for each province/territory. A monitor must be within 25 km of a community and not closer to a different community to be considered located in that community.',
+  exceeds_100 = 'Number of hours each community with nearby observation data had a mean PM<sub>2.5</sub> concentration above 100 {{< var units.pm >}} for each province/territory. A monitor must be within 25 km of a community and not closer to a different community to be considered located in that community.'
+)
+
+```
+
 ## Overview {.unlisted .unnumbered}
 
 `r build_overview_card(type = "seasonal", report_dropdown = old_report_dropdown)`
@@ -162,13 +206,6 @@ ggsave(
   units = fig_dims$u,
   dpi = 300
 )
-
-# Define plot summary text (figure titles essentially)
-plot_text = 'Daily counts of active fine particulate matter (PM<sub>2.5</sub>) monitors in each Canadian province/territory. 
-
-The National Air Pollution Service (NAPS) Federal Equivelant Method (FEM) monitors are the gold standard for hourly observations. The PurpleAir (PA) low cost monitors are not as accurate, but are cheaper/easier to install allowing for a larger network. These PA monitors are recorded as either owned by Environment and Climate Change Canada\'s Air Quality Science Units (ECCC AQSU) or by anyone else ("Non-ECCC").
-
-Note: Sudden drops in monitors counts may be the result of our automated quality control and/or gaps in our database.'
 
 # # Timeseries of monitor flags by province
 # pd = obs |>
@@ -275,10 +312,6 @@ table = reactable(
   )
 )
 
-``
-`
-```{r}
-
 tmp = daily_monitor_counts |>
     dplyr::group_by(prov_terr, date) |>
     dplyr::summarise(n = sum(n)) |>
@@ -335,7 +368,7 @@ The network of FEM monitors in Canada changed by `r text$tot$change[3]` this sea
 ```{r include=TRUE, results = 'asis'}
 plot_path |> 
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_text)
+  plot_card(monitor_count_text)
 ```
 
 |
@@ -353,7 +386,6 @@ table
 fig_dims = list(h = 7, w = 11, u = 'in')
 
 plot_paths = list()
-plot_texts = list()
 
 # Season zone mean/max map
 seasonal_zone_summaries = obs |>
@@ -442,10 +474,6 @@ htmltools::save_html(mean_map, plot_paths$mean_map, libdir="./libs")
 plot_paths$max_map = paste0("../../deployments/reports/seasonal/plots/", report_season, "_zone_max_map.html")
 htmltools::save_html(max_map, plot_paths$max_map, libdir="./libs")
 
-# Define plot summary text (figure titles essentially)
-plot_texts$mean_map = 'Interactive map of seasonal mean PM<sub>2.5</sub> concentrations ({{< var units.pm >}}) by Canadian forecast zone. Hover over a zone for more information.'
-plot_texts$max_map = 'Interactive map of seasonal max PM<sub>2.5</sub> concentrations ({{< var units.pm >}}) by Canadian forecast zone. Hover over a zone for more information.'
-
 # Daily zone mean ts
 daily_zone_means = obs |>
   dplyr::group_by(date = lubridate::floor_date(date, "days"), prov_terr, fcst_zone) |>
@@ -498,15 +526,6 @@ plot_paths$ts = paste0("../../deployments/reports/seasonal/plots/",report_season
                        "_daily_zone_means.png")
 ggsave(gg, filename = plot_paths$ts,
        width = fig_dims$w, height = fig_dims$h, units = fig_dims$u, dpi = 300)
-
-# Define plot summary text (figure titles essentially)
-plot_texts$ts = 'Daily mean PM<sub>2.5</sub> concentrations ({{< var units.pm >}}) by Canadian forecast zone for each province/territory. The black line indicates the daily mean of the forcast zone averages.
-
-Note: Not all forecast zones have observation data. See `
-When / where
-did
-event
-occur?` for a daily record of forecast zones with data by province/territory'
 
 # Make summary data for autmated text for this section
 
@@ -614,8 +633,8 @@ Duration(days)
             )
   )
 
-`
-``
+```
+
 ```{r}
 
 text = list(
@@ -648,6 +667,7 @@ text = list(
 )
 
 text$daily2 = text$daily |> dplyr::arrange(desc(max))
+
 ```
 
 ::: card
@@ -679,7 +699,7 @@ The worst impacts this season occurred in `r text$daily2$prov_terr[1]`, `r text$
 ```{r include=TRUE, results = 'asis'}
 plot_paths$mean_map |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_texts$mean_map, iframe = TRUE, iframe_height = 625)
+  plot_card(zone_summary_texts$mean_map, iframe = TRUE, iframe_height = 625)
 ```
 
 |
@@ -688,7 +708,7 @@ plot_paths$mean_map |>
 ```{r include=TRUE, results = 'asis'}
 plot_paths$max_map |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_texts$max_map, iframe = TRUE, iframe_height = 625)
+  plot_card(zone_summary_texts$max_map, iframe = TRUE, iframe_height = 625)
 ```
 
 |
@@ -698,7 +718,7 @@ plot_paths$max_map |>
 ```{r include=TRUE, results = 'asis'}
 plot_paths$ts |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_texts$ts)
+  plot_card(zone_summary_texts$ts)
 ```
 
 |
@@ -847,15 +867,6 @@ for (stat in names(pd)) {
     dpi = 300
   )
 }
-# Define plot summary text (figure titles essentially)
-plot_texts = list(
-  max = 'Daily percentage of forecast zones within each province/territory with a daily maximum PM<sub>2.5</sub> concentration within each AQHI+ risk group. White space indicates the percentage of forecast zones without observation data that day.
-
-See `Events Table` for a break down of events within each forecast zone.',
-  median = 'Daily percentage of forecast zones within each province/territory with a daily median PM<sub>2.5</sub> concentration within each AQHI+ risk group. White space indicates the percentage of forecast zones without observation data that day.
-
-See `Events Table` for a break down of events within each forecast zone.'
-)
 
 # Make summary data for autmated text for this section
 
@@ -930,8 +941,8 @@ table = reactable(
   )
 )
 
-``
-`
+```
+
 ```{r}
 months = unique(format(hours_to_summarise, "%B"))
 m_data = lapply(months, \(m){
@@ -1039,8 +1050,7 @@ for(t in texts){
   cat(t, "\n\n---\n\n")
 }
 
-`
-``
+```
   
 </details>
 
@@ -1054,7 +1064,7 @@ for(t in texts){
 ```{r include=TRUE, results = 'asis'}
 plot_paths$max |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_texts$max)
+  plot_card(event_texts$max)
 ```
 
 |
@@ -1064,7 +1074,7 @@ plot_paths$max |>
 ```{r include=TRUE, results = 'asis'}
 plot_paths$median |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_texts$median)
+  plot_card(event_texts$median)
 ```
 
 |
@@ -1383,19 +1393,6 @@ for (pt in names(prov_pretty)) {
     dpi = 300
   )
 }
-plot_texts = paste0(
-  "Hourly PM<sub>2.5</sub> concentrations from all FEM and PA monitors in the forecast zone for a selection of the worst events this season in ",
-  prov_pretty,
-  '. 
-
-Federal Equivelant Method (FEM) monitors are the gold standard for hourly observations. The PurpleAir (PA) low cost monitors are not as accurate, but are cheaper/easier to install allowing for a larger network.
-                    
-Each event panel is labelled with the forecast zone name followed by the date range of the event. Summary text is included in the top left. 
-
-Note: Forecast zones vary in size, larger zones may have greater variation in observations due to physical distances between monitors.'
-) |>
-  as.list() |>
-  setNames(names(prov_pretty))
 
 ```
 
@@ -1518,7 +1515,7 @@ for (p in names(prov_pretty)) {
   cat(
     plot_paths[[p]] |>
       stringr::str_replace(report_dir_esc, "./") |>
-      plot_card(plot_texts[[p]]),
+      plot_card(worst_event_texts[[p]]),
     "\n"
   )
 }
@@ -1707,13 +1704,6 @@ pd |>
     selfcontained = FALSE
   )
 
-
-# Define plot summary text (figure titles essentially)
-plot_texts = list(
-  exceeds_60 = 'Number of hours each community with nearby observation data had a mean PM<sub>2.5</sub> concentration above 60 {{< var units.pm >}} for each province/territory. A monitor must be within 25 km of a community and not closer to a different community to be considered located in that community.',
-  exceeds_100 = 'Number of hours each community with nearby observation data had a mean PM<sub>2.5</sub> concentration above 100 {{< var units.pm >}} for each province/territory. A monitor must be within 25 km of a community and not closer to a different community to be considered located in that community.'
-)
-
 # Make summary data for autmated text for this section
 
 # Table
@@ -1842,7 +1832,7 @@ text$provs_over_60 = paste0(
 ```{r include=TRUE, results = 'asis'}
 plot_paths$exceeds_100 |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_texts$exceeds_100, iframe = TRUE)
+  plot_card(community_exceed_texts$exceeds_100, iframe = TRUE)
 ```
 
 |
@@ -1852,7 +1842,7 @@ plot_paths$exceeds_100 |>
 ```{r include=TRUE, results = 'asis'}
 plot_paths$exceeds_60 |>
   stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(plot_texts$exceeds_60, iframe = TRUE)
+  plot_card(community_exceed_texts$exceeds_60, iframe = TRUE)
 ```
 
 |
