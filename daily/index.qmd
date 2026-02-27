@@ -355,4 +355,4 @@ community_table$card <- community_table$path |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, boxplot$paths, boxplot_texts, report_dir, iframe = TRUE, iframe_height = 526, plot_timestamp = plot_timestamp)`
+`r build_tabs(monitor_groups, boxplots$paths, boxplot_texts, report_dir, iframe = TRUE, iframe_height = 526, plot_timestamp = plot_timestamp)`
