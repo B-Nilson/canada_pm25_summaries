@@ -55,14 +55,25 @@ plot_card <- function(
   is_table = FALSE,
   plot_timestamp
 ) {
+  plot_id <- basename(plot_src) |>
+    tools::file_path_sans_ext() |>
+    stringr::str_remove(stringr::fixed(paste0("_", plot_timestamp))) |>
+    gsub(
+      pattern = "[^a-zA-Z0-9_\\-\\.]",
+      replacement = ""
+    )
+
   img <- ifelse(
     iframe,
     paste0(
-      "<iframe loading='lazy' style='height:",
+      "<iframe loading='lazy' title='",
+      plot_id,
+      "' style='height: ",
       iframe_height,
       "px' src='$plot_src' class='card-img-top p-2' data-external='1' frameborder='0' scrolling='no' width='100%'></iframe>"
     ),
-    "<div><img loading='lazy' src='$plot_src' class='card-img-top p-2'/></div>"
+    "<div><img alt='%s' loading='lazy' src='$plot_src' class='card-img-top p-2'/></div>" |>
+      sprintf(plot_id)
   ) |>
     stringr::str_replace("\\$plot_src", plot_src)
   if (!is.na(title)) {
@@ -85,16 +96,7 @@ $text
     stringr::str_replace("\\$TYPE", ifelse(is_table, "tbl", "fig")) |>
     stringr::str_replace("\\$IMG", img) |>
     stringr::str_replace("\\$text", text |> stringr::str_replace("'", "\\'")) |>
-    stringr::str_replace(
-      "\\$ID",
-      gsub(
-        "[^a-zA-Z0-9_\\-\\.]",
-        "",
-        basename(plot_src) |>
-          tools::file_path_sans_ext() |>
-          stringr::str_remove(stringr::fixed(paste0("_", plot_timestamp)))
-      )
-    )
+    stringr::str_replace("\\$ID", plot_id)
 }
 
 make_summary_chunk <- function(contents) {
