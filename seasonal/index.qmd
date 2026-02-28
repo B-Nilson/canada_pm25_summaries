@@ -9,8 +9,9 @@ params:
       lib: libs
   run_current: false
   months_in_seasons:
-    Summer: 5, 6, 7, 8, 9, 10
-    Winter: 11, 12, 1, 2, 3, 4
+    value:
+      Summer: 5, 6, 7, 8, 9, 10
+      Winter: 11, 12, 1, 2, 3, 4
   report: !expr source("../R/set_params.R"); set_params(type = "seasonal", default_report_date = "2026-01-02 00", months_in_seasons = list(Summer = 5:10, Wincter = c(11:12, 1:4)))
 title: "Canadian PM<sub>2.5</sub> Observations Seasonal Summary for <mark class='bg-info'>`r params$report$display_name`</mark>"
 subtitle: | 
