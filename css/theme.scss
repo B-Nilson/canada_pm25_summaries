@@ -1,0 +1,110 @@
+/*-- scss:defaults --*/
+
+$font-family-sans-serif: "InterVariable", "Inter", sans-serif !default;
+$font-family-base: $font-family-sans-serif !default;
+
+$card-border-color: #ddd !default;
+
+/*-- scss:rules --*/
+
+// grey left/right margins on wide screens
+html {
+  background-color: #F5F5F5;
+}
+
+body {
+  margin: auto;
+  max-width: 80rem;
+}
+
+.main-container {
+  max-width: 100%;
+  margin: auto;
+}
+
+.container-fluid {
+  background-color: white;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+/* -----------------------------------------------------------
+   BOOTSTRAP COMPONENT OVERRIDES
+----------------------------------------------------------- */
+
+.card {
+  margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.card-body {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 0rem;
+  padding-bottom: 0rem;
+}
+
+.nav-tabs>li>a {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nav,
+.nav-tabs,
+.active {
+  cursor: pointer;
+}
+
+.dropdown-menu {
+  max-height: 210px;
+  overflow-y: auto;
+}
+
+/* -----------------------------------------------------------
+   QUARTO-SPECIFIC OVERRIDES
+----------------------------------------------------------- */
+
+.quarto-float-caption {
+  margin: 0.5rem;
+}
+
+.quarto-float-caption-bottom {
+  margin-top: 0rem;
+}
+
+.quarto-float-caption-top {
+  margin-bottom: 0rem;
+}
+
+/* -----------------------------------------------------------
+   TYPOGRAPHY (HEADINGS, PARAGRAPHS, DETAILS)
+----------------------------------------------------------- */
+
+h1 {
+  font-size: 2rem;
+}
+
+h2 {
+  margin-top: 0.5rem;
+  font-size: 1.6rem;
+}
+
+.h3,
+h3 {
+  font-size: calc(1rem + .6vw);
+}
+
+h4 {
+  font-size: 1.2rem;
+}
+
+p,
+summary,
+details {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+summary {
+  font-weight: bold;
+}

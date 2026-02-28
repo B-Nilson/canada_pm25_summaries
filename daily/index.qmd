@@ -1,6 +1,14 @@
 ---
 params:
-  report: !expr source("../R/set_params.R"); set_params(type = "daily")
+  report_dir: "daily"
+  default_date: "2026-01-02 00"
+  dirs:
+    value:
+      data: data
+      plots: plots
+      lib: libs
+  run_current: false
+  report: !expr source("../R/set_params.R"); set_params(type = "daily", default_report_date = "2026-01-02 00")
 title: "Canadian PM<sub>2.5</sub> Observations Daily Summary for <mark class='bg-info'>`r params$report$display_name`</mark>"
 subtitle: | 
   Non-validated, auto-QA/QCed data representing `r params$report$date_ranges$utc`<br>
@@ -24,16 +32,15 @@ format:
 
 source("R/report-functions.R")
 source("R/report-constants.R")
-report_dir <- report_dir |> file.path("daily")
 
-date_range <- report_dir |>
+date_range <- params$report_dir |>
   get_report_start_end(
     type = "daily",
-    run_future = run_current_day,
-    default_date = .default_report_date
+    run_future = params$run_current,
+    default_date = params$default_report_date |> lubridate::ymd_h(tz = "UTC")
   )
 
-old_report_dropdown <- report_dir |>
+old_report_dropdown <- params$report_dir |>
   handle_old_reports(report_pattern = "[day,night]\\.html$")
 
 ```
@@ -43,7 +50,7 @@ old_report_dropdown <- report_dir |>
 obs <- date_range |>
   load_report_data(
     meta_cols = meta_cols,
-    cache_path = file.path(report_dir, "index_obs.rds"), # used when db not available
+    cache_path = file.path(params$report_dir, "index_obs.rds"), # used when db not available
     provinces_n_territories = provinces_n_territories
   )
 
@@ -54,18 +61,16 @@ plot_timestamp <- date_range[2] |>
   format("%F-%Hz")
 plot_captions <- date_range |>
   make_plot_captions(networks = names(monitor_groups))
-fig_caption_date_range <- date_range |>
-  lubridate::with_tz("UTC") |>
-  format("%b %d, %Y %H:%M UTC") |>
-  paste(collapse = " to ")
+quarto_captions <- date_range |> 
+  make_quarto_captions(monitor_groups = monitor_groups)
 
 summaries <- obs |>
   make_summaries(
     type = "daily",
     fcst_zones = fcst_zones,
     meta_cols = meta_cols,
-    report_dir = report_dir,
-    figure_dir = figure_dir,
+    report_dir = params$report_dir,
+    figure_dir = params$dirs$plots,
     plot_timestamp = plot_timestamp
   )
 
@@ -76,18 +81,9 @@ max_date <- obs$date |> base::max()
 ```{r prov_donuts}
 
 # plots created and saved in make_summaries()
-
-# Define plot summary text (figure titles essentially)
-plot_text_template <- "Monitor counts and frequencies of median AQHI risk levels for %s fine particulate matter (PM<sub>2.5</sub>) concentrations for monitoring sites within each province/territory for %s. The number within each circle indicates the total monitors with data in that area during the report period. Percentages indicate the proportion of those monitors with a median AQHI risk at that level for this report." |>
-  sprintf(names(monitor_groups), fig_caption_date_range)
-prov_donuts_text <- list(
-  median = plot_text_template,
-  max = plot_text_template |> stringr::str_replace_all(" median ", " max ")
-) |>
-  lapply(\(x) as.list(x) |> setNames(monitor_groups))
-
-# Make summary data for autmated text for this section
-prov_donuts_text$p <- c(pa = "PA", fem = "FEM") |>
+# Make summary data for automated text for this section
+# TODO: move to build_prov_donut_summary()
+prov_donuts_text <- c(pa = "PA", fem = "FEM") |>
   lapply(\(network) {
     summaries$donuts$data |>
       lapply(\(stat_data) {
@@ -107,24 +103,17 @@ map_path <- summaries$overall |>
   make_and_save_overall_map(
     zone_summary = summaries$by_zone,
     monitor_group = "FEM and PA",
-    report_dir = report_dir,
-    plot_dir = figure_dir,
-    lib_dir = lib_dir,
+    report_dir = params$report_dir,
+    plot_dir = params$dirs$plots,
+    lib_dir = params$dirs$lib,
     include_active_fires = FALSE,
     map_timestamps = date_range
   )
-# Define plot summary text (figure titles essentially)
-map_text <- "Interactive map of 24-hour mean fine particulate matter (PM<sub>2.5</sub>) concentrations
-from regulatory (FEM; diamonds) and PurpleAir (PA; circles) monitoring sites in Canada for %s. 
-Canadian forecast zones are shown coloured by the mean of the 24-hour mean concentrations from all monitors within the zone.
-Hover over a monitor or click on a forecast zone for additional details.
-Layers can be controlled in the top right menu." |>
-  sprintf(fig_caption_date_range)
 
 map_card <- map_path |>
-  stringr::str_replace(stringr::fixed(report_dir), "./") |>
+  stringr::str_replace(stringr::fixed(params$report_dir), "./") |>
   plot_card(
-    text = map_text,
+    text = quarto_captions$map,
     iframe = TRUE,
     iframe_height = 617,
     plot_timestamp = plot_timestamp
@@ -133,22 +122,17 @@ map_card <- map_path |>
 # Make and save tables
 overall_summary_table <- summaries$overall |>
   make_overall_summary_table(
-    report_dir = report_dir,
+    report_dir = params$report_dir,
     monitor_group = "FEM and PA",
-    data_dir = data_dir,
-    figure_dir = figure_dir,
+    data_dir = params$dirs$data,
+    figure_dir = params$dirs$plots,
     plot_timestamp = plot_timestamp
   )
 
-table_caption <- "Canadian regulatory (FEM) and PurpleAir (PA) monitor fine-particulate matter (PM<sub>2.5</sub>) observation summary for %s. 
-The table is sortable, filterable, and has multiple pages.
-Click the link on a monitor name to view that monitor's location on [AQmap](https://aqmap.ca/)." |>
-  sprintf(fig_caption_date_range)
-
 overall_summary_table$card <- overall_summary_table$path |>
-  stringr::str_replace(stringr::fixed(report_dir), "./") |>
+  stringr::str_replace(stringr::fixed(params$report_dir), "./") |>
   plot_card(
-    text = table_caption,
+    text = quarto_captions$overall_table,
     iframe = TRUE,
     is_table = TRUE,
     iframe_height = 590,
@@ -171,20 +155,10 @@ boxplots <- summaries$overall |>
     date_format = "%Y-%m-%d %H:%M (UTC)",
     avg_text = "24-hour",
     plot_timestamp = plot_timestamp,
-    report_dir = report_dir,
-    figure_dir = figure_dir,
-    lib_dir = lib_dir
+    report_dir = params$report_dir,
+    figure_dir = params$dirs$plots,
+    lib_dir = params$dirs$lib
   )
-
-boxplot_paths <- boxplots$paths
-
-# Define plot summary text (figure titles essentially)
-boxplot_texts <- "Distributions of site-mean fine particulate matter (PM<sub>2.5</sub>) concentrations for %s monitors in each province/territory from %s.
-Blue points show any sites with a mean concentration higher than that regions 75th percentile, with additional details displayed when hovered over. Hover over the boxplot (away from the points) to see the min/median/max and 25th/75th percentiles for that province. 
-See the menu in the top right of the plot for more." |>
-  sprintf(names(monitor_groups), fig_caption_date_range) |>
-  as.list() |>
-  setNames(monitor_groups)
 
 ```
 
@@ -197,24 +171,13 @@ grid_data <- list(median = median, maximum = max) |>
 # Make paths to plot files
 prov_grid_paths <- grid_data |>
   make_and_save_prov_terr_grids(
-    report_dir = report_dir,
-    figure_dir = figure_dir,
+    report_dir = params$report_dir,
+    figure_dir = params$dirs$plots,
     monitor_groups = monitor_groups,
     plot_timestamp = plot_timestamp,
     xlab = "Hour of Day",
     plot_captions = plot_captions
   )
-
-# Define plot summary text (figure titles essentially)
-prov_grid_texts <- paste(
-  "Median and maximum hourly fine particulate matter (PM<sub>2.5</sub>) concentrations",
-  "for all %s monitoring sites in each province/territory from %s.",
-  "The median is useful for identifying large scale impacts across the province/territory,",
-  "while the maximum can be used to identify impacts in at least one area."
-) |>
-  sprintf(names(monitor_groups), fig_caption_date_range) |>
-  setNames(monitor_groups) |>
-  as.list()
 
 ```
 
@@ -227,23 +190,13 @@ fcst_grid_data <- obs |>
 
 fcst_grid_paths <- fcst_grid_data |>
   make_and_save_fcst_zone_grids(
-    report_dir = report_dir,
-    figure_dir = figure_dir,
+    report_dir = params$report_dir,
+    figure_dir = params$dirs$plots,
     plot_timestamp = plot_timestamp,
     xlab = "Hour of Day",
     plot_caption = plot_captions$`FEM and PA`,
     provinces_n_territories = provinces_n_territories
   )
-
-# Define plot summary text (figure titles essentially)
-fcst_grid_texts <- paste(
-  "Hourly median fine particulate matter (PM<sub>2.5</sub>) concentrations for all regulatory (FEM) and PurpleAir (PA) monitors within each %s forecast zone for %s.",
-  "A white cell indicates there was no data for that hour from any monitor within that zone.",
-  "Zones are grouped into those with and those without monitors and are sorted alphabetically."
-) |>
-  sprintf(provinces_n_territories, fig_caption_date_range) |>
-  setNames(provinces_n_territories) |>
-  as.list()
 
 ```
 
@@ -252,20 +205,16 @@ fcst_grid_texts <- paste(
 
 community_table <- summaries$community |>
   make_community_table(
-    report_dir = report_dir,
-    data_dir = data_dir,
-    figure_dir = figure_dir,
+    report_dir = params$report_dir,
+    data_dir = params$dirs$data,
+    figure_dir = params$dirs$plots,
     plot_timestamp = plot_timestamp
   )
 
-table_caption <- "Canadian communities with at least one nearby regulatory (FEM) or PurpleAir (PA) fine particulate matter (PM<sub>2.5</sub>) monitor with data from %s. 
-The table is sortable, filterable, and has multiple pages.
-Click on a name to view that community on [AQmap](https://aqmap.ca/)." |>
-  sprintf(fig_caption_date_range)
 community_table$card <- community_table$path |>
-  stringr::str_replace(stringr::fixed(report_dir), "./") |>
+  stringr::str_replace(stringr::fixed(params$report_dir), "./") |>
   plot_card(
-    text = table_caption,
+    text = quarto_captions$community_table,
     iframe = TRUE,
     is_table = TRUE,
     iframe_height = 590,
@@ -297,13 +246,13 @@ community_table$card <- community_table$path |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, summaries$donuts$paths$median, prov_donuts_text$median, report_dir, plot_timestamp = plot_timestamp)`
+`r build_tabs(monitor_groups, summaries$donuts$paths$median, quarto_captions$median_donuts, params$report_dir, plot_timestamp = plot_timestamp)`
 
 ## Max PM<sub>2.5</sub>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, summaries$donuts$paths$max, prov_donuts_text$max, report_dir, plot_timestamp = plot_timestamp)`
+`r build_tabs(monitor_groups, summaries$donuts$paths$max, quarto_captions$max_donuts, params$report_dir, plot_timestamp = plot_timestamp)`
 
 ::::
 
@@ -333,13 +282,13 @@ community_table$card <- community_table$path |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, prov_grid_paths, prov_grid_texts, report_dir, plot_timestamp = plot_timestamp)`
+`r build_tabs(monitor_groups, prov_grid_paths, quarto_captions$prov_grids, params$report_dir, plot_timestamp = plot_timestamp)`
 
 ## Region Level 
 
 `r tab_explainers$prov_terr_tabs`
 
-`r build_tabs(provinces_n_territories, fcst_grid_paths, fcst_grid_texts, report_dir, plot_timestamp = plot_timestamp)`
+`r build_tabs(provinces_n_territories, fcst_grid_paths, quarto_captions$zone_grids, params$report_dir, plot_timestamp = plot_timestamp)`
 
 ::::
 
@@ -349,4 +298,4 @@ community_table$card <- community_table$path |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, boxplot_paths, boxplot_texts, report_dir, iframe = TRUE, iframe_height = 526, plot_timestamp = plot_timestamp)`
+`r build_tabs(monitor_groups, boxplots$paths, quarto_captions$boxplots, params$report_dir, iframe = TRUE, iframe_height = 526, plot_timestamp = plot_timestamp)`

@@ -1,0 +1,12 @@
+units: 
+  pm: "&mu;g m<sup>-3</sup>"
+
+terms:
+  aqmap: "[AQmap](https://aqmap.ca/)"
+  PA: "PurpleAir (PA)"
+  FEM: "regulatory (FEM)"
+  naps: "National Air Pollution Surveillance (NAPS) program"
+  pm25:
+    long: "fine particulate matter (PM<sub>2.5</sub>)"
+    short: "PM<sub>2.5</sub>"
+  pt: "province/territory"

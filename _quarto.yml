@@ -17,6 +17,7 @@ knitr:
 format:
   html: 
     page-layout: full
+    theme: css/theme.scss
     css: "index_files/css/report_stylesheet.css"
     embed-resources: false
     output-file: index.html
@@ -26,7 +27,6 @@ format:
       - text: |
           <link rel="preconnect" href="https://rsms.me/">
           <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-          <script src="index_files/js/page_load.js"></script>
 
 author: 
   - name: "Brayden Nilson"

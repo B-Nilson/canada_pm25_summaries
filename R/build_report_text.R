@@ -118,41 +118,41 @@ build_prov_donut_summary <- function(
 
   template <- 'There was <strong>%s FEM sites</strong> and <strong>%s PA sites</strong> reporting PM<sub>2.5</sub> in Canada for this report (@fig-monitor_donuts_median_fem_and_pa, @fig-monitor_donuts_max_fem_and_pa). 
 
-- <strong>%s</strong> of the FEM sites in Canada have a %s median exceeding 100 {{< pm_units >}},
-<strong>%s</strong> are between 60 and 100 {{< pm_units >}},
-and <strong>%s</strong> are between 30 and 60 {{< pm_units >}} (@fig-monitor_donuts_median_fem_only). 
-<strong>%s</strong> of the PA sites in Canada have a %s median exceeding 100 {{< pm_units >}},
-<strong>%s</strong> are between 60 and 100 {{< pm_units >}},
-and <strong>%s</strong> are between 30 and 60 {{< pm_units >}} (@fig-monitor_donuts_median_pa_only).
+- <strong>%s</strong> of the FEM sites in Canada have a %s median exceeding 100 {{< var units.pm >}},
+<strong>%s</strong> are between 60 and 100 {{< var units.pm >}},
+and <strong>%s</strong> are between 30 and 60 {{< var units.pm >}} (@fig-monitor_donuts_median_fem_only). 
+<strong>%s</strong> of the PA sites in Canada have a %s median exceeding 100 {{< var units.pm >}},
+<strong>%s</strong> are between 60 and 100 {{< var units.pm >}},
+and <strong>%s</strong> are between 30 and 60 {{< var units.pm >}} (@fig-monitor_donuts_median_pa_only).
   
-- <strong>%s</strong> of the FEM sites in Canada have a %s maximum exceeding 100 {{< pm_units >}},
-<strong>%s</strong> are between 60 and 100 {{< pm_units >}},
-and <strong>%s</strong> are between 30 and 60 {{< pm_units >}} (@fig-monitor_donuts_max_fem_only). 
-<strong>%s</strong> of the PA sites in Canada have a %s maximum exceeding 100 {{< pm_units >}},
-<strong>%s</strong> are between 60 and 100 {{< pm_units >}},
-and <strong>%s</strong> are between 30 and 60 {{< pm_units >}} (@fig-monitor_donuts_max_pa_only).'
+- <strong>%s</strong> of the FEM sites in Canada have a %s maximum exceeding 100 {{< var units.pm >}},
+<strong>%s</strong> are between 60 and 100 {{< var units.pm >}},
+and <strong>%s</strong> are between 30 and 60 {{< var units.pm >}} (@fig-monitor_donuts_max_fem_only). 
+<strong>%s</strong> of the PA sites in Canada have a %s maximum exceeding 100 {{< var units.pm >}},
+<strong>%s</strong> are between 60 and 100 {{< var units.pm >}},
+and <strong>%s</strong> are between 30 and 60 {{< var units.pm >}} (@fig-monitor_donuts_max_pa_only).'
 
   template |>
     sprintf(
-      sum(prov_donuts_text$p$fem$median$n),
-      sum(prov_donuts_text$p$pa$median$n),
-      prov_donuts_text$p$fem$median$p[4] |> paste0("%"),
+      sum(prov_donuts_text$fem$median$n),
+      sum(prov_donuts_text$pa$median$n),
+      prov_donuts_text$fem$median$p[4] |> paste0("%"),
       average_text,
-      prov_donuts_text$p$fem$median$p[3] |> paste0("%"),
-      prov_donuts_text$p$fem$median$p[2] |> paste0("%"),
-      prov_donuts_text$p$pa$median$p[4] |> paste0("%"),
+      prov_donuts_text$fem$median$p[3] |> paste0("%"),
+      prov_donuts_text$fem$median$p[2] |> paste0("%"),
+      prov_donuts_text$pa$median$p[4] |> paste0("%"),
       average_text,
-      prov_donuts_text$p$pa$median$p[3] |> paste0("%"),
-      prov_donuts_text$p$pa$median$p[2] |> paste0("%"),
+      prov_donuts_text$pa$median$p[3] |> paste0("%"),
+      prov_donuts_text$pa$median$p[2] |> paste0("%"),
 
-      prov_donuts_text$p$fem$max$p[4] |> paste0("%"),
+      prov_donuts_text$fem$max$p[4] |> paste0("%"),
       average_text,
-      prov_donuts_text$p$fem$max$p[3] |> paste0("%"),
-      prov_donuts_text$p$fem$max$p[2] |> paste0("%"),
-      prov_donuts_text$p$pa$max$p[4] |> paste0("%"),
+      prov_donuts_text$fem$max$p[3] |> paste0("%"),
+      prov_donuts_text$fem$max$p[2] |> paste0("%"),
+      prov_donuts_text$pa$max$p[4] |> paste0("%"),
       average_text,
-      prov_donuts_text$p$pa$max$p[3] |> paste0("%"),
-      prov_donuts_text$p$pa$max$p[2] |> paste0("%")
+      prov_donuts_text$pa$max$p[3] |> paste0("%"),
+      prov_donuts_text$pa$max$p[2] |> paste0("%")
     ) |>
     make_summary_chunk() |>
     knitr::asis_output()
@@ -208,7 +208,7 @@ build_map_summary <- function(
           w,
           " - 24-hour mean PM<sub>2.5</sub>: ",
           m,
-          " {{< pm_units >}}"
+          " {{< var units.pm >}}"
         )
       )
   } else {
@@ -216,15 +216,15 @@ build_map_summary <- function(
   }
 
   template <- 'There was <strong>%s FEM monitors</strong> and <strong>%s PA monitors</strong> in Canada
-with a %s mean PM<sub>2.5</sub> concentration <strong>exceeding 100 {{< pm_units >}}</strong>
+with a %s mean PM<sub>2.5</sub> concentration <strong>exceeding 100 {{< var units.pm >}}</strong>
 *(very high AQHI risk)* (@tbl-overall_table_fem_and_pa, @fig-site_mean_map_fem_and_pa).%s%s
 
 There was <strong>%s FEM monitors</strong> and <strong>%s PA monitors</strong> in Canada
-with a %s mean PM<sub>2.5</sub> concentration <strong>between 60 and 100 {{< pm_units >}}</strong>
+with a %s mean PM<sub>2.5</sub> concentration <strong>between 60 and 100 {{< var units.pm >}}</strong>
 *(high AQHI risk)*.%s%s
   
 There was <strong>%s FEM monitors</strong> and <strong>%s PA monitors</strong> in Canada
-with a %s mean PM<sub>2.5</sub> concentration <strong>between 30 and 60 {{< pm_units >}}</strong>
+with a %s mean PM<sub>2.5</sub> concentration <strong>between 30 and 60 {{< var units.pm >}}</strong>
 *(moderate AQHI risk)*.%s%s
   
 %s'
@@ -259,6 +259,43 @@ with a %s mean PM<sub>2.5</sub> concentration <strong>between 30 and 60 {{< pm_u
     knitr::asis_output()
 }
 
+format_count_summary <- function(
+  dat,
+  monitor = "FEM",
+  range_text = "exceeding 100"
+) {
+  if (nrow(dat) > 1) {
+    x <- paste0(" <strong>", dat[[monitor]], "</strong>") |>
+      paste(
+        unlist(dat[, 'prov_terr']),
+        sep = paste0(" ", monitor, " monitor(s) in ")
+      )
+
+    x[-length(x)] |>
+      paste(collapse = ", ") |>
+      paste0(
+        ', and ',
+        dplyr::last(x),
+        " had a mean PM<sub>2.5</sub> concentration ",
+        range_text,
+        " {{< var units.pm >}}."
+      )
+  } else if (nrow(dat) == 1) {
+    paste0(" <strong>", dat[[monitor]], "</strong>") |>
+      paste(
+        unlist(dat[, 'prov_terr']),
+        sep = paste0(" ", monitor, " monitor(s) in ")
+      ) |>
+      paste0(
+        " had a mean PM<sub>2.5</sub> concentration ",
+        range_text,
+        " {{< var units.pm >}}."
+      )
+  } else {
+    ""
+  }
+}
+
 # TODO: cleanup
 build_boxplot_summary <- function(
   boxplot_vals,
@@ -267,14 +304,14 @@ build_boxplot_summary <- function(
   average_text <- list(daily = "24-hour", monthly = "1-month")[[type]]
   template <- '
 *%s* (a %s monitor located %s km from %s, %s) had the highest observed hourly maximum PM<sub>2.5</sub>
-concentration in Canada from the FEM network for this report (%s {{< pm_units >}}) (@fig-site_mean_boxplots_fem_and_pa, @fig-site_mean_boxplots_fem_only).
+concentration in Canada from the FEM network for this report (%s {{< var units.pm >}}) (@fig-site_mean_boxplots_fem_and_pa, @fig-site_mean_boxplots_fem_only).
 *%s* (a %s monitor located %s km from %s, %s) had the highest observed %s mean PM<sub>2.5</sub>
-concentration in Canada from the FEM network (%s {{< pm_units >}}).
+concentration in Canada from the FEM network (%s {{< var units.pm >}}).
 
 *%s* (a %s monitor located %s km from %s, %s) had the highest observed hourly maximum PM<sub>2.5</sub>
-concentration in Canada from the PA network for this report (%s {{< pm_units >}})  (@fig-site_mean_boxplots_fem_and_pa, @fig-site_mean_boxplots_pa_only).
+concentration in Canada from the PA network for this report (%s {{< var units.pm >}})  (@fig-site_mean_boxplots_fem_and_pa, @fig-site_mean_boxplots_pa_only).
 *%s* (a %s monitor located %s km from %s, %s) had the highest observed %s mean PM<sub>2.5</sub>
-concentration in Canada from the PA network (%s {{< pm_units >}}).'
+concentration in Canada from the PA network (%s {{< var units.pm >}}).'
 
   template |>
     sprintf(
@@ -328,10 +365,10 @@ build_prov_grid_summary <- function(
     })
 
   template <- "%s had a significant amount of locations with elevated
-PM<sub>2.5</sub> concentrations  (> 30 {{< pm_units >}})
+PM<sub>2.5</sub> concentrations  (> 30 {{< var units.pm >}})
 for at least 3 %s (See @fig-prov_medianpeak_grid_fem_and_pa \"Median\"). 
 %s had at least one location with elevated 
-PM<sub>2.5</sub> concentrations (> 30 {{< pm_units >}})
+PM<sub>2.5</sub> concentrations (> 30 {{< var units.pm >}})
 for at least 3 %s (See @fig-prov_medianpeak_grid_fem_and_pa \"Maximum\")."
 
   template |>
@@ -368,7 +405,7 @@ build_fcst_grid_summary <- function(
 
   average_text <- list(daily = "hours", monthly = "days")[[type]]
   template <- "The following forecast regions experienced elevated PM<sub>2.5</sub> concentrations 
-(> 30 {{< pm_units >}}) for at least 3 %s):
+(> 30 {{< var units.pm >}}) for at least 3 %s):
 
 %s"
 
@@ -419,14 +456,14 @@ build_community_summary <- function(
   )
 
   template <- "*%s* (a community in %s with %s FEM and %s PA monitors within at least %s km)
-had the highest observed hourly PM<sub>2.5</sub> concentration in Canada for this report (%s {{< pm_units >}}) (@tbl-community_summary). 
+had the highest observed hourly PM<sub>2.5</sub> concentration in Canada for this report (%s {{< var units.pm >}}) (@tbl-community_summary). 
 *%s* (a community in %s with %s FEM and %s PA monitors within at least %s km) 
-had the highest %s mean in Canada (%s {{< pm_units >}}).
+had the highest %s mean in Canada (%s {{< var units.pm >}}).
 
 *%s* (a community in %s with %s FEM and %s PA monitors within at least %s km)
-had %s hours where at least one monitor exceeded 100 {{< pm_units >}}, 
-%s hours where at least one monitor exceeded 60 {{< pm_units >}}, 
-and %s hours where at least one monitor exceeded 30 {{< pm_units >}}."
+had %s hours where at least one monitor exceeded 100 {{< var units.pm >}}, 
+%s hours where at least one monitor exceeded 60 {{< var units.pm >}}, 
+and %s hours where at least one monitor exceeded 30 {{< var units.pm >}}."
 
   template |>
     sprintf(

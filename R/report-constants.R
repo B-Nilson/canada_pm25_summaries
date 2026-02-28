@@ -1,33 +1,3 @@
-# Run Control ------
-.default_report_date <- "2026-01-02 00" |> lubridate::ymd_h(tz = "UTC")
-
-#Change local->server when running on AQmap server
-run_location <- "server"
-
-run_current_day <- FALSE
-run_current_month <- FALSE
-run_current_season <- FALSE
-
-cache <- run_location == "local"
-
-# File Locations -----
-
-base_loc <- list(
-  local = 'https://aqmap.ca/aqmap/',
-  server = '../'
-)[[run_location]]
-
-aqcsv_dir <- paste0(base_loc, 'data/AQCSV/')
-aqcsv_folders <- c(raw = "unvalidated", fem = "fem")
-
-# Output Locations ----
-
-report_dir = "./" # appended to with report type for each report (i.e ./daily)
-report_dir_esc = "\\./" # appended to with report type for each report (i.e ./daily)
-figure_dir <- "plots" # relative to report_dir for each type
-data_dir <- "data" # relative to report_dir for each type
-lib_dir <- "libs" # relative to report_dir for each type
-
 # Font(s) ----------
 
 ## Uncomment for INIT run only
@@ -55,38 +25,6 @@ meta_cols <- c(
   "nc_lng"
 )
 
-# AQCSV Header
-header <- c(
-  "site",
-  "data_status",
-  "action_code",
-  "datetime",
-  "parameter",
-  "duration",
-  "frequency",
-  "value",
-  "unit",
-  "qc",
-  "poc",
-  "lat",
-  "lon",
-  "GISDatum",
-  "elev",
-  "method_code",
-  "mpc",
-  "mpc_value",
-  "uncertainty",
-  "qualifiers",
-  "A",
-  "B",
-  "FEM",
-  "FEMdistance",
-  "FEMsite",
-  "T",
-  "RH",
-  "P"
-)
-
 monitor_groups <- c(
   "FEM and PA" = "FEM and PA",
   FEM = "FEM Only",
@@ -96,51 +34,7 @@ monitor_groups_cleaned <- monitor_groups |>
   stringr::str_to_lower() |>
   stringr::str_replace_all(" ", "_")
 
-municipal_classes <- c(
-  "District Municipality",
-  "Community",
-  "Settlement",
-  "Hamlet",
-  "Village",
-  "Urban Community",
-  "City",
-  "Village Municipality",
-  "Town",
-  "Compact Rural Community",
-  "Municipality",
-  "Northern Community", #'Post Office',#"Borough",
-  "Northern Village",
-  "Locality",
-  "Community Government",
-  "First Nation Village",
-  "Northern Village Municipality",
-  "Resort Village",
-  "Organized Hamlet",
-  "Township Municipality",
-  "Recreational Community",
-  "Rural Village",
-  "Summer Village",
-  "Northern Settlement",
-  "Rural Community",
-  "Metis Settlement",
-  "Cree Village",
-  "Cree Village Municipality",
-  "Northern Hamlet",
-  "Metropolitan Area",
-  "Charter Community",
-  "Fort",
-  "Amerindian Settlement",
-  "Naskapi Village Municipality",
-  "Naskapi Village",
-  "Forest Village",
-  "Townsite",
-  "Resort Municipality",
-  "Mountain Resourt Municipality"
-)
-
 # Misc -----
-
-contact_email <- "brayden.nilson@ec.gc.ca"
 
 loading_div <- '
 <div id="loading" style="text-align:center;display: flex; align-items: center; justify-content: center; height: 250px;">
@@ -152,42 +46,11 @@ loading_div <- '
 ' |>
   htmltools::HTML()
 
-# Define legend breaks and colours from AQHI+ scale
-leg_ugm3 <- data.frame(
-  breaks = 0:10 * 10,
-  colours = c(
-    "#21C6F5",
-    '#189ACA',
-    "#0D6797", #Low [1 - 3]
-    "#FFFD37",
-    '#FFCC2E',
-    "#FE9A3F", # Moderate [4 - 6]
-    "#FD6769",
-    "#FF3B3B",
-    "#FF0101",
-    "#CB0713", # High [7 - 10]
-    "#650205"
-  )
-)
-
-###!Don't need all these different prov vars....
-prov_order <- list(
-  West = c("BC", "AB", "SK"),
-  Central = c("MB", "ON", "QC"),
-  East = c("NS", "NB", "NL", "PE"),
-  Territories = c("YK", "NT", "NU")
-)
-
 provinces_n_territories <- canadata::provinces_and_territories$abbreviation |>
   as.character() |>
   dplyr::replace_values("Quebec" ~ "Québec") |> # TODO: remove once database in cync with canadata
   setNames(canadata::provinces_and_territories$name_en) |>
   as.list()
-
-months_in_seasons = list(
-  "Summer" = 5:10,
-  "Winter" = c(11:12, 1:4)
-)
 
 # Forecast Zones ---
 
