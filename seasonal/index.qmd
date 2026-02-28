@@ -1,6 +1,17 @@
 ---
 params:
-  report: !expr source("../R/set_params.R"); set_params(type = "seasonal")
+  report_dir: "./seasonal"
+  default_date: "2026-01-02 00"
+  dirs:
+    value:
+      data: data
+      plots: plots
+      lib: libs
+  run_current: false
+  months_in_seasons:
+    Summer: 5, 6, 7, 8, 9, 10
+    Winter: 11, 12, 1, 2, 3, 4
+  report: !expr source("../R/set_params.R"); set_params(type = "seasonal", default_report_date = "2026-01-02 00", months_in_seasons = list(Summer = 5:10, Wincter = c(11:12, 1:4)))
 title: "Canadian PM<sub>2.5</sub> Observations Seasonal Summary for <mark class='bg-info'>`r params$report$display_name`</mark>"
 subtitle: | 
   Non-validated, auto-QA/QCed data representing `r params$report$date_ranges$utc`<br>
@@ -24,17 +35,16 @@ format:
 
 source("R/report-functions.R")
 source("R/report-constants.R")
-report_dir <- report_dir |> file.path("seasonal")
 
-date_range <- report_dir |>
+date_range <- params$report_dir |>
   get_report_start_end(
     type = "seasonal",
-    months_in_seasons = months_in_seasons,
-    run_future = run_current_season,
-    default_date = .default_report_date
+    months_in_seasons = params$months_in_seasons,
+    run_future = params$run_current,
+    default_date = params$default_report_date |> lubridate::ymd_h(tz = "UTC")
   )
 
-old_report_dropdown <- report_dir |>
+old_report_dropdown <- params$report_dir |>
   handle_old_reports(report_pattern = "[summer,winter]\\.html$")
 
 ```
@@ -44,7 +54,7 @@ old_report_dropdown <- report_dir |>
 obs <- date_range |>
   load_report_data(
     meta_cols = meta_cols,
-    cache_path = file.path(report_dir, "index_obs.rds"), # used when db not available
+    cache_path = file.path(params$report_dir, "index_obs.rds"), # used when db not available
     provinces_n_territories = provinces_n_territories
   )
 
@@ -54,7 +64,7 @@ summary_months <- date_range |>
   handyr::as_interval() |>
   seq(by = "1 months")
 report_season <- date_range[2] |>
-  get_season(months_in_seasons = months_in_seasons)
+  get_season(months_in_seasons = params$months_in_seasons)
 plot_captions <- date_range |>
   make_plot_captions(networks = names(monitor_groups))
 quarto_captions <- date_range |> 
@@ -1777,7 +1787,7 @@ pd = obs |>
 
 # Make paths to files for saving plots
 plot_paths = paste0(
-  report_dir,
+  params$report_dir,
   "plots/communities_",
   c("vHigh", "High"),
   "_hours_",

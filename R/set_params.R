@@ -1,4 +1,9 @@
-set_params <- function(type) {
+set_params <- function(
+  type,
+  default_report_date = "2026-01-02 00",
+  months_in_seasons = list("Summer" = 5:10, "Winter" = c(11:12, 1:4))
+) {
+  default_report_date <- lubridate::ymd_h(default_report_date, tz = "UTC")
   report_dir <- file.path(".", type)
   project_dir <- "../"
   setwd(project_dir)
@@ -8,7 +13,7 @@ set_params <- function(type) {
     get_report_start_end(
       type = type,
       months_in_seasons = months_in_seasons,
-      default_date = .default_report_date
+      default_date = default_report_date
     )
   report_date <- base::max(date_range) |> format("%Y-%m-%d")
   report_name <- base::max(date_range) |> get_report_file_names(type = type)

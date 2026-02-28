@@ -1,6 +1,14 @@
 ---
 params:
-  report: !expr source("../R/set_params.R"); set_params(type = "monthly")
+  report_dir: "./monthly"
+  default_date: "2026-01-02 00"
+  dirs:
+    value:
+      data: data
+      plots: plots
+      lib: libs
+  run_current: false
+  report: !expr source("../R/set_params.R"); set_params(type = "monthly", default_report_date = "2026-01-02 00")
 title: "Canadian PM<sub>2.5</sub> Observations Monthly Summary for <mark class='bg-info'>`r params$report$display_name`</mark>"
 subtitle: | 
   Non-validated, auto-QA/QCed data representing `r params$report$date_ranges$utc`<br>
@@ -24,17 +32,17 @@ format:
 
 source("R/report-functions.R")
 source("R/report-constants.R")
-report_dir <- report_dir |> file.path("monthly")
-report_dir_esc <- report_dir_esc |> file.path("daily")
 
-date_range <- report_dir |>
+report_dir_esc <- report_dir |> stringr::str_escape()
+
+date_range <- params$report_dir |>
   get_report_start_end(
     type = "monthly",
-    run_future = run_current_month,
-    default_date = .default_report_date
+    run_future = params$run_current,
+    default_date = params$default_report_date |> lubridate::ymd_h(tz = "UTC")
   )
 
-old_report_dropdown <- report_dir |>
+old_report_dropdown <- params$report_dir |>
   handle_old_reports(report_pattern = "\\d\\.html$")
 
 ```
@@ -44,7 +52,7 @@ old_report_dropdown <- report_dir |>
 obs <- date_range |>
   load_report_data(
     meta_cols = meta_cols,
-    cache_path = file.path(report_dir, "index_obs.rds"), # used when db not available
+    cache_path = file.path(params$report_dir, "index_obs.rds"), # used when db not available
     provinces_n_territories = provinces_n_territories
   )
 
@@ -63,8 +71,8 @@ summaries <- obs |>
     type = "monthly",
     fcst_zones = fcst_zones,
     meta_cols = meta_cols,
-    report_dir = report_dir,
-    figure_dir = figure_dir,
+    report_dir = params$report_dir,
+    figure_dir = params$dirs$plots,
     plot_timestamp = plot_timestamp
   )
 
@@ -348,7 +356,7 @@ coverage_barcharts = lapply(c_types, \(p) {
   setNames(c_types)
 
 plot_paths = paste0(
-  report_dir,
+  params$report_dir,
   "plots/coverage_",
   c_types,
   "_",
@@ -496,7 +504,7 @@ plot_title = paste0(
   format(date_range[2], "%B %Y")
 )
 plot_path = paste0(
-  report_dir,
+  params$report_dir,
   "plots/fcstzone_mean_map_daily_",
   output_date_fmt,
   ".html"
@@ -515,7 +523,7 @@ plot2_title = paste0(
   format(date_range[2], "%B %Y")
 )
 plot2_path = paste0(
-  report_dir,
+  params$report_dir,
   "plots/fcstzone_mean_map_",
   output_date_fmt,
   ".html"
@@ -574,8 +582,8 @@ grid_xlab <- "Day of %s" |> sprintf(format(date_range[2], "%B"))
 # Make paths to plot files
 plot_paths <- grid_data |>
   make_and_save_prov_terr_grids(
-    report_dir = report_dir,
-    figure_dir = figure_dir,
+    report_dir = params$report_dir,
+    figure_dir = params$dirs$plots,
     monitor_groups = monitor_groups,
     plot_timestamp = plot_timestamp,
     xlab = grid_xlab,
@@ -627,8 +635,8 @@ fcst_grid_data <- obs |>
 
 plot_paths <- fcst_grid_data |>
   make_and_save_fcst_zone_grids(
-    report_dir = report_dir,
-    figure_dir = figure_dir,
+    report_dir = params$report_dir,
+    figure_dir = params$dirs$plots,
     plot_timestamp = plot_timestamp,
     xlab = grid_xlab,
     plot_caption = plot_captions$`FEM and PA`,
@@ -667,9 +675,9 @@ boxplots <- summaries$overall |>
     date_format = "%Y-%m-%d",
     avg_text = "Monthly",
     plot_timestamp = plot_timestamp,
-    report_dir = report_dir,
-    figure_dir = figure_dir,
-    lib_dir = lib_dir
+    report_dir = params$report_dir,
+    figure_dir = params$dirs$plots,
+    lib_dir = params$dirs$lib
   )
 
 plot_paths <- boxplots$paths
@@ -732,14 +740,14 @@ pd = summaries$overall |>
   ) |>
   dplyr::mutate(aqhi_p_mean = aqhi_p(pm25_mean)) |>
   dplyr::full_join(expand.grid(
-    prov_terr = unlist(prov_order),
+    prov_terr = provinces_n_territories,
     monitor2 = monitor_groups,
     date_max = unique(summaries$overall$date_max)
   )) |>
   dplyr::mutate(date = date_max)
 # Make paths to files for saving plots
 plot_paths = paste0(
-  report_dir,
+  params$report_dir,
   "plots/communities_veryHigh_hours_",
   monitor_groups_cleaned,
   '_',

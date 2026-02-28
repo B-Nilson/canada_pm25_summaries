@@ -5,7 +5,7 @@ make_and_save_overall_map <- function(
   include_active_fires = FALSE,
   report_dir,
   plot_dir,
-  lib_dir = "libs",
+  lib_dir,
   map_timestamps
 ) {
   map_data <- overall_summary |>

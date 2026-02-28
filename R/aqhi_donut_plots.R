@@ -4,7 +4,7 @@ save_aqhi_donuts_plots <- function(
   stats = c("median", "max"),
   avg = "24-hour",
   report_dir,
-  figure_dir = "plots",
+  figure_dir,
   fig_dims = list(h = 7, w = 11, u = 'in'),
   plot_timestamp = format(Sys.time(), "%Y%m%d%H%M%S")
 ) {

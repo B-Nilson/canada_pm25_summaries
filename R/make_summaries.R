@@ -3,8 +3,8 @@ make_summaries <- function(
   type = c("daily", "monthly", "seasonal")[1],
   meta_cols,
   fcst_zones,
-  report_dir = ".",
-  figure_dir = "plots",
+  report_dir,
+  figure_dir,
   plot_timestamp = format(Sys.time(), "%Y%m%d%H%M%S")
 ) {
   summaries <- list(
