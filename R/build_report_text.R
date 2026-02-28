@@ -136,7 +136,7 @@ and <strong>%s</strong> are between 30 and 60 {{< var units.pm >}} (@fig-monitor
     sprintf(
       sum(prov_donuts_text$fem$median$n),
       sum(prov_donuts_text$pa$median$n),
-      prov_donuts_text$fem$median[4] |> paste0("%"),
+      prov_donuts_text$fem$median$p[4] |> paste0("%"),
       average_text,
       prov_donuts_text$fem$median$p[3] |> paste0("%"),
       prov_donuts_text$fem$median$p[2] |> paste0("%"),
