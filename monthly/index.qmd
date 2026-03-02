@@ -175,7 +175,7 @@ pop_coverage = pop_coverage |>
       has_nearby_pa ~ "PA",
       TRUE ~ "No Monitor"
     ) |>
-      factor(c("FEM", "FEM and PA", "PA Onlyo Monitor"))
+      factor(c("FEM", "FEM and PA", "PA", "No Monitor"))
   ) |>
   dplyr::select(-has_nearby_pa, -has_nearby_fem) |>
   tidyr::pivot_longer(
