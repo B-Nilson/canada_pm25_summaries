@@ -41,7 +41,6 @@ make_quarto_captions <- function(date_range, monitor_groups) {
         fig_caption_date_range,
         coverage_types,
         coverage_types,
-        coverage_types,
         coverage_sources
       ) |>
       setNames(names(coverage_types)),
@@ -142,7 +141,7 @@ make_quarto_captions <- function(date_range, monitor_groups) {
     ) |>
       sprintf(fig_caption_date_range),
     community_exceeds_100 = paste(
-      "Number of hours each community with nearby observation data had a mean PM2.5 concentration above 100 {{< var units.pm >}} for each p/t.",
+      "Number of hours each community with nearby observation data had a mean PM2.5 concentration above 100 {{< var units.pm >}} for each p/t for %s.",
       "A monitor must be within 25 km of a community and not closer to a different community to be considered located in that community."
     ) |>
       sprintf(fig_caption_date_range)
