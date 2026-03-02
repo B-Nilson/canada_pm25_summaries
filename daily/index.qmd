@@ -33,27 +33,20 @@ format:
 source("R/report-functions.R")
 source("R/report-constants.R")
 
-date_range <- params$type |>
+old_report_dropdown <- params$type |> build_report_dropdown()
+
+obs <- params$type |>
   get_report_start_end(
     type = params$type,
     run_future = params$run_current,
     default_date = params$default_report_date |> lubridate::ymd_h(tz = "UTC")
-  )
-
-old_report_dropdown <- params$type |> build_report_dropdown()
-
-```
-
-```{r load_data}
-
-obs <- date_range |>
+  ) |> 
   load_report_data(
     meta_cols = meta_cols,
     cache_path = file.path(params$type, "index_obs.rds"), # used when db not available
     provinces_n_territories = provinces_n_territories
   )
 
-# Alter dange range if needed (only when cached data is used)
 date_range <- range(obs$date)
 hours_to_summarise <- date_range |> make_hourly_seq() # TODO: pass as arg where used
 plot_timestamp <- date_range[2] |>

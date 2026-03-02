@@ -33,22 +33,16 @@ format:
 source("R/report-functions.R")
 source("R/report-constants.R")
 
-report_dir_esc <- type |> stringr::str_escape()
-
-date_range <- params$type |>
-  get_report_start_end(
-    type = "monthly",
-    run_future = params$run_current,
-    default_date = params$default_report_date |> lubridate::ymd_h(tz = "UTC")
-  )
+report_dir_esc <- params$type |> stringr::str_escape()
 
 old_report_dropdown <- params$type |> build_report_dropdown()
 
-```
-
-```{r load_data}
-
-obs <- date_range |>
+obs <- params$type |>
+  get_report_start_end(
+    type = params$type,
+    run_future = params$run_current,
+    default_date = params$default_report_date |> lubridate::ymd_h(tz = "UTC")
+  ) |>
   load_report_data(
     meta_cols = meta_cols,
     cache_path = file.path(params$type, "index_obs.rds"), # used when db not available
