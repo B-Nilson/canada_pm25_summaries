@@ -41,7 +41,7 @@ save_aqhi_donuts_plots <- function(
       # Make and save donut plots
       lapply(monitors_clean, \(monitor_group) {
         plot_type <- paste0(stat, "_", monitor_group)
-        group_name <- names(monitors_clean)[monitors_clean == monitor_group]
+        group_name <- monitor_groups[monitors_clean == monitor_group]
         plot_data |>
           dplyr::filter(monitor == group_name) |>
           make_donut_plot(

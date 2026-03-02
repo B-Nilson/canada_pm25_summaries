@@ -18,11 +18,11 @@ make_and_save_prov_terr_grids <- function(
       monitor_groups_cleaned,
       plot_timestamp
     ) |>
-    setNames(names(monitor_groups)) |>
+    setNames(monitor_groups) |>
     as.list()
 
   # Make and save plots
-  names(monitor_groups) |>
+  monitor_groups |>
     lapply(\(monitor_group) {
       grid_data |>
         make_prov_terr_grids(

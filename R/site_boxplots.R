@@ -19,13 +19,13 @@ make_and_save_site_boxplots <- function(
       monitor_groups_cleaned,
       plot_timestamp
     ) |>
-    setNames(names(monitor_groups)) |>
+    setNames(monitor_groups) |>
     as.list()
 
   # Make and save plots
   boxplot_data <- overall_summary |>
     make_site_boxplot_data()
-  summary_values <- lapply(names(monitor_groups), \(monitor_group) {
+  summary_values <- lapply(monitor_groups, \(monitor_group) {
     plot_data <- boxplot_data |>
       subset(monitor == monitor_group | monitor_group == "FEM and PA")
     plot_data |>
@@ -70,7 +70,7 @@ make_and_save_site_boxplots <- function(
         )
     )
   }) |>
-    setNames(names(monitor_groups))
+    setNames(monitor_groups)
   list(
     paths = plot_paths |> setNames(monitor_groups),
     summary_values = summary_values

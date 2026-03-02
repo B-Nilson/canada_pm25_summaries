@@ -2,6 +2,10 @@
 params:
   type: "daily"
   default_date: "2026-01-02 00"
+  monitor_groups: 
+    - "FEM and PA"
+    - "FEM" 
+    - "PA" 
   dirs:
     value:
       data: data
@@ -51,14 +55,15 @@ date_range <- range(obs$date)
 plot_timestamp <- date_range[2] |>
   format("%F-%Hz")
 plot_captions <- date_range |>
-  make_plot_captions(networks = names(monitor_groups))
+  make_plot_captions(networks = params$monitor_groups)
 quarto_captions <- date_range |> 
-  make_quarto_captions(monitor_groups = monitor_groups)
+  make_quarto_captions(monitor_groups = params$monitor_groups)
 
 summaries <- obs |>
   make_summaries(
     type = "daily",
     fcst_zones = fcst_zones,
+    monitor_groups = params$monitor_groups,
     meta_cols = meta_cols,
     report_dir = params$type,
     figure_dir = params$dirs$plots,
@@ -141,7 +146,7 @@ overall_summary_table$card <- overall_summary_table$path |>
 
 boxplots <- summaries$overall |>
   make_and_save_site_boxplots(
-    monitor_groups = monitor_groups,
+    monitor_groups = params$monitor_groups,
     date_range = date_range,
     date_format = "%Y-%m-%d %H:%M (UTC)",
     avg_text = "24-hour",
@@ -164,7 +169,7 @@ prov_grid_paths <- grid_data |>
   make_and_save_prov_terr_grids(
     report_dir = params$type,
     figure_dir = params$dirs$plots,
-    monitor_groups = monitor_groups,
+    monitor_groups = params$monitor_groups,
     plot_timestamp = plot_timestamp,
     xlab = "Hour of Day",
     plot_captions = plot_captions
@@ -237,13 +242,13 @@ community_table$card <- community_table$path |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, summaries$donuts$paths$median, quarto_captions$median_donuts, params$type, plot_timestamp = plot_timestamp)`
+`r build_tabs(params$monitor_groups, summaries$donuts$paths$median, quarto_captions$median_donuts, params$type, plot_timestamp = plot_timestamp)`
 
 ## Max PM<sub>2.5</sub>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, summaries$donuts$paths$max, quarto_captions$max_donuts, params$type, plot_timestamp = plot_timestamp)`
+`r build_tabs(params$monitor_groups, summaries$donuts$paths$max, quarto_captions$max_donuts, params$type, plot_timestamp = plot_timestamp)`
 
 ::::
 
@@ -273,7 +278,7 @@ community_table$card <- community_table$path |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, prov_grid_paths, quarto_captions$prov_grids, params$type, plot_timestamp = plot_timestamp)`
+`r build_tabs(params$monitor_groups, prov_grid_paths, quarto_captions$prov_grids, params$type, plot_timestamp = plot_timestamp)`
 
 ## Region Level 
 
@@ -289,4 +294,4 @@ community_table$card <- community_table$path |>
 
 `r tab_explainers$network_tabs`
 
-`r build_tabs(monitor_groups, boxplots$paths, quarto_captions$boxplots, params$type, iframe = TRUE, iframe_height = 526, plot_timestamp = plot_timestamp)`
+`r build_tabs(params$monitor_groups, boxplots$paths, quarto_captions$boxplots, params$type, iframe = TRUE, iframe_height = 526, plot_timestamp = plot_timestamp)`

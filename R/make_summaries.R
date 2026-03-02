@@ -2,6 +2,7 @@ make_summaries <- function(
   obs,
   type = c("daily", "monthly", "seasonal")[1],
   meta_cols,
+  monitor_groups,
   fcst_zones,
   report_dir,
   figure_dir,

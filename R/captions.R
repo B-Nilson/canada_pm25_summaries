@@ -23,7 +23,7 @@ make_quarto_captions <- function(date_range, monitor_groups) {
     "The number within each circle indicates the total monitors with data in that area during the report period.",
     "Percentages indicate the proportion of those monitors with a median AQHI risk at that level for this report."
   ) |>
-    sprintf(names(monitor_groups), fig_caption_date_range) |>
+    sprintf(monitor_groups, fig_caption_date_range) |>
     setNames(monitor_groups)
 
   table_helper <- "The table is sortable, filterable, and has multiple pages."
@@ -73,16 +73,16 @@ make_quarto_captions <- function(date_range, monitor_groups) {
       "Distributions of site-mean PM2.5 concentrations for %s monitors in each p/t from %s.",
       "Blue points show any sites with a mean concentration higher than that region's 75th percentile, with additional details displayed on hover.",
       "Hover over the boxplot (away from the points) to see the min/median/max and 25th/75th percentiles for that p/t.",
-      "See the menu in the top right of the plot for more."
+      "See the menu in the top right for more."
     ) |>
-      sprintf(names(monitor_groups), fig_caption_date_range) |>
+      sprintf(monitor_groups, fig_caption_date_range) |>
       setNames(monitor_groups),
     prov_grids = paste(
       "Median and maximum hourly PM2.5 concentrations for all %s monitoring sites in each p/t from %s.",
       "The median is useful for identifying large scale impacts across the p/t,",
       "while the maximum can be used to identify impacts in at least one area."
     ) |>
-      sprintf(names(monitor_groups), fig_caption_date_range) |>
+      sprintf(monitor_groups, fig_caption_date_range) |>
       setNames(monitor_groups),
     zone_grids = paste(
       "Hourly median PM2.5 concentrations for all FEM and PA monitors within each %s forecast zone for %s.",
@@ -98,12 +98,12 @@ make_quarto_captions <- function(date_range, monitor_groups) {
     ) |>
       sprintf(fig_caption_date_range),
     community_boxplots = paste0(
-      "Each boxplot summarises the distribution of hours with PM2.5 concentrations above 100 {{< var units.pm >}} for at least one %s monitoring site in each community for each p/t for %s.",
-      "Blue points are displayed for any communities with counts higher than that regions 75th percentile.",
-      "Hover over the blue points (if present) to see details about that specific community; hover over the boxplot (away from the points) to see the min/median/max and 25th/75th percentiles for that p/t.",
+      "Distributions of hours where PM2.5 concentrations exceeded 100 {{< var units.pm >}} for all %s monitors nearby that community for each p/t from %s.",
+      "Blue points are displayed for any communities with counts higher than that regions 75th percentile, with additional details displayed on hover.",
+      "Hover over the blue points (if present) to see details about that specific community.",
       "See the menu in the top right for more."
     ) |>
-      sprintf(names(monitor_groups), fig_caption_date_range) |>
+      sprintf(monitor_groups, fig_caption_date_range) |>
       setNames(monitor_groups),
     monitor_counts = paste(
       "Daily counts of active PA and FEM PM2.5 monitors in each Canadian p/t for %s.",

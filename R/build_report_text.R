@@ -120,17 +120,17 @@ build_prov_donut_summary <- function(
 
 - <strong>%s</strong> of the FEM sites in Canada have a %s median exceeding 100 {{< var units.pm >}},
 <strong>%s</strong> are between 60 and 100 {{< var units.pm >}},
-and <strong>%s</strong> are between 30 and 60 {{< var units.pm >}} (@fig-monitor_donuts_median_fem_only). 
+and <strong>%s</strong> are between 30 and 60 {{< var units.pm >}} (@fig-monitor_donuts_median_fem). 
 <strong>%s</strong> of the PA sites in Canada have a %s median exceeding 100 {{< var units.pm >}},
 <strong>%s</strong> are between 60 and 100 {{< var units.pm >}},
-and <strong>%s</strong> are between 30 and 60 {{< var units.pm >}} (@fig-monitor_donuts_median_pa_only).
+and <strong>%s</strong> are between 30 and 60 {{< var units.pm >}} (@fig-monitor_donuts_median_pa).
   
 - <strong>%s</strong> of the FEM sites in Canada have a %s maximum exceeding 100 {{< var units.pm >}},
 <strong>%s</strong> are between 60 and 100 {{< var units.pm >}},
-and <strong>%s</strong> are between 30 and 60 {{< var units.pm >}} (@fig-monitor_donuts_max_fem_only). 
+and <strong>%s</strong> are between 30 and 60 {{< var units.pm >}} (@fig-monitor_donuts_max_fem). 
 <strong>%s</strong> of the PA sites in Canada have a %s maximum exceeding 100 {{< var units.pm >}},
 <strong>%s</strong> are between 60 and 100 {{< var units.pm >}},
-and <strong>%s</strong> are between 30 and 60 {{< var units.pm >}} (@fig-monitor_donuts_max_pa_only).'
+and <strong>%s</strong> are between 30 and 60 {{< var units.pm >}} (@fig-monitor_donuts_max_pa).'
 
   template |>
     sprintf(
@@ -304,12 +304,12 @@ build_boxplot_summary <- function(
   average_text <- list(daily = "24-hour", monthly = "1-month")[[type]]
   template <- '
 *%s* (a %s monitor located %s km from %s, %s) had the highest observed hourly maximum PM<sub>2.5</sub>
-concentration in Canada from the FEM network for this report (%s {{< var units.pm >}}) (@fig-site_mean_boxplots_fem_and_pa, @fig-site_mean_boxplots_fem_only).
+concentration in Canada from the FEM network for this report (%s {{< var units.pm >}}) (@fig-site_mean_boxplots_fem_and_pa, @fig-site_mean_boxplots_fem).
 *%s* (a %s monitor located %s km from %s, %s) had the highest observed %s mean PM<sub>2.5</sub>
 concentration in Canada from the FEM network (%s {{< var units.pm >}}).
 
 *%s* (a %s monitor located %s km from %s, %s) had the highest observed hourly maximum PM<sub>2.5</sub>
-concentration in Canada from the PA network for this report (%s {{< var units.pm >}})  (@fig-site_mean_boxplots_fem_and_pa, @fig-site_mean_boxplots_pa_only).
+concentration in Canada from the PA network for this report (%s {{< var units.pm >}})  (@fig-site_mean_boxplots_fem_and_pa, @fig-site_mean_boxplots_pa).
 *%s* (a %s monitor located %s km from %s, %s) had the highest observed %s mean PM<sub>2.5</sub>
 concentration in Canada from the PA network (%s {{< var units.pm >}}).'
 
