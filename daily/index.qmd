@@ -78,49 +78,19 @@ summaries <- obs |>
 
 ```{r, overall_summary}
 
-overall_summary_cards <- list(
-  # make and save map of all sites, format with quarto markdown
-  map = summaries$overall |>
-    make_and_save_overall_map(
-      zone_summary = summaries$by_zone,
-      date_range = date_range,
-      monitor_group = all_monitors_group,
-      report_dir = params$type,
-      plot_dir = params$dirs$plots,
-      lib_dir = params$dirs$lib,
-      include_active_fires = FALSE,
-      map_timestamps = date_range
-    ) |>
-    stringr::str_replace(stringr::fixed(params$type), "./") |>
-    plot_card(
-      text = quarto_captions$map,
-      iframe = TRUE,
-      iframe_height = 617,
-      plot_timestamp = plot_timestamp
-    )
-)
-
-# Make and save tables
-overall_summary_table <- summaries$overall |>
-  make_overall_summary_table(
-    report_dir = params$type,
-    monitor_group = all_monitors_group,
+overall_summary_cards <- summaries$overall |>
+  make_and_save_overall_summary_cards(
+    zone_summary = summaries$zone,
+    date_range = date_range,
+    all_monitors_group = all_monitors_group,
+    type = params$type,
     data_dir = params$dirs$data,
     figure_dir = params$dirs$plots,
-    plot_timestamp = plot_timestamp
+    lib_dir = params$dirs$lib,
+    plot_timestamp = plot_timestamp,
+    map_caption = quarto_captions$map,
+    table_caption = quarto_captions$table
   )
-
-overall_summary_cards$table <- overall_summary_table$path |>
-  stringr::str_replace(stringr::fixed(params$type), "./") |>
-  plot_card(
-    text = quarto_captions$overall_table,
-    iframe = TRUE,
-    is_table = TRUE,
-    iframe_height = 590,
-    plot_timestamp = plot_timestamp
-  ) |>
-  append_gt_dl_button(dl_button = overall_summary_table$dl_button) |>
-  knitr::asis_output()
 
 ```
 

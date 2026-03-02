@@ -1,3 +1,64 @@
+make_and_save_overall_summary_cards <- function(
+  overall_summary,
+  zone_summary,
+  date_range,
+  all_monitors_group,
+  type,
+  data_dir,
+  figure_dir,
+  lib_dir,
+  plot_timestamp,
+  map_caption,
+  table_caption,
+  include_active_fires = FALSE
+) {
+  map <- overall_summary |>
+    make_and_save_overall_map(
+      zone_summary = zone_summary,
+      date_range = date_range,
+      monitor_group = all_monitors_group,
+      report_dir = type,
+      plot_dir = figure_dir,
+      lib_dir = lib_dir,
+      include_active_fires = include_active_fires,
+      map_timestamps = date_range
+    ) |>
+    stringr::str_replace(stringr::fixed(type), "./") |>
+    plot_card(
+      text = map_caption,
+      iframe = TRUE,
+      iframe_height = 617,
+      plot_timestamp = plot_timestamp
+    ) |>
+    knitr::asis_output()
+
+  table <- summaries$overall |>
+    make_overall_summary_table(
+      report_dir = type,
+      monitor_group = all_monitors_group,
+      data_dir = data_dir,
+      figure_dir = figure_dir,
+      plot_timestamp = plot_timestamp
+    )
+
+  table <- table$path |>
+    stringr::str_replace(stringr::fixed(type), "./") |>
+    plot_card(
+      text = table_caption,
+      iframe = TRUE,
+      is_table = TRUE,
+      iframe_height = 590,
+      plot_timestamp = plot_timestamp
+    ) |>
+    append_gt_dl_button(dl_button = table$dl_button) |>
+    knitr::asis_output()
+
+  list(
+    map = map,
+    table = table
+  )
+}
+
 make_and_save_overall_map <- function(
   overall_summary,
   zone_summary,
