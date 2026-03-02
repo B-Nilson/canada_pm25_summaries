@@ -176,7 +176,8 @@ make_donut_plot <- function(
 make_donut_data <- function(overall_summary, pm25_col = "pm25_mean") {
   overall_summary |>
     dplyr::bind_rows(
-      overall_summary |> dplyr::mutate(monitor = monitor |> unique() |> join_list_sentence())
+      overall_summary |>
+        dplyr::mutate(monitor = monitor |> unique() |> join_list_sentence())
     ) |>
     dplyr::mutate(
       aqhi_p = aqhi::AQHI_plus(get(pm25_col))$risk

@@ -115,16 +115,16 @@ build_prov_donut_summary <- function(
   type = c("daily", "monthly")[1]
 ) {
   prov_donuts_text <- c(pa = "PA", fem = "FEM") |>
-  lapply(\(network) {
-    donut_summary |>
-      lapply(\(stat_data) {
-        stat_data |>
-          dplyr::filter(monitor == network) |>
-          dplyr::group_by(monitor, aqhi_p) |>
-          dplyr::summarise(n = sum(n), .groups = "drop") |>
-          dplyr::mutate(p = round(n / sum(n) * 100, 1))
-      })
-  })
+    lapply(\(network) {
+      donut_summary |>
+        lapply(\(stat_data) {
+          stat_data |>
+            dplyr::filter(monitor == network) |>
+            dplyr::group_by(monitor, aqhi_p) |>
+            dplyr::summarise(n = sum(n), .groups = "drop") |>
+            dplyr::mutate(p = round(n / sum(n) * 100, 1))
+        })
+    })
   average_text <- list(daily = "24-hour", monthly = "1-month")[[type]]
 
   template <- 'There was <strong>%s FEM sites</strong> and <strong>%s PA sites</strong> reporting PM<sub>2.5</sub> in Canada for this report (@fig-monitor_donuts_median_fem_and_pa, @fig-monitor_donuts_max_fem_and_pa). 
