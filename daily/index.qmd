@@ -110,13 +110,10 @@ boxplots <- summaries$overall |>
 
 ```
 
-```{r grids_prov}
+```{r grids}
 
-# Make data for prov/terr grid plots
 grid_data <- list(median = median, maximum = max) |>
   lapply(\(FUN) obs |> make_grid_data(FUN = FUN, type = params$type))
-
-# Make paths to plot files
 prov_grid_paths <- grid_data |>
   make_and_save_prov_terr_grids(
     report_dir = params$type,
@@ -127,15 +124,9 @@ prov_grid_paths <- grid_data |>
     plot_captions = plot_captions
   )
 
-```
-
-```{r grids_fcst, include= FALSE}
-
-# Make data and save fcst_zone grid plots
 fcst_grid_data <- obs |>
   dplyr::mutate(monitor = all_monitors_group) |>
   make_grid_data(FUN = median, type = params$type, fcst_zones = fcst_zones)
-
 fcst_grid_paths <- fcst_grid_data |>
   make_and_save_fcst_zone_grids(
     report_dir = params$type,
