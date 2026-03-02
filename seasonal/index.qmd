@@ -1,6 +1,6 @@
 ---
 params:
-  report_dir: "./seasonal"
+  type: "./seasonal"
   default_date: "2026-01-02 00"
   dirs:
     value:
@@ -37,7 +37,7 @@ format:
 source("R/report-functions.R")
 source("R/report-constants.R")
 
-date_range <- params$report_dir |>
+date_range <- params$type |>
   get_report_start_end(
     type = "seasonal",
     months_in_seasons = params$months_in_seasons,
@@ -45,7 +45,7 @@ date_range <- params$report_dir |>
     default_date = params$default_report_date |> lubridate::ymd_h(tz = "UTC")
   )
 
-old_report_dropdown <- params$report_dir |>
+old_report_dropdown <- params$type |>
   handle_old_reports(report_pattern = "[summer,winter]\\.html$")
 
 ```
@@ -55,7 +55,7 @@ old_report_dropdown <- params$report_dir |>
 obs <- date_range |>
   load_report_data(
     meta_cols = meta_cols,
-    cache_path = file.path(params$report_dir, "index_obs.rds"), # used when db not available
+    cache_path = file.path(params$type, "index_obs.rds"), # used when db not available
     provinces_n_territories = provinces_n_territories
   )
 
@@ -1788,7 +1788,7 @@ pd = obs |>
 
 # Make paths to files for saving plots
 plot_paths = paste0(
-  params$report_dir,
+  params$type,
   "plots/communities_",
   c("vHigh", "High"),
   "_hours_",
