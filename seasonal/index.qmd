@@ -74,7 +74,7 @@ quarto_captions <- date_range |>
   )
 
 # summaries <- obs |>
-#   make_summaries(type = "seasonal", fcst_zones = fcst_zones, monitor_groups = params$monitor_groups, meta_cols = meta_cols)
+#   make_summaries(type = params$type, fcst_zones = fcst_zones, monitor_groups = params$monitor_groups, meta_cols = meta_cols)
 
 events <- get_pm_events(obs, c("prov_terr", "fcst_zone"))
 
@@ -82,7 +82,7 @@ events <- get_pm_events(obs, c("prov_terr", "fcst_zone"))
 
 ## Overview {.unlisted .unnumbered}
 
-`r build_overview_card(type = "seasonal", report_dropdown = old_report_dropdown)`
+`r build_overview_card(type = params$type, report_dropdown = old_report_dropdown)`
 
 `r loading_div`
 

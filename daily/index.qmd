@@ -65,7 +65,7 @@ quarto_captions <- date_range |>
 
 summaries <- obs |>
   make_summaries(
-    type = "daily",
+    type = params$type,
     fcst_zones = fcst_zones,
     monitor_groups = params$monitor_groups,
     meta_cols = meta_cols,
@@ -147,7 +147,7 @@ boxplots <- summaries$overall |>
 
 # Make data for prov/terr grid plots
 grid_data <- list(median = median, maximum = max) |>
-  lapply(\(FUN) obs |> make_grid_data(FUN = FUN, type = "daily"))
+  lapply(\(FUN) obs |> make_grid_data(FUN = FUN, type = params$type))
 
 # Make paths to plot files
 prov_grid_paths <- grid_data |>
@@ -167,7 +167,7 @@ prov_grid_paths <- grid_data |>
 # Make data and save fcst_zone grid plots
 fcst_grid_data <- obs |>
   dplyr::mutate(monitor = all_monitors_group) |>
-  make_grid_data(FUN = median, type = "daily", fcst_zones = fcst_zones)
+  make_grid_data(FUN = median, type = params$type, fcst_zones = fcst_zones)
 
 fcst_grid_paths <- fcst_grid_data |>
   make_and_save_fcst_zone_grids(
@@ -180,7 +180,6 @@ fcst_grid_paths <- fcst_grid_data |>
   )
 
 ```
-
 
 ```{r community_summary, include = TRUE}
 
@@ -213,11 +212,11 @@ community_table$card <- community_table$path |>
 
 ## Overview {.unlisted .unnumbered}
 
-`r build_overview_card(type = "daily", report_dropdown = old_report_dropdown)`
+`r build_overview_card(type = params$type, report_dropdown = old_report_dropdown)`
 
 ## Past 24-Hours of PM<sub>2.5</sub> Observations
 
-`r build_prov_donut_summary(summaries$donuts$data, type = "daily")`
+`r build_prov_donut_summary(summaries$donuts$data, type = params$type)`
 
 :::: panel-tabset
 
@@ -239,21 +238,21 @@ community_table$card <- community_table$path |>
 
 ### Where were PM<sub>2.5</sub> concentrations high?
 
-`r build_map_summary(summaries$aqhi_p_counts, type = "daily")`
+`r build_map_summary(summaries$aqhi_p_counts, type = params$type)`
 
 `r overall_summary_cards$table`
 
 `r overall_summary_cards$map`
 
-`r build_community_summary(summaries$community, type = "daily")`
+`r build_community_summary(summaries$community, type = params$type)`
 
 `r community_table$card`
 
 ### When did PM<sub>2.5</sub> events occur?
 
-`r build_prov_grid_summary(grid_data, type = "daily")`
+`r build_prov_grid_summary(grid_data, type = params$type)`
 
-`r build_fcst_grid_summary(fcst_grid_data, type = "daily")`
+`r build_fcst_grid_summary(fcst_grid_data, type = params$type)`
 
 `r tab_explainers$scale_tabs`
 
@@ -275,7 +274,7 @@ community_table$card <- community_table$path |>
 
 ### Where were the worst PM<sub>2.5</sub> concentrations?
 
-`r build_boxplot_summary(boxplots$summary_values, type = "daily")`  
+`r build_boxplot_summary(boxplots$summary_values, type = params$type)`  
 
 `r tab_explainers$network_tabs`
 
