@@ -119,10 +119,7 @@ overall_summary_cards$table <- overall_summary_table$path |>
     iframe_height = 590,
     plot_timestamp = plot_timestamp
   ) |>
-  stringr::str_replace(
-    "</iframe>",
-    paste0("</iframe>\n", overall_summary_table$dl_button)
-  ) |>
+  append_gt_dl_button(dl_button = overall_summary_table$dl_button) |>
   knitr::asis_output()
 
 ```
@@ -200,10 +197,7 @@ community_table$card <- community_table$path |>
     iframe_height = 590,
     plot_timestamp = plot_timestamp
   ) |>
-  stringr::str_replace(
-    "</iframe>",
-    paste0("</iframe>\n", community_table$dl_button)
-  ) |>
+  append_gt_dl_button(dl_button = community_table$dl_button) |>
   knitr::asis_output()
 
 ```

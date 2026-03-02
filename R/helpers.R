@@ -173,6 +173,14 @@ dl_button_html <- function(outdir, file) {
     htmltools::HTML()
 }
 
+append_gt_dl_button <- function(text, dl_button, end_tag = "</iframe>") {
+  text |>
+    gsub(
+      pattern = end_tag,
+      replacement = paste0(end_tag, "\n", dl_button)
+    )
+}
+
 make_download_button <- function(data_for_download, data_dir, file_path) {
   sanitized_header <- data_for_download |>
     names() |>
