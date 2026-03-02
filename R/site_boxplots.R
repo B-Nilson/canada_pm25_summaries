@@ -84,6 +84,7 @@ make_site_boxplots <- function(
   avg,
   monitor_group
 ) {
+  hours_to_summarise <- date_range |> make_hourly_seq()
   plot_background_fills <- boxplot_data$pm25_mean |>
     make_plotly_aqhi_background()
 

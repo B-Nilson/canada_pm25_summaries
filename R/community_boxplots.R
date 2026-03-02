@@ -1,4 +1,5 @@
-make_community_boxplots <- function(pd, m = "FEM and PA") {
+make_community_boxplots <- function(pd, date_range, m = "FEM and PA") {
+  hours_to_summarise <- date_range |> make_hourly_seq()
   box <- boxplot(n_hours_above_100 ~ prov_terr, pd, plot = FALSE)
   pd <- pd |>
     dplyr::mutate(
