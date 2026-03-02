@@ -279,21 +279,7 @@ coverage = dplyr::bind_rows(pop_coverage, fnic_coverage)
 
 ### How many observation sites at each risk level?
 
-```{r prov_donuts}
-
-# Make summary data for autmated text for this section
-prov_donuts_text <- c(pa = "PA", fem = "FEM") |>
-  lapply(\(network) {
-    summaries$donuts$data$median |>
-      dplyr::filter(monitor == network) |>
-      dplyr::group_by(monitor, aqhi_p) |>
-      dplyr::summarise(n = sum(n), .groups = "drop") |>
-      dplyr::mutate(p = round(n / sum(n) * 100, 1))
-  })
-
-```
-
-`r build_prov_donut_summary(prov_donuts_text, type = "monthly")`
+`r build_prov_donut_summary(summaries$donuts$data, type = "monthly")`
 
 `r tab_explainers$network_tabs`
 

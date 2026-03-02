@@ -72,25 +72,6 @@ summaries <- obs |>
 
 ```
 
-```{r prov_donuts}
-
-# plots created and saved in make_summaries()
-# Make summary data for automated text for this section
-# TODO: move to build_prov_donut_summary()
-prov_donuts_text <- c(pa = "PA", fem = "FEM") |>
-  lapply(\(network) {
-    summaries$donuts$data |>
-      lapply(\(stat_data) {
-        stat_data |>
-          dplyr::filter(monitor == network) |>
-          dplyr::group_by(monitor, aqhi_p) |>
-          dplyr::summarise(n = sum(n), .groups = "drop") |>
-          dplyr::mutate(p = round(n / sum(n) * 100, 1))
-      })
-  })
-
-```
-
 ```{r, maps}
 
 map_path <- summaries$overall |>
@@ -231,7 +212,7 @@ community_table$card <- community_table$path |>
 
 ## Past 24-Hours of PM<sub>2.5</sub> Observations
 
-`r build_prov_donut_summary(prov_donuts_text, type = "daily")`
+`r build_prov_donut_summary(summaries$donuts$data, type = "daily")`
 
 :::: panel-tabset
 
