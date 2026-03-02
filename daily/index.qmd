@@ -40,8 +40,7 @@ date_range <- params$type |>
     default_date = params$default_report_date |> lubridate::ymd_h(tz = "UTC")
   )
 
-old_report_dropdown <- params$type |>
-  handle_old_reports(report_pattern = "[day,night]\\.html$")
+old_report_dropdown <- params$type |> build_report_dropdown()
 
 ```
 
