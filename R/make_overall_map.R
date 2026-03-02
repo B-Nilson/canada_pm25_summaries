@@ -26,7 +26,7 @@ make_and_save_overall_map <- function(
   # Make and save maps
   pd <- map_data |>
     dplyr::filter(
-      monitor == monitor_group | monitor_group == "FEM and PA"
+      monitor %in% stringr::str_split_1(monitor_group, ", | and ")
     )
   pd |>
     make_overall_map(

@@ -37,6 +37,8 @@ format:
 source("R/report-functions.R")
 source("R/report-constants.R")
 
+all_monitors_group <- params$monitor_groups[1]
+
 old_report_dropdown <- params$type |> build_report_dropdown()
 
 obs <- params$type |>
@@ -56,8 +58,11 @@ plot_timestamp <- date_range[2] |>
   format("%F-%Hz")
 plot_captions <- date_range |>
   make_plot_captions(networks = params$monitor_groups)
-quarto_captions <- date_range |> 
-  make_quarto_captions(monitor_groups = params$monitor_groups)
+quarto_captions <- date_range |>
+  make_quarto_captions(
+    monitor_groups = params$monitor_groups,
+    all_monitors_group = all_monitors_group
+  )
 
 summaries <- obs |>
   make_summaries(
@@ -78,7 +83,7 @@ map_path <- summaries$overall |>
   make_and_save_overall_map(
     zone_summary = summaries$by_zone,
     date_range = date_range,
-    monitor_group = "FEM and PA",
+    monitor_group = all_monitors_group,
     report_dir = params$type,
     plot_dir = params$dirs$plots,
     lib_dir = params$dirs$lib,
@@ -99,7 +104,7 @@ map_card <- map_path |>
 overall_summary_table <- summaries$overall |>
   make_overall_summary_table(
     report_dir = params$type,
-    monitor_group = "FEM and PA",
+    monitor_group = all_monitors_group,
     data_dir = params$dirs$data,
     figure_dir = params$dirs$plots,
     plot_timestamp = plot_timestamp
@@ -161,7 +166,7 @@ prov_grid_paths <- grid_data |>
 
 # Make data and save fcst_zone grid plots
 fcst_grid_data <- obs |>
-  dplyr::mutate(monitor = "FEM and PA") |>
+  dplyr::mutate(monitor = all_monitors_group) |>
   make_grid_data(FUN = median, type = "daily", fcst_zones = fcst_zones)
 
 fcst_grid_paths <- fcst_grid_data |>
@@ -170,7 +175,7 @@ fcst_grid_paths <- fcst_grid_data |>
     figure_dir = params$dirs$plots,
     plot_timestamp = plot_timestamp,
     xlab = "Hour of Day",
-    plot_caption = plot_captions$`FEM and PA`,
+    plot_caption = plot_captions[[all_monitors_group]],
     provinces_n_territories = provinces_n_territories
   )
 

@@ -108,7 +108,7 @@ make_prov_terr_grids <- function(
       caption <- ifelse(is_last_stat, plot_caption, "")
       plot <- grid_data[[stat]] |>
         dplyr::filter(
-          monitor == monitor_group | monitor_group == "FEM and PA"
+          monitor %in% stringr::str_split_1(monitor_group, ", | and ")
         ) |>
         make_grid_plot(xlab = xlab, stat = "", caption = caption) +
         ggplot2::labs(subtitle = stat |> stringr::str_to_title())
@@ -202,7 +202,10 @@ make_grid_data <- function(
     FUN2() |>
     unique()
   out <- obs |>
-    dplyr::bind_rows(obs |> dplyr::mutate(monitor == "FEM and PA")) |>
+    dplyr::bind_rows(
+      obs |>
+        dplyr::mutate(monitor == monitor |> unique() |> join_list_sentence())
+    ) |>
     dplyr::arrange(date) |>
     dplyr::mutate(
       prov_terr = prov_terr |>

@@ -12,7 +12,7 @@ save_aqhi_donuts_plots <- function(
   # Prov/Terr monitor counts for centers of donuts
   labels <- overall_summary |>
     dplyr::bind_rows(
-      overall_summary |> dplyr::mutate(monitor = "FEM and PA")
+      overall_summary |> dplyr::mutate(monitor = monitor_groups[1])
     ) |>
     tidyr::complete(prov_terr, monitor) |>
     dplyr::summarise(n = sum(!is.na(pm25_max)), .by = c(prov_terr, monitor)) |>
@@ -90,7 +90,7 @@ make_donut_plot <- function(
   plot_data,
   labels,
   plot_caption = NULL,
-  networks = "FEM and PA",
+  networks,
   stat = "Mean",
   avg = "24-hour"
 ) {
@@ -176,7 +176,7 @@ make_donut_plot <- function(
 make_donut_data <- function(overall_summary, pm25_col = "pm25_mean") {
   overall_summary |>
     dplyr::bind_rows(
-      overall_summary |> dplyr::mutate(monitor = "FEM and PA")
+      overall_summary |> dplyr::mutate(monitor = monitor |> unique() |> join_list_sentence())
     ) |>
     dplyr::mutate(
       aqhi_p = aqhi::AQHI_plus(get(pm25_col))$risk

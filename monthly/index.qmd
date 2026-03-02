@@ -37,6 +37,8 @@ format:
 source("R/report-functions.R")
 source("R/report-constants.R")
 
+all_monitors_group <- params$monitor_groups[1]
+
 report_dir_esc <- params$type |> stringr::str_escape()
 
 old_report_dropdown <- params$type |> build_report_dropdown()
@@ -60,7 +62,10 @@ plot_timestamp <- date_range[2] |>
 plot_captions <- date_range |>
   make_plot_captions(networks = params$monitor_groups)
 quarto_captions <- date_range |>
-  make_quarto_captions(monitor_groups = params$monitor_groups)
+  make_quarto_captions(
+    monitor_groups = params$monitor_groups,
+    all_monitors_group = all_monitors_group
+  )
 
 summaries <- obs |>
   make_summaries(
@@ -613,7 +618,7 @@ plot_paths[['PA']] |>
 
 # Make data and save fcst_zone grid plots
 fcst_grid_data <- obs |>
-  dplyr::mutate(monitor = "FEM and PA") |>
+  dplyr::mutate(monitor = all_monitors_group) |>
   make_grid_data(FUN = median, type = "monthly", fcst_zones = fcst_zones)
 
 plot_paths <- fcst_grid_data |>
@@ -701,17 +706,10 @@ plot_paths[["PA"]] |>
 
 # Get data for site mean boxplots
 pd = summaries$overall |>
-  dplyr::mutate(
-    monitor2 = ifelse(
-      monitor == "FEM",
-      "FEM",
-      ifelse(monitor == "PA", "PA", "FEM and PA")
-    )
-  ) |>
   dplyr::bind_rows(
     summaries$overall |>
-      dplyr::mutate(monitor2 = "FEM and PA") |>
-      dplyr::group_by(prov_terr, fcst_zone, nearest_community, monitor2) |>
+      dplyr::mutate(monitor = monitor |> unique() |> join_list_sentence()) |>
+      dplyr::group_by(prov_terr, fcst_zone, nearest_community, monitor) |>
       dplyr::summarise(
         n_hours_above_30 = max(n_hours_above_30, na.rm = TRUE),
         n_hours_above_60 = max(n_hours_above_60, na.rm = TRUE),
@@ -744,7 +742,7 @@ plot_paths = paste0(
 # MAke and save plots
 .tmp = lapply(params$monitor_groups, \(m) {
   pd |>
-    subset(monitor2 == m) |>
+    subset(monitor == m) |>
     make_community_boxplots(m, date_range = date_range) |>
     htmlwidgets::saveWidget(
       plot_paths[[m]],

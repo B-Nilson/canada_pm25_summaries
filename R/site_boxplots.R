@@ -27,7 +27,7 @@ make_and_save_site_boxplots <- function(
     make_site_boxplot_data()
   summary_values <- lapply(monitor_groups, \(monitor_group) {
     plot_data <- boxplot_data |>
-      subset(monitor == monitor_group | monitor_group == "FEM and PA")
+      subset(monitor %in% stringr::str_split_1(monitor_group, ", | and "))
     plot_data |>
       make_site_boxplots(
         date_range = date_range,
