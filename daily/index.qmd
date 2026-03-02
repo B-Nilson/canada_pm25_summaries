@@ -77,28 +77,29 @@ summaries <- obs |>
 
 ```
 
-```{r, maps}
+```{r, overall_summary}
 
-map_path <- summaries$overall |>
-  make_and_save_overall_map(
-    zone_summary = summaries$by_zone,
-    date_range = date_range,
-    monitor_group = all_monitors_group,
-    report_dir = params$type,
-    plot_dir = params$dirs$plots,
-    lib_dir = params$dirs$lib,
-    include_active_fires = FALSE,
-    map_timestamps = date_range
-  )
-
-map_card <- map_path |>
-  stringr::str_replace(stringr::fixed(params$type), "./") |>
-  plot_card(
-    text = quarto_captions$map,
-    iframe = TRUE,
-    iframe_height = 617,
-    plot_timestamp = plot_timestamp
-  )
+overall_summary_cards <- list(
+  # make and save map of all sites, format with quarto markdown
+  map = summaries$overall |>
+    make_and_save_overall_map(
+      zone_summary = summaries$by_zone,
+      date_range = date_range,
+      monitor_group = all_monitors_group,
+      report_dir = params$type,
+      plot_dir = params$dirs$plots,
+      lib_dir = params$dirs$lib,
+      include_active_fires = FALSE,
+      map_timestamps = date_range
+    ) |>
+    stringr::str_replace(stringr::fixed(params$type), "./") |>
+    plot_card(
+      text = quarto_captions$map,
+      iframe = TRUE,
+      iframe_height = 617,
+      plot_timestamp = plot_timestamp
+    )
+)
 
 # Make and save tables
 overall_summary_table <- summaries$overall |>
@@ -110,7 +111,7 @@ overall_summary_table <- summaries$overall |>
     plot_timestamp = plot_timestamp
   )
 
-overall_summary_table$card <- overall_summary_table$path |>
+overall_summary_cards$table <- overall_summary_table$path |>
   stringr::str_replace(stringr::fixed(params$type), "./") |>
   plot_card(
     text = quarto_captions$overall_table,
@@ -241,9 +242,9 @@ community_table$card <- community_table$path |>
 
 `r build_map_summary(summaries$aqhi_p_counts, type = "daily")`
 
-`r overall_summary_table$card`
+`r overall_summary_cards$table`
 
-`r map_card`
+`r overall_summary_cards$map`
 
 `r build_community_summary(summaries$community, type = "daily")`
 
