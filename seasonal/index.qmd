@@ -1,6 +1,6 @@
 ---
 params:
-  type: "./seasonal"
+  type: "seasonal"
   default_date: "2026-01-02 00"
   dirs:
     value:
