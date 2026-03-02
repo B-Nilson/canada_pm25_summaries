@@ -1,9 +1,10 @@
 make_community_table <- function(
   community_summary,
-  report_dir,
+  type,
   data_dir,
   figure_dir,
-  plot_timestamp
+  plot_timestamp,
+  plot_caption
 ) {
   display_names <- list(
     nearest_community = "Name",
@@ -123,17 +124,29 @@ make_community_table <- function(
 
   # Write out data to CSV and make download button linked to it
   file_path <- "%s/%s/community_summary_%s.csv" |>
-    sprintf(report_dir, data_dir, plot_timestamp)
+    sprintf(type, data_dir, plot_timestamp)
   dl_button <- table_data |>
     make_download_button(data_dir = data_dir, file_path = file_path)
 
   table_path <- "%s/%s/community_summary_%s.html" |>
-    sprintf(report_dir, figure_dir, plot_timestamp)
+    sprintf(type, figure_dir, plot_timestamp)
   community_table |> gt::gtsave(filename = table_path)
+
+  card <- community_table$path |>
+    stringr::str_replace(stringr::fixed(type), "./") |>
+    plot_card(
+      text = plot_caption,
+      iframe = TRUE,
+      is_table = TRUE,
+      iframe_height = 590,
+      plot_timestamp = plot_timestamp
+    ) |>
+    append_gt_dl_button(dl_button = dl_button) |>
+    knitr::asis_output()
 
   list(
     html = community_table,
     path = table_path,
-    dl_button = dl_button
+    card = card
   )
 }

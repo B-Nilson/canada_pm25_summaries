@@ -182,23 +182,12 @@ fcst_grid_paths <- fcst_grid_data |>
 
 community_table <- summaries$community |>
   make_community_table(
-    report_dir = params$type,
+    type = params$type,
     data_dir = params$dirs$data,
     figure_dir = params$dirs$plots,
-    plot_timestamp = plot_timestamp
+    plot_timestamp = plot_timestamp,
+    plot_caption = quarto_captions$community_table
   )
-
-community_table$card <- community_table$path |>
-  stringr::str_replace(stringr::fixed(params$type), "./") |>
-  plot_card(
-    text = quarto_captions$community_table,
-    iframe = TRUE,
-    is_table = TRUE,
-    iframe_height = 590,
-    plot_timestamp = plot_timestamp
-  ) |>
-  append_gt_dl_button(dl_button = community_table$dl_button) |>
-  knitr::asis_output()
 
 ```
 
