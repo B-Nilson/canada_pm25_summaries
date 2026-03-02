@@ -70,8 +70,6 @@ summaries <- obs |>
     plot_timestamp = plot_timestamp
   )
 
-max_date <- obs$date |> base::max()
-
 ```
 
 ```{r prov_donuts}
@@ -98,6 +96,7 @@ prov_donuts_text <- c(pa = "PA", fem = "FEM") |>
 map_path <- summaries$overall |>
   make_and_save_overall_map(
     zone_summary = summaries$by_zone,
+    date_range = date_range,
     monitor_group = "FEM and PA",
     report_dir = params$type,
     plot_dir = params$dirs$plots,

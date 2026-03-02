@@ -18,7 +18,7 @@ make_community_boxplots <- function(pd, date_range, m = "FEM and PA") {
     plotly::layout(
       title = paste(
         "Number of Community-Level, Very High Exceedances by Province/Territory for",
-        format(max_date, "%B %Y")
+        format(date_range[2], "%B %Y")
       ),
       showlegend = FALSE,
       xaxis = list(

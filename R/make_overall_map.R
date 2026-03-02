@@ -1,6 +1,7 @@
 make_and_save_overall_map <- function(
   overall_summary,
   zone_summary,
+  date_range,
   monitor_group,
   include_active_fires = FALSE,
   report_dir,
@@ -129,7 +130,7 @@ make_overall_map <- function(
     leaflet::addControl(html = pm_legend, position = 'bottomleft')
 
   if (include_active_fires) {
-    active_fires <- get_active_fire_data()
+    active_fires <- get_active_fire_data(max_date = date_range[2])
     fire_pal <- leaflet::colorFactor(
       c("#ffb24c", "#00a2ff", "#fff300", "#f03b20"),
       levels = fire_states
@@ -421,7 +422,7 @@ make_overall_summary_table <- function(
   )
 }
 
-get_active_fire_data <- function() {
+get_active_fire_data <- function(max_date) {
   fire_groups <- c("0 - 100 ha", "101 - 1000 ha", "> 1000ha")
   fire_states <- c("Other", "Under Control", "Being Held", "Out of Control")
   "https://cwfis.cfs.nrcan.gc.ca/downloads/activefires/activefires.csv" |>
