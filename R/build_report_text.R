@@ -59,25 +59,41 @@ and the network of low-cost monitors from **PurpleAir (PA)**.
 This report is automatically updated every %s.'
 
   report_details <- '<div>
-  <p>
-    <strong>PM~2.5~</strong> is a major constituent of wildfire smoke and has significant health risks associated with acute and chronic exposure.
-    <strong>FEM monitors are the gold-standard</strong> for real-time data quality for PM~2.5~; however installations are limited by capital and maintenance costs.
-    <strong>PA monitors are less accurate</strong> than their FEM counterparts, but are <strong>much less cost prohibitive</strong> allowing large numbers to be installed. 
-    FEM monitors provide <strong>great</strong> data (in <strong>limited areas</strong>), but PA monitors provide <strong>good</strong> data (in <strong>many areas</strong>), and are very useful as "smoke detectors" during wildfire smoke events.
-  </p>
+<p>
+  <strong>PM~2.5~</strong> is a major constituent of wildfire smoke and has significant health risks associated with acute and chronic exposure.
+  <strong>FEM monitors are the gold-standard</strong> for real-time data quality for PM~2.5~; however installations are limited by capital and maintenance costs.
+  <strong>PA monitors are less accurate</strong> than their FEM counterparts, but are <strong>much less cost prohibitive</strong> allowing large numbers to be installed. 
+  FEM monitors provide <strong>great</strong> data (in <strong>limited areas</strong>), but PA monitors provide <strong>good</strong> data (in <strong>many areas</strong>), and are very useful as "smoke detectors" during wildfire smoke events.
+</p>
 
-  <p>All PM~2.5~ data are sourced from the <a href="https://aqmap.ca/aqmap">UNBC AQmap</a> data repository.</p>
+<p>All PM~2.5~ data are sourced from the <a href="https://aqmap.ca/aqmap">UNBC AQmap</a> data repository.</p>
 
-  <ul>
-    <li>
-      Data from the FEM network originate from <a href="https://www.airnow.gov/about-airnow/">AirNow</a>, and are NOT VALIDATED. 
-      No QA/QC is applied after retrieval from AirNow, and official values may differ from those presented here.
-    </li>
-    <li>
-      Data from the PA network originate from the <a href="https://api.purpleair.com/">PurpleAir API</a>, and a rigorous automated QA/QC method is applied to ensure the best available data are used. 
-      The <a href="https://amt.copernicus.org/articles/15/3315/2022/">UNBC/ECCC bias correction</a> is applied to all PA data to improve comparability with FEM values.
-    </li>
-  </ul>
+<ul>
+  <li>
+    Data from the FEM network originate from <a href="https://www.airnow.gov/about-airnow/">AirNow</a>, and are NOT VALIDATED. 
+    No QA/QC is applied after retrieval from AirNow, and official values may differ from those presented here.
+  </li>
+  <li>
+    Data from the PA network originate from the <a href="https://api.purpleair.com/">PurpleAir API</a>, and a rigorous automated QA/QC method is applied to ensure the best available data are used. 
+    The <a href="https://amt.copernicus.org/articles/15/3315/2022/">UNBC/ECCC bias correction</a> is applied to all PA data to improve comparability with FEM values.
+  </li>
+</ul>
+
+### Terms and Definitions
+
+PM~2.5~
+: Airborne fine particulate matter, a mixture of solid and liquid particles less than 2.5 microns in diameter. 
+Primary pollutant of smoke. Measured as mass concentration in units of micrograms per cubic meter ({{< var units.pm >}}).
+
+AQHI
+: Canadian Air Quality Heath Index, calculated here using the "AQHI+" formulation using the 1-hour mean PM~2.5~ (instead of the 3-hour rolling mean of PM~2.5~, O~3~ and NO~2~).
+Split into 4 health risk categories: "Low" (PM~2.5~ < 30 {{< var units.pm >}}), "Moderate" (30 <= PM~2.5~ < 60 {{< var units.pm >}}), "High" (60 <= PM~2.5~ < 100 {{< var units.pm >}}), and "Very High" (PM~2.5~ >= 100 {{< var units.pm >}}).
+  
+FEM
+: Federal Equivalent Method PM~2.5~ monitors are the gold standard for real-time PM~2.5~ observations, and are used for regulatory decisions.
+
+PA
+: Low-cost PM~2.5~ monitors from PurpleAir - less accurate than FEM monitors, but much less expensive.
 </div>'
 
   template <- "
