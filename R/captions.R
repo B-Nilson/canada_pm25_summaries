@@ -99,7 +99,7 @@ make_quarto_captions <- function(
       ) |>
       setNames(provinces_n_territories),
     community_table = paste(
-      "Canadian communities with at least one nearby PM2.5 monitor with data from %s.",
+      "Canadian communities with at least one nearby PM2.5 monitor from the %s network(s) with data from %s.",
       table_helper,
       "Click on a name to view that community on AQmap."
     ) |>
