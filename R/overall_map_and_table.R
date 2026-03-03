@@ -1,6 +1,57 @@
+make_and_save_overall_summary_cards <- function(
+  overall_summary,
+  zone_summary,
+  date_range,
+  all_monitors_group,
+  type,
+  data_dir,
+  figure_dir,
+  lib_dir,
+  plot_timestamp,
+  map_caption,
+  table_caption,
+  include_active_fires = FALSE
+) {
+  map <- overall_summary |>
+    make_and_save_overall_map(
+      zone_summary = zone_summary,
+      date_range = date_range,
+      monitor_group = all_monitors_group,
+      report_dir = type,
+      plot_dir = figure_dir,
+      lib_dir = lib_dir,
+      include_active_fires = include_active_fires,
+      map_timestamps = date_range
+    ) |>
+    stringr::str_replace(stringr::fixed(type), "./") |>
+    plot_card(
+      text = map_caption,
+      iframe = TRUE,
+      iframe_height = 617,
+      plot_timestamp = plot_timestamp
+    ) |>
+    knitr::asis_output()
+
+  table <- overall_summary |>
+    make_overall_summary_table(
+      type = type,
+      monitor_group = all_monitors_group,
+      data_dir = data_dir,
+      figure_dir = figure_dir,
+      plot_timestamp = plot_timestamp,
+      table_caption = table_caption
+    )
+
+  list(
+    map = map,
+    table = table$card
+  )
+}
+
 make_and_save_overall_map <- function(
   overall_summary,
   zone_summary,
+  date_range,
   monitor_group,
   include_active_fires = FALSE,
   report_dir,
@@ -25,7 +76,7 @@ make_and_save_overall_map <- function(
   # Make and save maps
   pd <- map_data |>
     dplyr::filter(
-      monitor == monitor_group | monitor_group == "FEM and PA"
+      monitor %in% stringr::str_split_1(monitor_group, ", | and ")
     )
   pd |>
     make_overall_map(
@@ -105,7 +156,7 @@ make_overall_map <- function(
     ) |>
     leaflet::addPolygons(
       data = zone_summary |>
-        dplyr::filter_out(fcst_zone == "Not inside a zone"),
+        dplyr::filter_out(fcst_zone == "Not inside a defined zone"),
       fillColor = ~ aqhi_pal(get(mean_pm25_col)),
       color = "black",
       weight = 1,
@@ -129,7 +180,7 @@ make_overall_map <- function(
     leaflet::addControl(html = pm_legend, position = 'bottomleft')
 
   if (include_active_fires) {
-    active_fires <- get_active_fire_data()
+    active_fires <- get_active_fire_data(max_date = date_range[2])
     fire_pal <- leaflet::colorFactor(
       c("#ffb24c", "#00a2ff", "#fff300", "#f03b20"),
       levels = fire_states
@@ -297,21 +348,21 @@ make_map_popup <- function(
 make_overall_summary_table <- function(
   table_data,
   monitor_group,
-  report_dir,
+  type,
   data_dir,
   figure_dir,
-  plot_timestamp
+  plot_timestamp,
+  table_caption
 ) {
-  dir.create(file.path(report_dir, data_dir), showWarnings = FALSE)
   display_names <- list(
     name = "Name",
     monitor = "Type",
     fcst_zone = "Region",
     nearest_community = "Name",
     nc_dist_km = "Distance",
-    n_hours_above_30 = gt::md("30 &mu;g/m<sup>3</sup>"),
-    n_hours_above_60 = gt::md("60 &mu;g/m<sup>3</sup>"),
-    n_hours_above_100 = gt::md("100 &mu;g/m<sup>3</sup>"),
+    n_hours_above_30 = gt::md("30 &mu;g/m^3^"),
+    n_hours_above_60 = gt::md("60 &mu;g/m^3^"),
+    n_hours_above_100 = gt::md("100 &mu;g/m^3^"),
     pm25_current = "Last",
     pm25_mean = "Mean",
     pm25_max = "Max"
@@ -350,7 +401,7 @@ make_overall_summary_table <- function(
       columns = c("name", "monitor", "fcst_zone")
     ) |>
     gt::tab_spanner(
-      label = gt::md("PM<sub>2.5</sub> Concentration (&mu;g m<sup>-3</sup>)"),
+      label = gt::html("PM<sub>2.5</sub> Concentration (&mu;g m<sup>-3</sup>)"),
       columns = dplyr::starts_with("pm25")
     ) |>
     gt::tab_spanner(
@@ -358,7 +409,7 @@ make_overall_summary_table <- function(
       columns = c("nearest_community", "nc_dist_km")
     ) |>
     gt::tab_spanner(
-      label = gt::md("Hours Above PM<sub>2.5</sub> Threshold"),
+      label = gt::html("Hours Above PM<sub>2.5</sub> Threshold"),
       columns = dplyr::starts_with("n_hours"),
       id = "hours_above_spanner"
     ) |>
@@ -392,36 +443,28 @@ make_overall_summary_table <- function(
     ) |>
     gt::sub_missing(dplyr::starts_with("n_hours") | dplyr::starts_with("pm25"))
 
-  # Save data to csv for download
+  # Save table to .html and data to .csv, link within a plot_card
   m_group_cleaned <- monitor_group |>
     stringr::str_to_lower() |>
     stringr::str_replace_all(" ", "_")
-  file_path <- "%s/pm2.5_monitor_sites_%s_%s.csv" |>
-    sprintf(
-      file.path(report_dir, data_dir),
-      m_group_cleaned,
-      plot_timestamp
-    )
-  dl_button <- table_data |>
-    make_download_button(data_dir = data_dir, file_path = file_path)
+  data_path <- "%s/%s/pm2.5_monitor_sites_%s_%s.csv" |>
+    sprintf(type, data_dir, m_group_cleaned, plot_timestamp)
+  table_path <- "%s/%s/overall_table_%s_%s.html" |>
+    sprintf(type, figure_dir, m_group_cleaned, plot_timestamp)
 
-  # Save table to .html
-  table_path <- "%s/overall_table_%s_%s.html" |>
-    sprintf(
-      file.path(report_dir, figure_dir),
-      m_group_cleaned,
-      plot_timestamp
+  table |>
+    make_table_card(
+      table_data = table_data,
+      table_caption = table_caption,
+      table_path = table_path,
+      data_path = data_path,
+      data_rel_dir = data_dir,
+      plot_timestamp = plot_timestamp,
+      type = type
     )
-  table |> gt::gtsave(filename = table_path)
-
-  list(
-    html = table,
-    path = table_path,
-    dl_button = dl_button
-  )
 }
 
-get_active_fire_data <- function() {
+get_active_fire_data <- function(max_date) {
   fire_groups <- c("0 - 100 ha", "101 - 1000 ha", "> 1000ha")
   fire_states <- c("Other", "Under Control", "Being Held", "Out of Control")
   "https://cwfis.cfs.nrcan.gc.ca/downloads/activefires/activefires.csv" |>

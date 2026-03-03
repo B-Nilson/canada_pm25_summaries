@@ -1,4 +1,5 @@
-make_community_boxplots <- function(pd, m = "FEM and PA") {
+make_community_boxplots <- function(pd, date_range, m) {
+  hours_to_summarise <- date_range |> make_hourly_seq()
   box <- boxplot(n_hours_above_100 ~ prov_terr, pd, plot = FALSE)
   pd <- pd |>
     dplyr::mutate(
@@ -17,7 +18,7 @@ make_community_boxplots <- function(pd, m = "FEM and PA") {
     plotly::layout(
       title = paste(
         "Number of Community-Level, Very High Exceedances by Province/Territory for",
-        format(max_date, "%B %Y")
+        format(date_range[2], "%B %Y")
       ),
       showlegend = FALSE,
       xaxis = list(

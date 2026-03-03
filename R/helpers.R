@@ -46,6 +46,40 @@ join_list_sentence <- function(l, oxford = FALSE, type = "regions") {
   return(out)
 }
 
+make_table_card <- function(
+  table_html,
+  table_data,
+  table_caption,
+  table_path,
+  data_path,
+  data_rel_dir,
+  plot_timestamp,
+  type
+) {
+  dl_button <- table_data |>
+    make_download_button(data_dir = data_rel_dir, file_path = data_path)
+
+  table_html |>
+    gt::gtsave(filename = table_path, libdir = "libs")
+
+  card <- table_path |>
+    stringr::str_replace(stringr::fixed(type), "./") |>
+    plot_card(
+      text = table_caption,
+      iframe = TRUE,
+      is_table = TRUE,
+      iframe_height = 590,
+      plot_timestamp = plot_timestamp
+    ) |>
+    append_gt_dl_button(dl_button = dl_button) |>
+    knitr::asis_output()
+
+  list(
+    html = table_html,
+    card = card
+  )
+}
+
 plot_card <- function(
   plot_src,
   text,
@@ -171,6 +205,14 @@ dl_button_html <- function(outdir, file) {
     '\')"><i class="fa fa-save"></i> Download data as csv</button>'
   ) |>
     htmltools::HTML()
+}
+
+append_gt_dl_button <- function(text, dl_button, end_tag = "</iframe>") {
+  text |>
+    gsub(
+      pattern = end_tag,
+      replacement = paste0(end_tag, "\n", dl_button)
+    )
 }
 
 make_download_button <- function(data_for_download, data_dir, file_path) {

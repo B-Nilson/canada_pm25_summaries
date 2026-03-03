@@ -17,8 +17,8 @@ pop_coverage_barchart <- function(pd, pop_type = "total", leg_rows = 1) {
   )
 
   colours <- c(
-    "FEM Only" = "#F0BE19",
-    "PA Only" = "#944BE7",
+    "FEM" = "#F0BE19",
+    "PA" = "#944BE7",
     "FEM and PA" = "#F0BE19",
     "No Monitor" = "#AF1B3F"
   )
@@ -60,7 +60,7 @@ pop_coverage_barchart <- function(pd, pop_type = "total", leg_rows = 1) {
       colour = "black",
       pattern_alpha = 0.8,
       alpha = 0.8,
-      pattern_fill = colours[names(colours) == "PA Only"],
+      pattern_fill = colours[names(colours) == "PA"],
       # pattern_angle = 45,
       pattern_density = 0.45,
       # pattern_spacing = 0.025,

@@ -1,7 +1,11 @@
 ---
 params:
-  report_dir: "./seasonal"
+  type: "seasonal"
   default_date: "2026-01-02 00"
+  monitor_groups: 
+    - "FEM and PA"
+    - "FEM" 
+    - "PA" 
   dirs:
     value:
       data: data
@@ -13,7 +17,7 @@ params:
       Summer: 5, 6, 7, 8, 9, 10
       Winter: 11, 12, 1, 2, 3, 4
   report: !expr source("../R/set_params.R"); set_params(type = "seasonal", default_report_date = "2026-01-02 00", months_in_seasons = list(Summer = 5:10, Wincter = c(11:12, 1:4)))
-title: "Canadian PM<sub>2.5</sub> Observations Seasonal Summary for <mark class='bg-info'>`r params$report$display_name`</mark>"
+title: "Canadian PM~2.5~ Observations Seasonal Summary for <mark class='bg-info'>`r params$report$display_name`</mark>"
 subtitle: | 
   Non-validated, auto-QA/QCed data representing `r params$report$date_ranges$utc`<br>
   `r params$report$date_ranges$vancouver` in Vancouver |
@@ -37,25 +41,20 @@ format:
 source("R/report-functions.R")
 source("R/report-constants.R")
 
-date_range <- params$report_dir |>
+all_monitors_group <- params$monitor_groups[1]
+
+old_report_dropdown <- params$type |> build_report_dropdown()
+
+obs <- params$type |>
   get_report_start_end(
-    type = "seasonal",
+    type = params$type,
     months_in_seasons = params$months_in_seasons,
     run_future = params$run_current,
     default_date = params$default_report_date |> lubridate::ymd_h(tz = "UTC")
-  )
-
-old_report_dropdown <- params$report_dir |>
-  handle_old_reports(report_pattern = "[summer,winter]\\.html$")
-
-```
-
-```{r load_data }
-
-obs <- date_range |>
+  ) |>
   load_report_data(
     meta_cols = meta_cols,
-    cache_path = file.path(params$report_dir, "index_obs.rds"), # used when db not available
+    cache_path = file.path(params$type, "index_obs.rds"), # used when db not available
     provinces_n_territories = provinces_n_territories
   )
 
@@ -67,28 +66,21 @@ summary_months <- date_range |>
 report_season <- date_range[2] |>
   get_season(months_in_seasons = params$months_in_seasons)
 plot_captions <- date_range |>
-  make_plot_captions(networks = names(monitor_groups))
+  make_plot_captions(networks = monitor_groups)
 quarto_captions <- date_range |> 
-  make_quarto_captions(monitor_groups = monitor_groups)
+  make_quarto_captions(
+    monitor_groups = monitor_groups,
+    all_monitors_group = all_monitors_group
+  )
 
 # summaries <- obs |>
-#   make_summaries(type = "seasonal", fcst_zones = fcst_zones, meta_cols = meta_cols)
+#   make_summaries(type = params$type, fcst_zones = fcst_zones, monitor_groups = params$monitor_groups, meta_cols = meta_cols)
 
 events <- get_pm_events(obs, c("prov_terr", "fcst_zone"))
 
 ```
 
-## Overview {.unlisted .unnumbered}
-
-`r build_overview_card(type = "seasonal", report_dropdown = old_report_dropdown)`
-
-`r loading_div`
-
-## Analysis of Past 6-months of PM<sub>2.5</sub> Observations
-
-### Where/when did we have observations? {.panel-tabset}
-
-```{r}
+```{r monitor_counts}
 # Define dimensions for output figures
 fig_dims = list(h = 7, w = 11, u = 'in')
 
@@ -144,7 +136,7 @@ gg = daily_monitor_counts |>
     x = ggplot2::element_blank(),
     y = bquote("Number of PM"[2.5] * " Monitors w/ Valid Data"),
     fill = bquote("PM"[2.5] * " Monitor"),
-    caption = plot_captions$`FEM and PA`
+    caption = plot_captions[[all_monitors_group]]
   ) +
   ggplot2::theme(
     axis.text.x = ggplot2::element_text(hjust = -0.1),
@@ -162,14 +154,14 @@ gg = daily_monitor_counts |>
     )
   )
 
-plot_path = paste0(
+monitor_counts_path <- paste0(
   "../../deployments/reports/seasonal/plots/",
   report_season,
   "_monitor_counts.png"
 )
 ggsave(
   gg,
-  filename = plot_path,
+  filename = monitor_counts_path,
   width = fig_dims$w,
   height = fig_dims$h,
   units = fig_dims$u,
@@ -205,7 +197,7 @@ ggsave(
 #        width = fig_dims$w, height = fig_dims$h, units = fig_dims$u, dpi = 300)
 #
 # # Define plot summary text (figure titles essentially)
-# plot_text = 'Daily counts of active fine particulate matter (PM<sub>2.5</sub>) monitors in each Canadian province/territory.
+# plot_text = 'Daily counts of active fine particulate matter (PM~2.5~) monitors in each Canadian province/territory.
 #
 # The National Air Pollution Service (NAPS) Federal Equivelant Method (FEM) monitors are the gold standard for hourly observations. The PurpleAir (PA) low cost monitors are not as accurate, but are cheaper/easier to install allowing for a larger network. These PA monitors are recorded as either owned by Environment and Climate Change Canada\'s Air Quality Science Units (ECCC AQSU) or by anyone else ("Non-ECCC").
 #
@@ -242,7 +234,7 @@ table_data = obs |>
     `Mean Flag Rate (%)` = (mean(flaggedness, na.rm = TRUE) |> round(3)) * 100
   )
 
-table = reactable(
+monitor_counts_table <- reactable(
   data = table_data,
   defaultPageSize = 13,
   columns = list(
@@ -267,7 +259,7 @@ table = reactable(
     PA = reactable::colDef(
       header = with_tooltip(
         "PA",
-        "PurpleAir low-cost PM<sub>2.5</sub> monitors."
+        "PurpleAir low-cost PM~2.5~ monitors."
       )
     )
   ),
@@ -289,15 +281,12 @@ tmp = daily_monitor_counts |>
     change = n[date == max(date)] - n[date == min(date)],
     rel_change = change / max(n)
   )
-text = list(
+
+monitor_count_text = list(
   most = table_data |>
     dplyr::mutate(t = FEM + PA) |>
     dplyr::arrange(desc(t)) |>
-    dplyr::pull(
-      `
-Prov. / Terr.
-`
-    ) |>
+    dplyr::pull("Prov. / Terr.") |>
     head(3),
   change = tmp |>
     list(
@@ -319,48 +308,9 @@ Prov. / Terr.
 
 ```
 
-::: card
-::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-`r text$most[1]`, `r text$most[2]`, and `r text$most[3]` had the most PM<sub>2.5</sub> monitors in Canada in the `r report_season` season. `r text$change$abs[1]` and `r text$change$abs[2]` experienced the greatest absolute increase in monitors over this season. `r text$change$rel[1]` and `r text$change$rel[2]` experienced the greatest relative increase. 
-
-PurpleAir monitors purchased by ECCC's AQSU increased by `r text$tot$change[1]` this season, totaling `r text$tot$max[1]` across Canada at the end of the season (compared to `r text$tot$min[1]` at the start). Approximately `r round(text$tot$max[1]/(text$tot$max[1]+text$tot$max[2])*100,1)`% of the PurpleAir monitors in Canada at the end of the `r report_season` season were owned by ECCC.
-
-The network of FEM monitors in Canada changed by `r text$tot$change[3]` this season. The network of PA monitors changed by `r paste0(ifelse(sum(text$tot$change[1:2])>=0,"+"),sum(text$tot$change[1:2]))` this season.
-  
-</details>
-
-:::
-:::
-
-`r tab_explainers$summary_tabs`
-
-#### Daily Monitor Counts
-
-```{r include=TRUE, results = 'asis'}
-plot_path |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$monitor_counts)
-```
-
-|
-
-#### Summary Table
-
-```{r include=TRUE}
-table
-```
-
-### How was this season overall? {.panel-tabset}
-
 ```{r}
 # Define dimensions for output figures
 fig_dims = list(h = 7, w = 11, u = 'in')
-
-plot_paths = list()
 
 # Season zone mean/max map
 seasonal_zone_summaries = obs |>
@@ -419,10 +369,10 @@ seasonal_zone_summaries = obs |>
       ", PA: ",
       n_pa,
       ")<br>",
-      "Seasonal mean PM<sub>2.5</sub>: <b>",
+      "Seasonal mean PM~2.5~: <b>",
       handyr::swap(round(zone_mean_pm25, 1), NA, with = "-"),
       " {{< var units.pm >}}</b><br>",
-      "Seasonal max PM<sub>2.5</sub>: <b>",
+      "Seasonal max PM~2.5~: <b>",
       handyr::swap(round(zone_max_pm25, 1), NA, with = "-"),
       " {{< var units.pm >}}</b>"
     ) |>
@@ -439,7 +389,7 @@ pal = colorBin(
 
 legend_title = paste0(
   report_season,
-  "<br>Max PM<sub>2.5</sub> ({{< var units.pm >}})"
+  "<br>Max PM~2.5~ ({{< var units.pm >}})"
 )
 pm_legend = paste0(
   '<div style="margin-bottom:3px"><strong><span>',
@@ -472,7 +422,7 @@ max_map = leaflet(height = 605) |>
 
 legend_title = paste0(
   report_season,
-  "<br>Mean PM<sub>2.5</sub> ({{< var units.pm >}})"
+  "<br>Mean PM~2.5~ ({{< var units.pm >}})"
 )
 pm_legend = paste0(
   '<div style="margin-bottom:3px"><strong><span>',
@@ -502,18 +452,19 @@ mean_map = leaflet(height = 605) |>
   ) |>
   addControl(pm_legend, position = "bottomleft")
 
-plot_paths$mean_map = paste0(
+seasonal_zone_summary_paths = list()
+seasonal_zone_summary_paths$mean_map = paste0(
   "../../deployments/reports/seasonal/plots/",
   report_season,
   "_zone_mean_map.html"
 )
-htmltools::save_html(mean_map, plot_paths$mean_map, libdir = "./libs")
-plot_paths$max_map = paste0(
+htmltools::save_html(mean_map, seasonal_zone_summary_paths$mean_map, libdir = "./libs")
+seasonal_zone_summary_paths$max_map = paste0(
   "../../deployments/reports/seasonal/plots/",
   report_season,
   "_zone_max_map.html"
 )
-htmltools::save_html(max_map, plot_paths$max_map, libdir = "./libs")
+htmltools::save_html(max_map, seasonal_zone_summary_paths$max_map, libdir = "./libs")
 
 # Daily zone mean ts
 daily_zone_means = obs |>
@@ -589,14 +540,10 @@ gg = daily_zone_means |>
     y = bquote("Daily Mean PM"[2.5] ~ "(" * mu * "g m"^-3 * ")"),
     x = element_blank(),
     colour = element_blank(),
-    caption = plot_captions$`
-FEM
-and
-PA
-`
+    caption = plot_captions[[all_monitors_group]]
   )
 
-plot_paths$ts = paste0(
+seasonal_zone_summary_paths$ts = paste0(
   "../../deployments/reports/seasonal/plots/",
   report_season,
   "_daily_zone_means.png"
@@ -667,93 +614,65 @@ table_data = obs |>
     "Max Duration (days)" = max_event_duration
   )
 
-table = reactable(
+event_table = reactable(
   data = table_data,
   defaultPageSize = 13,
   columns = list(
-    `
-Mean
-` = reactable::colDef(
+    Mean = reactable::colDef(
       header = with_tooltip(
         "Mean",
         "Average of the forecast zone seasonal mean PM2.5 concentrations within each province/territory"
       )
     ),
-    `
-Max
-` = reactable::colDef(
+    Max = reactable::colDef(
       header = with_tooltip(
         "Max",
         "Maximum of the forecast zone seasonal mean PM2.5 concentrations within each province/territory"
       )
     ),
-    `
-98
-th
-Percentile
-` = reactable::colDef(
+    "98th Percentile" = reactable::colDef(
       header = with_tooltip(
         "98th Percentile",
         "98th Percentile of the forecast zone seasonal mean PM2.5 concentrations within each province/territory"
       )
     ),
-    `
-Mean
-Hours >= 60
-` = reactable::colDef(
+    "Mean Hours >= 60" = reactable::colDef(
       header = with_tooltip(
         "Mean Hours >= 60",
         "Average of the forecast zone seasonal counts of hourly PM2.5 concentrations of 60 ug/mm3 or greater (High - Very High risk) within each province/territory"
       )
     ),
-    `
-Mean
-Hours >= 100
-` = reactable::colDef(
+    "Mean Hours >= 100" = reactable::colDef(
       header = with_tooltip(
         "Mean Hours >= 100",
         "Average of the forecast zone seasonal counts of hourly PM2.5 concentrations of 100 ug/mm3 or greater (Very High risk) within each province/territory"
       )
     ),
-    `
-Count
-` = reactable::colDef(
+    Count = reactable::colDef(
       header = with_tooltip(
         "Count",
         "Total number of elevated PM2.5 events detected within the province/territory"
       )
     ),
-    `
-Mean
-Count
-` = reactable::colDef(
+    "Mean Count" = reactable::colDef(
       header = with_tooltip(
         "Mean Count",
         "Average of the number of elevated PM2.5 events detected within each forecast zone in the province/territory"
       )
     ),
-    `
-Zones
-w / Events
-` = reactable::colDef(
+    "Zones w/ Events" = reactable::colDef(
       header = with_tooltip(
         "Zones w/ Events",
         "Count of the number of forecast zones with at least one elevated PM2.5 event"
       )
     ),
-    `
-Mean
-Duration(days)
-` = reactable::colDef(
+    "Mean Duration (days)" = reactable::colDef(
       header = with_tooltip(
         "Mean Duration (days)",
         "Average duration of elevated PM2.5 events this season in the province/territory"
       )
     ),
-    `
-Max
-Duration(days)
-` = reactable::colDef(
+    "Max Duration (days)" = reactable::colDef(
       header = with_tooltip(
         "Max Duration (days)",
         "Maximum duration of elevated PM2.5 events this season in the province/territory"
@@ -785,11 +704,7 @@ Duration(days)
   )
 )
 
-```
-
-```{r}
-
-text = list(
+zone_text <- list(
   mean_counts = seasonal_zone_summaries |>
     dplyr::filter(n > 0) |>
     dplyr::summarise(
@@ -818,70 +733,10 @@ text = list(
     dplyr::arrange(max)
 )
 
-text$daily2 = text$daily |> dplyr::arrange(desc(max))
+zone_text$daily2 = zone_text$daily |> dplyr::arrange(desc(max))
 
 ```
 
-::: card
-::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-
-`r sum(seasonal_zone_summaries$n != 0)` of the `r nrow(seasonal_zone_summaries)` forecast regions in Canada had observation data in the `r report_season` season. `r text$mean_counts$low` of these zones had a seasonal (6-month) zone mean above 10 {{< var units.pm >}}, `r text$mean_counts$mod` had a mean above 30 {{< var units.pm >}}, `r text$mean_counts$high` had a mean above 60 {{< var units.pm >}}, and `r text$mean_counts$vhigh` had a mean above 100 {{< var units.pm >}}.
-
-`r text$max_counts$vhigh` of the `r nrow(seasonal_zone_summaries)` forecast regions in Canada experienced concentrations above 100 {{< var units.pm >}} during the `r report_season` season, `r text$max_counts$high` experienced concentrations above 60 {{< var units.pm >}}, and `r text$max_counts$mod` experienced concentrations above 30 {{< var units.pm >}}.
-
-The most widespread impacts this season occurred in `r text$daily$prov_terr[1]`, `r text$daily$prov_terr[2]`, and `r text$daily$prov_terr[3]`, where daily forecast zone mean concentrations were `r paste(text$daily$mean[3], text$daily$mean[1], sep = " - ")` {{< var units.pm >}} on average.
-
-The worst impacts this season occurred in `r text$daily2$prov_terr[1]`, `r text$daily2$prov_terr[2]`, and `r text$daily2$prov_terr[3]`, where daily forecast zone max concentrations were `r paste(text$daily$max[3], text$daily$max[1], sep = " - ")` {{< var units.pm >}} on average.
-
-`r text$least$prov_terr[1]`, `r text$least$prov_terr[2]`, and `r text$least$prov_terr[3]` were the least impacted (where we had data), but still experienced daily mean concentrations as high as `r paste(text$least$max[1], text$least$max[3], sep = " - ")` {{< var units.pm >}}.
-  
-</details>
-
-:::
-:::
-
-`r tab_explainers$summary_tabs`
-
-#### Seasonal Zone Mean
-
-```{r include=TRUE, results = 'asis'}
-plot_paths$mean_map |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$mean_map, iframe = TRUE, iframe_height = 625)
-```
-
-|
-#### Seasonal Zone Max
-
-```{r include=TRUE, results = 'asis'}
-plot_paths$max_map |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$max_map, iframe = TRUE, iframe_height = 625)
-```
-
-|
-
-#### Daily Zone Mean
-
-```{r include=TRUE, results = 'asis'}
-plot_paths$ts |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$zone_ts)
-```
-
-|
-
-#### Summary Table
-
-```{r include=TRUE}
-table
-```
-
-### When/where did events occur? {.panel-tabset}
 
 ```{r }
 # Define dimensions for output figures
@@ -931,7 +786,7 @@ pd$median = test_data |>
       factor(c(levels(aqhip), "No Data."))
   )
 
-plot_paths = paste0(
+zone_aqhi_paths = paste0(
   "../../deployments/reports/seasonal/plots/",
   report_season,
   "_",
@@ -981,7 +836,7 @@ for (stat in names(pd)) {
     ggpubr::theme_pubr(border = TRUE) +
     labs(
       y = "Daily % of Forecast Zones",
-      caption = plot_captions$`FEM and PA`,
+      caption = plot_captions[[all_monitors_group]],
       x = element_blank(),
       fill = paste(
         "Daily",
@@ -1009,10 +864,9 @@ for (stat in names(pd)) {
       colour = "none"
     )
 
-  fp = plot_paths[[stat]]
   ggsave(
     gg,
-    filename = fp,
+    filename = zone_aqhi_paths[[stat]],
     width = fig_dims$w,
     height = fig_dims$h,
     units = fig_dims$u,
@@ -1057,7 +911,7 @@ table_data = events |>
     "Mean * Duration" = mean_pm25_duration
   )
 
-table = reactable(
+events_table_2 = reactable(
   data = table_data,
   defaultPageSize = 10,
   columns = list(
@@ -1099,9 +953,6 @@ table = reactable(
   )
 )
 
-```
-
-```{r}
 months = unique(format(hours_to_summarise, "%B"))
 m_data = lapply(months, \(m) {
   lapply(pd, \(df) dplyr::filter(df, format(date, "%B") %in% m))
@@ -1109,7 +960,7 @@ m_data = lapply(months, \(m) {
   setNames(months)
 
 
-texts = lapply(months, \(month) {
+event_texts <- lapply(months, \(month) {
   m_data = names(pd) |>
     handyr::for_each(.as_list = TRUE, .bind = TRUE, \(stat) {
       df = pd[[stat]]
@@ -1120,25 +971,17 @@ texts = lapply(months, \(month) {
   e_data = table_data |>
     dplyr::filter(format(Start, "%B") %in% month | format(End, "%B") %in% month)
   e_prov_counts = e_data |>
-    dplyr::group_by(
-      `
-Prov. / Terr.
-`
-    ) |>
+    dplyr::group_by(`Prov. / Terr.`) |>
     dplyr::summarise(n = n()) |>
     dplyr::arrange(desc(n)) |>
     head(3)
   e_prov_max_dur = e_data |>
     dplyr::group_by(
-      `
-Prov. / Terr.
-`
+      `Prov. / Terr.`
     ) |>
     dplyr::summarise(
       dur = max(
-        `
-Duration(days)
-`
+        `Duration(days)`
       )
     ) |>
     dplyr::arrange(desc(dur)) |>
@@ -1159,33 +1002,25 @@ Duration(days)
     month,
     " there was ",
     nrow(e_data),
-    " detected events in Canada where the daily max PM<sub>2.5</sub> concentration in a forecast zone exceeded 30 {{< var units.pm >}} for more than 1 day in a row. The most events this month occurred in ",
+    " detected events in Canada where the daily max PM~2.5~ concentration in a forecast zone exceeded 30 {{< var units.pm >}} for more than 1 day in a row. The most events this month occurred in ",
     paste(
-      e_prov_counts$`
-Prov. / Terr.
-`[1:2],
+      e_prov_counts$`Prov. / Terr.`[1:2],
       collapse = ", "
     ) |>
       paste(
         "and",
-        e_prov_counts$`
-Prov. / Terr.
-`[3]
+        e_prov_counts$`Prov. / Terr.`[3]
       ),
     " (",
     paste(min(e_prov_counts$n), "-", max(e_prov_counts$n)),
     " events). The longest events this month occurred in ",
     paste(
-      e_prov_max_dur$`
-Prov. / Terr.
-`[1:2],
+      e_prov_max_dur$`Prov. / Terr.`[1:2],
       collapse = ", "
     ) |>
       paste(
         "and",
-        e_prov_max_dur$`
-Prov. / Terr.
-`[3]
+        e_prov_max_dur$`Prov. / Terr.`[3]
       ),
     " (max ",
     paste(min(e_prov_max_dur$dur), "-", max(e_prov_max_dur$dur)),
@@ -1208,15 +1043,11 @@ Prov. / Terr.
       )
     p_e_data = e_data |>
       dplyr::filter(
-        `
-Prov. / Terr.
-` ==
+        `Prov. / Terr.` ==
           prov
       ) |>
       dplyr::arrange(desc(
-        `
-Mean * Duration
-`
+        `Mean * Duration`
       ))
 
     if (nrow(p_m_data) == 1 & p_m_data$aqhip[1] == "Low [0-30)") {
@@ -1233,7 +1064,7 @@ Mean * Duration
         format(p_m_data$worst_day[1], "%b %d"),
         ", where ",
         round(p_m_data$p[1] * 100, 1),
-        "% of forecast zones had a maximum daily PM<sub>2.5</sub> concentration ",
+        "% of forecast zones had a maximum daily PM~2.5~ concentration ",
         p_m_data$desc[1],
         " {{< var units.pm >}}."
       )
@@ -1249,56 +1080,6 @@ Mean * Duration
 
 
 ```
-
-::: card
-::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-```{r include = TRUE, results="asis"}
-
-for (t in texts) {
-  cat(t, "\n\n---\n\n")
-}
-
-``
-`
-  
-</details>
-
-:::
-:::
-
-`r tab_explainers$summary_tabs`
-
-#### Peak Events (Zone Maximum)
-
-```{r include=TRUE, results = 'asis'}
-plot_paths$max |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$events_max)
-```
-
-|
-
-#### Widespread Events (Zone Median)
-
-```{r include=TRUE, results = 'asis'}
-plot_paths$median |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$events_median)
-```
-
-|
-
-#### Events Table
-
-```{r include=TRUE}
-table
-```
-
-### What were the worst events like? {.panel-tabset}
 
 ```{r }
 # Define dimensions for output figures
@@ -1428,7 +1209,7 @@ fills = fills |>
   ) |>
   dplyr::mutate(y1 = ifelse(y1 == max(y1), Inf, y1))
 
-plot_paths = paste0(
+worst_event_paths = paste0(
   "../../deployments/reports/seasonal/plots/",
   report_season,
   names(prov_pretty),
@@ -1437,7 +1218,7 @@ plot_paths = paste0(
   as.list() |>
   setNames(names(prov_pretty))
 for (pt in names(prov_pretty)) {
-  fp = plot_paths[[pt]]
+  fp = worst_event_paths[[pt]]
 
   ppd = pd |>
     dplyr::bind_rows(
@@ -1576,11 +1357,7 @@ for (pt in names(prov_pretty)) {
     labs(
       y = bquote("Hourly PM"[2.5] ~ "Concentration (" * mu * "g m"^-3 * ")"),
       x = element_blank(),
-      caption = plot_captions$`
-FEM
-and
-PA
-`,
+      caption = plot_captions[[all_monitors_group]],
       colour = bquote("PM"[2.5] ~ "Monitor")
     ) +
     guides(
@@ -1611,11 +1388,7 @@ PA
   )
 }
 
-```
-
-```{r}
-
-texts = sapply(prov_pretty, \(prov) {
+worst_event_texts = sapply(prov_pretty, \(prov) {
   e_data = events |>
     dplyr::ungroup() |>
     dplyr::filter(prov_terr == prov)
@@ -1667,10 +1440,7 @@ texts = sapply(prov_pretty, \(prov) {
     paste0(
       "In ",
       prov,
-      " during the `
-r
-report_season
-` season, no events of continued elevated PM<sub>2.5</sub> occurred where observations were available."
+      " during the `r report_season` season, no events of continued elevated PM~2.5~ occurred where observations were available."
     )
   } else {
     paste0(
@@ -1680,7 +1450,7 @@ report_season
       report_season,
       " season, ",
       nrow(e_data),
-      " events of continued elevated PM<sub>2.5</sub> occurred. The most significant events occurred in ",
+      " events of continued elevated PM~2.5~ occurred. The most significant events occurred in ",
       worst_text,
       ". These events ranged from ",
       worst_summs$dur_range,
@@ -1704,46 +1474,6 @@ report_season
 })
 
 ```
-
-
-::: card
-::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-```{r include = TRUE, results="asis"}
-
-for(t in texts){
-  cat(t, "\n\n---\n\n")
-}
-
-`
-``
-  
-</details>
-
-:::
-:::
-
-`r tab_explainers$prov_terr_tabs`
-
-```{r include = TRUE, results="asis"}
-
-for (p in names(prov_pretty)) {
-  pp = prov_pretty[[p]]
-  cat("#### ", pp, "\n")
-  cat(
-    plot_paths[[p]] |>
-      stringr::str_replace(report_dir_esc, "./") |>
-      plot_card(quarto_captions$worst_events[[p]]),
-    "\n"
-  )
-}
-
-```
-
-### Which communities [with data] were impacted? {.panel-tabset}
 
 ```{r }
 # Define dimensions for output figures
@@ -1787,8 +1517,8 @@ pd = obs |>
   dplyr::mutate(prov_terr = factor(prov_terr, prov_pretty, names(prov_pretty)))
 
 # Make paths to files for saving plots
-plot_paths = paste0(
-  params$report_dir,
+community_paths = paste0(
+  params$type,
   "plots/communities_",
   c("vHigh", "High"),
   "_hours_",
@@ -1859,7 +1589,7 @@ plot_1 = pd |>
     )
   ) |>
   htmlwidgets::saveWidget(
-    plot_paths$exceeds_100,
+    community_paths$exceeds_100,
     libdir = "./libs",
     selfcontained = FALSE
   )
@@ -1920,7 +1650,7 @@ pd |>
     )
   ) |>
   htmlwidgets::saveWidget(
-    plot_paths$exceeds_60,
+    community_paths$exceeds_60,
     libdir = "./libs",
     selfcontained = FALSE
   )
@@ -1946,7 +1676,7 @@ t_data = pd |>
     "Max." = max_community_pm25,
     "Mean" = mean_community_pm25
   )
-table = reactable(
+community_table = reactable(
   data = t_data,
   defaultPageSize = 10,
   # columns = list(
@@ -1972,11 +1702,7 @@ table = reactable(
   )
 )
 
-```
-
-```{r}
-
-text = list(
+community_text = list(
   n_max_100 = pd |>
     dplyr::filter(max_community_pm25 > 100),
   more_100_over_100 = pd |>
@@ -2016,7 +1742,7 @@ text = list(
 t = text$more_100_over_100$prov_terr[
   text$more_100_over_100$prov_terr != "Canada"
 ]
-text$provs_over_100 = paste0(
+community_text$provs_over_100 = paste0(
   paste(
     t[-length(t)],
     collapse = ", "
@@ -2025,7 +1751,7 @@ text$provs_over_100 = paste0(
   dplyr::last(t)
 )
 t = text$more_60_over_100$prov_terr[text$more_60_over_100$prov_terr != "Canada"]
-text$provs_over_60 = paste0(
+community_text$provs_over_60 = paste0(
   paste(
     t[-length(t)],
     collapse = ", "
@@ -2036,18 +1762,176 @@ text$provs_over_60 = paste0(
 
 ```
 
+## Overview {.unlisted .unnumbered}
+
+`r build_overview_card(type = params$type, report_dropdown = old_report_dropdown)`
+
+`r loading_div`
+
+## Analysis of Past 6-months of PM~2.5~ Observations
+
+### Where/when did we have observations? {.panel-tabset}
+
 ::: card
 ::: card-body
 
-<details>
-<summary>Click for an automated text summary.</summary>
+`r monitor_count_text$most[1]`, `r monitor_count_text$most[2]`, and `r monitor_count_text$most[3]` had the most PM~2.5~ monitors in Canada in the `r report_season` season. `r monitor_count_text$change$abs[1]` and `r monitor_count_text$change$abs[2]` experienced the greatest absolute increase in monitors over this season. `r monitor_count_text$change$rel[1]` and `r monitor_count_text$change$rel[2]` experienced the greatest relative increase. 
 
-`r nrow(text$n_max_100)` communities of the `r nrow(pd)` in Canada with observation data in the `r report_season` season experienced concentrations in excess of 100 {{< var units.pm >}}. `r text$more_100_over_100$p[text$more_100_over_100=="Canada"]`% of communities with data experienced more than 100 hours in excess of 100 {{< var units.pm >}}; these communities were located in `r text$provs_over_100`. `r text$worst$community` a community in `r text$worst$prov_terr`, experienced the most hours above 100 {{< var units.pm >}} (`r text$worst$hours_exceeding_100` hours in total, out of `r text$worst$hours_w_obs` hours where observations were available).
+PurpleAir monitors purchased by ECCC's AQSU increased by `r monitor_count_text$tot$change[1]` this season, totaling `r monitor_count_text$tot$max[1]` across Canada at the end of the season (compared to `r monitor_count_text$tot$min[1]` at the start). Approximately `r round(monitor_count_text$tot$max[1]/(monitor_count_text$tot$max[1]+monitor_count_text$tot$max[2])*100,1)`% of the PurpleAir monitors in Canada at the end of the `r report_season` season were owned by ECCC.
 
-`r nrow(text$n_max_60)` communities of the `r nrow(pd)` in Canada with observation data in the `r report_season` season experienced concentrations in excess of 60 {{< var units.pm >}}. `r text$more_60_over_100$p[text$more_60_over_100=="Canada"]`% of communities with data experienced more than 100 hours in excess of 60 {{< var units.pm >}}; these communities were located in `r text$provs_over_60`. `r text$worst_60$community` a community in `r text$worst_60$prov_terr`, experienced the most hours above 60 {{< var units.pm >}} (`r text$worst_60$hours_exceeding_100` hours in total, out of `r text$worst$hours_w_obs` hours where observations were available).
+The network of FEM monitors in Canada changed by `r monitor_count_text$tot$change[3]` this season. The network of PA monitors changed by `r paste0(ifelse(sum(monitor_count_text$tot$change[1:2])>=0,"+"),sum(monitor_count_text$tot$change[1:2]))` this season.
 
+:::
+:::
+
+`r tab_explainers$summary_tabs`
+
+#### Daily Monitor Counts
+
+```{r include=TRUE, results = 'asis'}
+monitor_counts_path |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$monitor_counts)
+```
+
+#### Summary Table
+
+```{r include=TRUE}
+monitor_counts_table
+```
+
+### How was this season overall? {.panel-tabset}
+
+::: card
+::: card-body
+
+`r sum(seasonal_zone_summaries$n != 0)` of the `r nrow(seasonal_zone_summaries)` forecast regions in Canada had observation data in the `r report_season` season. `r zone_text$mean_counts$low` of these zones had a seasonal (6-month) zone mean above 10 {{< var units.pm >}}, `r zone_text$mean_counts$mod` had a mean above 30 {{< var units.pm >}}, `r zone_text$mean_counts$high` had a mean above 60 {{< var units.pm >}}, and `r zone_text$mean_counts$vhigh` had a mean above 100 {{< var units.pm >}}.
+
+`r zone_text$max_counts$vhigh` of the `r nrow(seasonal_zone_summaries)` forecast regions in Canada experienced concentrations above 100 {{< var units.pm >}} during the `r report_season` season, `r zone_text$max_counts$high` experienced concentrations above 60 {{< var units.pm >}}, and `r zone_text$max_counts$mod` experienced concentrations above 30 {{< var units.pm >}}.
+
+The most widespread impacts this season occurred in `r zone_text$daily$prov_terr[1]`, `r zone_text$daily$prov_terr[2]`, and `r zone_text$daily$prov_terr[3]`, where daily forecast zone mean concentrations were `r paste(zone_text$daily$mean[3], zone_text$daily$mean[1], sep = " - ")` {{< var units.pm >}} on average.
+
+The worst impacts this season occurred in `r zone_text$daily2$prov_terr[1]`, `r zone_text$daily2$prov_terr[2]`, and `r zone_text$daily2$prov_terr[3]`, where daily forecast zone max concentrations were `r paste(zone_text$daily$max[3], zone_text$daily$max[1], sep = " - ")` {{< var units.pm >}} on average.
+
+`r zone_text$least$prov_terr[1]`, `r zone_text$least$prov_terr[2]`, and `r zone_text$least$prov_terr[3]` were the least impacted (where we had data), but still experienced daily mean concentrations as high as `r paste(zone_text$least$max[1], zone_text$least$max[3], sep = " - ")` {{< var units.pm >}}.
   
-</details>
+:::
+:::
+
+`r tab_explainers$summary_tabs`
+
+#### Seasonal Zone Mean
+
+```{r include=TRUE, results = 'asis'}
+seasonal_zone_summary_paths$mean_map |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$mean_map, iframe = TRUE, iframe_height = 625)
+```
+
+#### Seasonal Zone Max
+
+```{r include=TRUE, results = 'asis'}
+seasonal_zone_summary_paths$max_map |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$max_map, iframe = TRUE, iframe_height = 625)
+```
+
+#### Daily Zone Mean
+
+```{r include=TRUE, results = 'asis'}
+seasonal_zone_summary_paths$ts |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$zone_ts)
+```
+
+#### Summary Table
+
+```{r include=TRUE}
+event_table
+```
+
+### When/where did events occur? {.panel-tabset}
+
+::: card
+::: card-body
+
+```{r include = TRUE, results="asis"}
+
+for (t in event_texts) {
+  cat(t, "\n\n---\n\n")
+}
+
+```
+  
+
+:::
+:::
+
+`r tab_explainers$summary_tabs`
+
+#### Peak Events (Zone Maximum)
+
+```{r include=TRUE, results = 'asis'}
+zone_aqhi_paths$max |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$events_max)
+```
+
+#### Widespread Events (Zone Median)
+
+```{r include=TRUE, results = 'asis'}
+zone_aqhi_paths$median |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$events_median)
+```
+
+#### Events Table
+
+```{r include=TRUE}
+events_table_2
+```
+
+### What were the worst events like? {.panel-tabset}
+
+::: card
+::: card-body
+
+```{r include = TRUE, results="asis"}
+
+for(t in worst_event_texts){
+  cat(t, "\n\n---\n\n")
+}
+
+```
+
+:::
+:::
+
+`r tab_explainers$prov_terr_tabs`
+
+```{r include = TRUE, results="asis"}
+
+for (p in names(prov_pretty)) {
+  pp = prov_pretty[[p]]
+  cat("#### ", pp, "\n")
+  cat(
+    worst_event_paths[[p]] |>
+      stringr::str_replace(report_dir_esc, "./") |>
+      plot_card(quarto_captions$worst_events[[p]]),
+    "\n"
+  )
+}
+
+```
+
+### Which communities [with data] were impacted? {.panel-tabset}
+
+::: card
+::: card-body
+
+`r nrow(community_text$n_max_100)` communities of the `r nrow(pd)` in Canada with observation data in the `r report_season` season experienced concentrations in excess of 100 {{< var units.pm >}}. `r community_text$more_100_over_100$p[community_text$more_100_over_100=="Canada"]`% of communities with data experienced more than 100 hours in excess of 100 {{< var units.pm >}}; these communities were located in `r community_text$provs_over_100`. `r community_text$worst$community` a community in `r community_text$worst$prov_terr`, experienced the most hours above 100 {{< var units.pm >}} (`r community_text$worst$hours_exceeding_100` hours in total, out of `r community_text$worst$hours_w_obs` hours where observations were available).
+
+`r nrow(community_text$n_max_60)` communities of the `r nrow(pd)` in Canada with observation data in the `r report_season` season experienced concentrations in excess of 60 {{< var units.pm >}}. `r community_text$more_60_over_100$p[community_text$more_60_over_100=="Canada"]`% of communities with data experienced more than 100 hours in excess of 60 {{< var units.pm >}}; these communities were located in `r community_text$provs_over_60`. `r community_text$worst_60$community` a community in `r community_text$worst_60$prov_terr`, experienced the most hours above 60 {{< var units.pm >}} (`r community_text$worst_60$hours_exceeding_100` hours in total, out of `r community_text$worst$hours_w_obs` hours where observations were available).
 
 :::
 :::
@@ -2057,7 +1941,7 @@ text$provs_over_60 = paste0(
 #### Hours > 100 (V. High)
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$exceeds_100 |>
+community_paths$exceeds_100 |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(quarto_captions$community_exceeds_100, iframe = TRUE)
 ```
@@ -2067,17 +1951,13 @@ plot_paths$exceeds_100 |>
 #### Hours > 60 (High)
 
 ```{r include=TRUE, results = 'asis'}
-plot_paths$exceeds_60 |>
+community_paths$exceeds_60 |>
   stringr::str_replace(report_dir_esc, "./") |>
   plot_card(quarto_captions$community_exceeds_60, iframe = TRUE)
 ```
 
-|
-
 #### Summary Table
 
 ```{r include=TRUE}
-table
+community_table
 ```
-
-##

@@ -19,15 +19,15 @@ make_and_save_site_boxplots <- function(
       monitor_groups_cleaned,
       plot_timestamp
     ) |>
-    setNames(names(monitor_groups)) |>
+    setNames(monitor_groups) |>
     as.list()
 
   # Make and save plots
   boxplot_data <- overall_summary |>
     make_site_boxplot_data()
-  summary_values <- lapply(names(monitor_groups), \(monitor_group) {
+  summary_values <- lapply(monitor_groups, \(monitor_group) {
     plot_data <- boxplot_data |>
-      subset(monitor == monitor_group | monitor_group == "FEM and PA")
+      subset(monitor %in% stringr::str_split_1(monitor_group, ", | and "))
     plot_data |>
       make_site_boxplots(
         date_range = date_range,
@@ -70,7 +70,7 @@ make_and_save_site_boxplots <- function(
         )
     )
   }) |>
-    setNames(names(monitor_groups))
+    setNames(monitor_groups)
   list(
     paths = plot_paths |> setNames(monitor_groups),
     summary_values = summary_values
@@ -84,6 +84,7 @@ make_site_boxplots <- function(
   avg,
   monitor_group
 ) {
+  hours_to_summarise <- date_range |> make_hourly_seq()
   plot_background_fills <- boxplot_data$pm25_mean |>
     make_plotly_aqhi_background()
 

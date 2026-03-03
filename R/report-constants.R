@@ -25,15 +25,6 @@ meta_cols <- c(
   "nc_lng"
 )
 
-monitor_groups <- c(
-  "FEM and PA" = "FEM and PA",
-  FEM = "FEM Only",
-  PA = "PA Only"
-)
-monitor_groups_cleaned <- monitor_groups |>
-  stringr::str_to_lower() |>
-  stringr::str_replace_all(" ", "_")
-
 # Misc -----
 
 loading_div <- '

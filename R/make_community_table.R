@@ -1,9 +1,10 @@
 make_community_table <- function(
   community_summary,
-  report_dir,
+  type,
   data_dir,
   figure_dir,
-  plot_timestamp
+  plot_timestamp,
+  table_caption
 ) {
   display_names <- list(
     nearest_community = "Name",
@@ -12,9 +13,9 @@ make_community_table <- function(
     n_pa = "PA",
     nc_dist_km_network_mean_comm_mean = "Mean Dist.",
     nc_dist_km_network_max_comm_max = "Max Dist.",
-    n_hours_above_30_network_max_comm_max = gt::md("30 &mu;g/m<sup>3</sup>"),
-    n_hours_above_60_network_max_comm_max = gt::md("60 &mu;g/m<sup>3</sup>"),
-    n_hours_above_100_network_max_comm_max = gt::md("100 &mu;g/m<sup>3</sup>"),
+    n_hours_above_30_network_max_comm_max = gt::md("30 &mu;g/m^3^"),
+    n_hours_above_60_network_max_comm_max = gt::md("60 &mu;g/m^3^"),
+    n_hours_above_100_network_max_comm_max = gt::md("100 &mu;g/m^3^"),
     pm25_current_network_mean_comm_mean = "Last",
     pm25_mean_network_mean_comm_mean = "Mean",
     pm25_max_network_max_comm_max = "Max"
@@ -66,7 +67,7 @@ make_community_table <- function(
       columns = c("nearest_community", "fcst_zone")
     ) |>
     gt::tab_spanner(
-      label = gt::md("PM<sub>2.5</sub> Monitoring Sites"),
+      label = gt::html("PM<sub>2.5</sub> Monitoring Sites"),
       columns = c(
         n_pa,
         n_fem,
@@ -75,11 +76,11 @@ make_community_table <- function(
       )
     ) |>
     gt::tab_spanner(
-      label = gt::md("PM<sub>2.5</sub> Concentration (&mu;g m<sup>-3</sup>)"),
+      label = gt::html("PM<sub>2.5</sub> Concentration (&mu;g m<sup>-3</sup>)"),
       columns = dplyr::starts_with("pm25")
     ) |>
     gt::tab_spanner(
-      label = gt::md("Hours Above PM<sub>2.5</sub> Threshold"),
+      label = gt::html("Hours Above PM<sub>2.5</sub> Threshold"),
       columns = dplyr::starts_with("n_hours"),
       id = "hours_above_spanner"
     ) |>
@@ -121,19 +122,20 @@ make_community_table <- function(
     ) |>
     gt::sub_missing(dplyr::starts_with("n_hours") | dplyr::starts_with("pm25"))
 
-  # Write out data to CSV and make download button linked to it
-  file_path <- "%s/%s/community_summary_%s.csv" |>
-    sprintf(report_dir, data_dir, plot_timestamp)
-  dl_button <- table_data |>
-    make_download_button(data_dir = data_dir, file_path = file_path)
-
+  # Save table to .html and data to .csv, link within a plot_card
+  data_path <- "%s/%s/community_summary_%s.csv" |>
+    sprintf(type, data_dir, plot_timestamp)
   table_path <- "%s/%s/community_summary_%s.html" |>
-    sprintf(report_dir, figure_dir, plot_timestamp)
-  community_table |> gt::gtsave(filename = table_path)
+    sprintf(type, figure_dir, plot_timestamp)
 
-  list(
-    html = community_table,
-    path = table_path,
-    dl_button = dl_button
-  )
+  community_table |>
+    make_table_card(
+      table_data = table_data,
+      table_caption = table_caption,
+      table_path = table_path,
+      data_path = data_path,
+      data_rel_dir = data_dir,
+      plot_timestamp = plot_timestamp,
+      type = type
+    )
 }
