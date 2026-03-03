@@ -80,7 +80,7 @@ summaries <- obs |>
 
 overall_summary_cards <- summaries$overall |>
   make_and_save_overall_summary_cards(
-    zone_summary = summaries$zone,
+    zone_summary = summaries$by_zone,
     date_range = date_range,
     all_monitors_group = all_monitors_group,
     type = params$type,
