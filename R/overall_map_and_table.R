@@ -354,7 +354,6 @@ make_overall_summary_table <- function(
   plot_timestamp,
   table_caption
 ) {
-  dir.create(file.path(type, data_dir), showWarnings = FALSE)
   display_names <- list(
     name = "Name",
     monitor = "Type",
@@ -444,45 +443,23 @@ make_overall_summary_table <- function(
     ) |>
     gt::sub_missing(dplyr::starts_with("n_hours") | dplyr::starts_with("pm25"))
 
-  # Save data to csv for download
+  # Save table to .html and data to .csv, link within a plot_card
   m_group_cleaned <- monitor_group |>
     stringr::str_to_lower() |>
     stringr::str_replace_all(" ", "_")
-  file_path <- "%s/pm2.5_monitor_sites_%s_%s.csv" |>
-    sprintf(
-      file.path(type, data_dir),
-      m_group_cleaned,
-      plot_timestamp
+  data_path <- "%s/%s/pm2.5_monitor_sites_%s_%s.csv" |>
+    sprintf(type, data_dir, m_group_cleaned, plot_timestamp)
+  table_path <- "%s/%s/overall_table_%s_%s.html" |>
+    sprintf(type, figure_dir, m_group_cleaned, plot_timestamp)
+
+  table |>
+    make_table_card(
+      table_data = table_data,
+      table_caption = table_caption,
+      table_path = table_path,
+      data_path = data_path,
+      data_rel_dir = data_dir
     )
-  dl_button <- table_data |>
-    make_download_button(data_dir = data_dir, file_path = file_path)
-
-  # Save table to .html
-  table_path <- "%s/overall_table_%s_%s.html" |>
-    sprintf(
-      file.path(type, figure_dir),
-      m_group_cleaned,
-      plot_timestamp
-    )
-  table |> gt::gtsave(filename = table_path)
-
-  card <- table_path |>
-    stringr::str_replace(stringr::fixed(type), "./") |>
-    plot_card(
-      text = table_caption,
-      iframe = TRUE,
-      is_table = TRUE,
-      iframe_height = 590,
-      plot_timestamp = plot_timestamp
-    ) |>
-    append_gt_dl_button(dl_button) |>
-    knitr::asis_output()
-
-  list(
-    html = table,
-    path = table_path,
-    card = card
-  )
 }
 
 get_active_fire_data <- function(max_date) {

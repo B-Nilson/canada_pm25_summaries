@@ -46,6 +46,37 @@ join_list_sentence <- function(l, oxford = FALSE, type = "regions") {
   return(out)
 }
 
+make_table_card <- function(
+  table_html,
+  table_data,
+  table_caption,
+  table_path,
+  data_path,
+  data_rel_dir
+) {
+  dl_button <- table_data |>
+    make_download_button(data_dir = data_rel_dir, file_path = data_path)
+
+  table_html |> gt::gtsave(filename = table_path)
+
+  card <- table_path |>
+    stringr::str_replace(stringr::fixed(type), "./") |>
+    plot_card(
+      text = plot_caption,
+      iframe = TRUE,
+      is_table = TRUE,
+      iframe_height = 590,
+      plot_timestamp = plot_timestamp
+    ) |>
+    append_gt_dl_button(dl_button = dl_button) |>
+    knitr::asis_output()
+
+  list(
+    html = table_html,
+    card = card
+  )
+}
+
 plot_card <- function(
   plot_src,
   text,
