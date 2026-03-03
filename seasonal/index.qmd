@@ -1775,16 +1775,11 @@ community_text$provs_over_60 = paste0(
 ::: card
 ::: card-body
 
-<details>
-<summary>Click for an automated text summary.</summary>
-
 `r monitor_count_text$most[1]`, `r monitor_count_text$most[2]`, and `r monitor_count_text$most[3]` had the most PM<sub>2.5</sub> monitors in Canada in the `r report_season` season. `r monitor_count_text$change$abs[1]` and `r monitor_count_text$change$abs[2]` experienced the greatest absolute increase in monitors over this season. `r monitor_count_text$change$rel[1]` and `r monitor_count_text$change$rel[2]` experienced the greatest relative increase. 
 
 PurpleAir monitors purchased by ECCC's AQSU increased by `r monitor_count_text$tot$change[1]` this season, totaling `r monitor_count_text$tot$max[1]` across Canada at the end of the season (compared to `r monitor_count_text$tot$min[1]` at the start). Approximately `r round(monitor_count_text$tot$max[1]/(monitor_count_text$tot$max[1]+monitor_count_text$tot$max[2])*100,1)`% of the PurpleAir monitors in Canada at the end of the `r report_season` season were owned by ECCC.
 
 The network of FEM monitors in Canada changed by `r monitor_count_text$tot$change[3]` this season. The network of PA monitors changed by `r paste0(ifelse(sum(monitor_count_text$tot$change[1:2])>=0,"+"),sum(monitor_count_text$tot$change[1:2]))` this season.
-  
-</details>
 
 :::
 :::
@@ -1810,9 +1805,6 @@ monitor_counts_table
 ::: card
 ::: card-body
 
-<details>
-<summary>Click for an automated text summary.</summary>
-
 `r sum(seasonal_zone_summaries$n != 0)` of the `r nrow(seasonal_zone_summaries)` forecast regions in Canada had observation data in the `r report_season` season. `r zone_text$mean_counts$low` of these zones had a seasonal (6-month) zone mean above 10 {{< var units.pm >}}, `r zone_text$mean_counts$mod` had a mean above 30 {{< var units.pm >}}, `r zone_text$mean_counts$high` had a mean above 60 {{< var units.pm >}}, and `r zone_text$mean_counts$vhigh` had a mean above 100 {{< var units.pm >}}.
 
 `r zone_text$max_counts$vhigh` of the `r nrow(seasonal_zone_summaries)` forecast regions in Canada experienced concentrations above 100 {{< var units.pm >}} during the `r report_season` season, `r zone_text$max_counts$high` experienced concentrations above 60 {{< var units.pm >}}, and `r zone_text$max_counts$mod` experienced concentrations above 30 {{< var units.pm >}}.
@@ -1823,8 +1815,6 @@ The worst impacts this season occurred in `r zone_text$daily2$prov_terr[1]`, `r 
 
 `r zone_text$least$prov_terr[1]`, `r zone_text$least$prov_terr[2]`, and `r zone_text$least$prov_terr[3]` were the least impacted (where we had data), but still experienced daily mean concentrations as high as `r paste(zone_text$least$max[1], zone_text$least$max[3], sep = " - ")` {{< var units.pm >}}.
   
-</details>
-
 :::
 :::
 
@@ -1865,9 +1855,6 @@ event_table
 ::: card
 ::: card-body
 
-<details>
-<summary>Click for an automated text summary.</summary>
-
 ```{r include = TRUE, results="asis"}
 
 for (t in event_texts) {
@@ -1876,7 +1863,6 @@ for (t in event_texts) {
 
 ```
   
-</details>
 
 :::
 :::
@@ -1910,9 +1896,6 @@ events_table_2
 ::: card
 ::: card-body
 
-<details>
-<summary>Click for an automated text summary.</summary>
-
 ```{r include = TRUE, results="asis"}
 
 for(t in worst_event_texts){
@@ -1920,8 +1903,6 @@ for(t in worst_event_texts){
 }
 
 ```
-
-</details>
 
 :::
 :::
@@ -1948,15 +1929,9 @@ for (p in names(prov_pretty)) {
 ::: card
 ::: card-body
 
-<details>
-<summary>Click for an automated text summary.</summary>
-
 `r nrow(community_text$n_max_100)` communities of the `r nrow(pd)` in Canada with observation data in the `r report_season` season experienced concentrations in excess of 100 {{< var units.pm >}}. `r community_text$more_100_over_100$p[community_text$more_100_over_100=="Canada"]`% of communities with data experienced more than 100 hours in excess of 100 {{< var units.pm >}}; these communities were located in `r community_text$provs_over_100`. `r community_text$worst$community` a community in `r community_text$worst$prov_terr`, experienced the most hours above 100 {{< var units.pm >}} (`r community_text$worst$hours_exceeding_100` hours in total, out of `r community_text$worst$hours_w_obs` hours where observations were available).
 
 `r nrow(community_text$n_max_60)` communities of the `r nrow(pd)` in Canada with observation data in the `r report_season` season experienced concentrations in excess of 60 {{< var units.pm >}}. `r community_text$more_60_over_100$p[community_text$more_60_over_100=="Canada"]`% of communities with data experienced more than 100 hours in excess of 60 {{< var units.pm >}}; these communities were located in `r community_text$provs_over_60`. `r community_text$worst_60$community` a community in `r community_text$worst_60$prov_terr`, experienced the most hours above 60 {{< var units.pm >}} (`r community_text$worst_60$hours_exceeding_100` hours in total, out of `r community_text$worst$hours_w_obs` hours where observations were available).
-
-  
-</details>
 
 :::
 :::

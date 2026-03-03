@@ -816,12 +816,7 @@ coverage_table
 ::: card
 ::: card-body
 
-<details>
-<summary>Click for an automated text summary.</summary>
-
-**STILL IN DEVELOPMENT**
-  
-</details>
+**SUMMARY TEXT STILL IN DEVELOPMENT**
 
 :::
 :::
@@ -875,12 +870,7 @@ The "worst day" for PM<sub>2.5</sub> concentrations **for each forecast zone**. 
 ::: card
 ::: card-body
 
-<details>
-<summary>Click for an automated text summary.</summary>
-
-**STILL IN DEVELOPMENT**
-  
-</details>
+**SUMMARY TEXT STILL IN DEVELOPMENT**
 
 :::
 :::
