@@ -59,7 +59,8 @@ make_table_card <- function(
   dl_button <- table_data |>
     make_download_button(data_dir = data_rel_dir, file_path = data_path)
 
-  table_html |> gt::gtsave(filename = table_path)
+  table_html |>
+    gt::gtsave(filename = table_path, libdir = "libs")
 
   card <- table_path |>
     stringr::str_replace(stringr::fixed(type), "./") |>
