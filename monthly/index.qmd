@@ -79,6 +79,55 @@ summaries <- obs |>
 
 ```
 
+```{r grids}
+
+grid_xlab <- "Day of %s" |> sprintf(format(date_range[2], "%B"))
+
+grid_data <- list(median = median, maximum = max) |>
+  lapply(\(FUN) obs |> make_grid_data(FUN = FUN, type = params$type))
+prov_grid_paths <- grid_data |>
+  make_and_save_prov_terr_grids(
+    report_dir = params$type,
+    figure_dir = params$dirs$plots,
+    monitor_groups = params$monitor_groups,
+    plot_timestamp = plot_timestamp,
+    xlab = grid_xlab,
+    plot_captions = plot_captions
+  )
+
+fcst_grid_data <- obs |>
+  dplyr::mutate(monitor = all_monitors_group) |>
+  make_grid_data(FUN = median, type = params$type, fcst_zones = fcst_zones)
+fcst_grid_paths <- fcst_grid_data |>
+  make_and_save_fcst_zone_grids(
+    report_dir = params$type,
+    figure_dir = params$dirs$plots,
+    plot_timestamp = plot_timestamp,
+    xlab = grid_xlab,
+    plot_caption = plot_captions$`FEM and PA`,
+    provinces_n_territories = provinces_n_territories
+  )
+
+```
+
+```{r site_boxplots}
+
+boxplots <- summaries$overall |>
+  make_and_save_site_boxplots(
+    monitor_groups = params$monitor_groups,
+    date_range = date_range,
+    date_format = "%Y-%m-%d",
+    avg_text = "Monthly",
+    plot_timestamp = plot_timestamp,
+    report_dir = params$type,
+    figure_dir = params$dirs$plots,
+    lib_dir = params$dirs$lib
+  )
+
+boxplot_paths <- boxplots$paths
+
+```
+
 ```{r getNetworkCoverage}
 
 pop_rds = "../resources/spatial/canada_gridded_pop_census_2016.rds"
@@ -269,68 +318,6 @@ coverage = dplyr::bind_rows(pop_coverage, fnic_coverage)
 
 ```
 
-`r if(run_future_month) paste0("<center><h4>**WARNING - This report is incomplete. It only contains data up to ",max(obs$date) |> format("%B %d"),"**</h4></center>") |> HTML()`
-
-|  
-
-## Overview {.unlisted .unnumbered}
-
-`r build_overview_card(type = params$type, report_dropdown = old_report_dropdown)`
-
-`r loading_div`
-
-## Analysis of Past Month of PM<sub>2.5</sub> Observations
-
-### How many observation sites at each risk level?
-
-`r build_prov_donut_summary(summaries$donuts$data, type = params$type)`
-
-`r tab_explainers$network_tabs`
-
-#### FEM and PA
-
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$median_fem_and_pa |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$median_donuts$`FEM and PA`)
-```
-
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$max_fem_and_pa |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$max_donuts$`FEM and PA`)
-```
-
-#### FEM Only
-
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$median_fem |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$median_donuts$`FEM`)
-```
-
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$max_fem |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$max_donuts$`FEM`)
-```
-
-#### PA Only
-
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$median_pa |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$median_donuts$`PA`)
-```
-
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$max_pa |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$max_donuts$`PA`)
-```
-
-### Who had access to nearby observations? {.panel-tabset}
-
 ```{r coverage_charts}
 fig_dims = list(h = 7, w = 9, u = 'in')
 
@@ -342,7 +329,7 @@ coverage_barcharts = lapply(c_types, \(p) {
 }) |>
   setNames(c_types)
 
-plot_paths = paste0(
+coverage_table_paths <- paste0(
   params$type,
   "plots/coverage_",
   c_types,
@@ -353,10 +340,10 @@ plot_paths = paste0(
   as.list() |>
   setNames(c_types)
 
-for (ct in names(plot_paths)) {
+for (ct in names(coverage_table_paths)) {
   ggsave(
     coverage_barcharts[[ct]],
-    filename = plot_paths[[ct]],
+    filename = coverage_table_paths[[ct]],
     dpi = 300,
     units = fig_dims$u,
     height = fig_dims$h,
@@ -365,7 +352,7 @@ for (ct in names(plot_paths)) {
 }
 
 # Make coverage table
-td = coverage |>
+coverage_table_data <- coverage |>
   dplyr::select(-total_pop) |>
   dplyr::mutate(p_pop = paste0(p_pop * 100, "%")) |>
   tidyr::pivot_wider(names_from = pop_type, values_from = c(pop, p_pop)) |>
@@ -388,7 +375,7 @@ td = coverage |>
     p_pop_total
   )
 coverage_table = reactable(
-  data = td,
+  data = coverage_table_data,
   pagination = FALSE,
   columns = list(
     pop_fnic = reactable::colDef("Count"),
@@ -419,7 +406,7 @@ coverage_table = reactable(
     )
   )
 )
-coverage_dl = td |>
+coverage_dl = coverage_table_data |>
   download_this(
     output_name = "network_coverage_" |>
       paste0(max(obs$date) |> format("%Y-%B")),
@@ -435,51 +422,6 @@ coverage_dl = td |>
 
 ```
 
-`r build_coverage_summary(td)`
-
-`r tab_explainers$scale_tabs`
-
-#### Total Population
-
-```{r include=TRUE, results = 'asis'}
-plot_paths$total |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$coverage$total)
-```
-
-#### First Nations and Inuit Communities
-
-```{r include=TRUE, results = 'asis'}
-plot_paths$fnic |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$coverage$fnic)
-```
-
-#### Urban Population
-
-```{r include=TRUE, results = 'asis'}
-plot_paths$urban |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$coverage$urban)
-```
-
-#### Rural Population
-
-```{r include=TRUE, results = 'asis'}
-plot_paths$rural |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$coverage$rural)
-```
-
-#### Coverage Table
-
-```{r include = TRUE, cache = FALSE}
-coverage_dl
-coverage_table
-```
-
-### Where and when were PM<sub>2.5</sub> concentrations high? {.panel-tabset}
-
 ```{r, maps}
 
 # Daily Zone Summaries ----------------------------------------------------
@@ -490,7 +432,7 @@ plot_title = paste0(
   "Animated Map of Daily Forecast Zone Mean PM<sub>2.5</sub> for ",
   format(date_range[2], "%B %Y")
 )
-plot_path = paste0(
+daily_zone_path = paste0(
   params$type,
   "plots/fcstzone_mean_map_daily_",
   output_date_fmt,
@@ -501,7 +443,7 @@ plot_path = paste0(
 # To add slider controls see jsfiddle.net/qs6dL200
 map = make_anim_map(summaries$daily_by_zone, legend_title, height = 600)
 
-mapview::mapshot(map, plot_path, libdir = "./libs", selfcontained = FALSE)
+mapview::mapshot(map, daily_zone_path, libdir = "./libs", selfcontained = FALSE)
 
 # Monthly Zone Summaries ----------------------------------------------------
 
@@ -509,7 +451,7 @@ plot2_title = paste0(
   "Map of Forecast Zone Mean [left] and Max [right] for ",
   format(date_range[2], "%B %Y")
 )
-plot2_path = paste0(
+monthly_zone_path = paste0(
   params$type,
   "plots/fcstzone_mean_map_",
   output_date_fmt,
@@ -528,135 +470,9 @@ map = make_sync_map(
   legend_titles
 )
 
-htmltools::save_html(map, plot2_path, libdir = "./libs")
+htmltools::save_html(map, monthly_zone_path, libdir = "./libs")
 
 ```
-
-`r build_map_summary(summaries$aqhi_p_counts, type = params$type, worst_day = summaries$worst_day)`
-
-`r tab_explainers$scale_tabs`
-
-#### Daily
-
-```{r include=TRUE, results = 'asis'}
-plot_path |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$daily_zones, iframe = TRUE, plot_title)
-```
-
-#### Monthly
-
-```{r include=TRUE, results = 'asis'}
-plot2_path |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(
-    quarto_captions$monthly_zones,
-    iframe = TRUE,
-    plot2_title,
-    iframe_height = 625
-  )
-```
-
-### Where and when did PM<sub>2.5</sub> events occur? {.panel-tabset}
-
-```{r grids}
-
-grid_xlab <- "Day of %s" |> sprintf(format(date_range[2], "%B"))
-
-grid_data <- list(median = median, maximum = max) |>
-  lapply(\(FUN) obs |> make_grid_data(FUN = FUN, type = params$type))
-prov_grid_paths <- grid_data |>
-  make_and_save_prov_terr_grids(
-    report_dir = params$type,
-    figure_dir = params$dirs$plots,
-    monitor_groups = params$monitor_groups,
-    plot_timestamp = plot_timestamp,
-    xlab = grid_xlab,
-    plot_captions = plot_captions
-  )
-
-fcst_grid_data <- obs |>
-  dplyr::mutate(monitor = all_monitors_group) |>
-  make_grid_data(FUN = median, type = params$type, fcst_zones = fcst_zones)
-fcst_grid_paths <- fcst_grid_data |>
-  make_and_save_fcst_zone_grids(
-    report_dir = params$type,
-    figure_dir = params$dirs$plots,
-    plot_timestamp = plot_timestamp,
-    xlab = grid_xlab,
-    plot_caption = plot_captions$`FEM and PA`,
-    provinces_n_territories = provinces_n_territories
-  )
-
-```
-
-`r tab_explainers$scale_tabs`
-
-:::: panel-tabset
-
-## Province Level
-
-`r tab_explainers$network_tabs`
-
-`r build_tabs(params$monitor_groups, prov_grid_paths, quarto_captions$prov_grids, params$type, plot_timestamp = plot_timestamp)`
-
-## Region Level 
-
-`r tab_explainers$prov_terr_tabs`
-
-`r build_tabs(provinces_n_territories, fcst_grid_paths, quarto_captions$zone_grids, params$type, plot_timestamp = plot_timestamp)`
-
-::::
-
-### Which sites had the highest concentrations? {.panel-tabset}
-
-```{r site_boxplots}
-
-boxplots <- summaries$overall |>
-  make_and_save_site_boxplots(
-    monitor_groups = params$monitor_groups,
-    date_range = date_range,
-    date_format = "%Y-%m-%d",
-    avg_text = "Monthly",
-    plot_timestamp = plot_timestamp,
-    report_dir = params$type,
-    figure_dir = params$dirs$plots,
-    lib_dir = params$dirs$lib
-  )
-
-plot_paths <- boxplots$paths
-
-```
-
-`r build_boxplot_summary(boxplots$summary_values, type = params$type)`  
-
-`r tab_explainers$network_tabs`
-
-#### FEM and PA
-
-```{r include=TRUE, results = 'asis'}
-plot_paths[["FEM and PA"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$boxplots[["FEM and PA"]], iframe = TRUE)
-```
-
-#### FEM Only
-
-```{r include=TRUE, results = 'asis'}
-plot_paths[["FEM"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$boxplots[["FEM"]], iframe = TRUE)
-```
-
-#### PA Only
-
-```{r include=TRUE, results = 'asis'}
-plot_paths[["PA"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$boxplots[["PA"]], iframe = TRUE)
-```
-
-### Which communities [with data] had very high PM<sub>2.5</sub>? {.panel-tabset}
 
 ```{r community_boxplots}
 
@@ -683,7 +499,7 @@ pd = summaries$overall |>
   )) |>
   dplyr::mutate(date = date_max)
 # Make paths to files for saving plots
-plot_paths = paste0(
+community_boxplot_paths = paste0(
   params$type,
   "plots/communities_veryHigh_hours_",
   params$monitor_groups |>
@@ -701,7 +517,7 @@ plot_paths = paste0(
     subset(monitor == m) |>
     make_community_boxplots(m, date_range = date_range) |>
     htmlwidgets::saveWidget(
-      plot_paths[[m]],
+      community_boxplot_paths[[m]],
       libdir = "./libs",
       selfcontained = FALSE
     )
@@ -710,39 +526,9 @@ plot_paths = paste0(
 
 ```
 
-`r build_community_summary(summaries$community, type = params$type)`
-
-`r tab_explainers$network_tabs`
-
-#### FEM and PA
-
-```{r include=TRUE, results = 'asis'}
-plot_paths[["FEM and PA"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$community_boxplots[["FEM and PA"]], iframe = TRUE)
-```
-
-#### FEM Only
-
-```{r include=TRUE, results = 'asis'}
-plot_paths[["FEM"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$community_boxplots[["FEM"]], iframe = TRUE)
-```
-
-#### PA Only
-
-```{r include=TRUE, results = 'asis'}
-plot_paths[["PA"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$community_boxplots[["PA"]], iframe = TRUE)
-```
-
-### What was the worst day this month? {.panel-tabset}
-
 ```{r worst_day_tables}
 # Make download link and table for province level
-dl = summaries$worst_day |>
+worst_day_dl = summaries$worst_day |>
   setNames(names(summaries$worst_day) |> stringr::str_replace_all("\n", " ")) |>
   download_this(
     output_name = "worst_days_by_provterr_" |>
@@ -756,7 +542,7 @@ dl = summaries$worst_day |>
     csv2 = FALSE,
     icon = "fa fa-save"
   )
-table = reactable(
+worst_day_table = reactable(
   data = summaries$worst_day,
   pagination = FALSE,
   defaultSorted = "Mean of Site Means",
@@ -817,7 +603,7 @@ pd = summaries$daily |>
     "Mean of Sites" = mean_pm25,
     "Max of Sites" = max_pm25
   )
-dl2 = pd |>
+worst_day_dl2 = pd |>
   download_this(
     output_name = "worst_days_by_fcast_zone_" |>
       paste0(max(obs$date) |> format("%Y-%B")),
@@ -830,7 +616,7 @@ dl2 = pd |>
     csv2 = FALSE,
     icon = "fa fa-save"
   )
-table2 = reactable(
+worst_day_table2 = reactable(
   data = pd,
   groupBy = c("Prov./Terr."),
   defaultSorted = "Mean of Sites",
@@ -844,65 +630,6 @@ table2 = reactable(
   )
 )
 ```
-
-::: card
-::: card-body
-
-<details>
-<summary>Click for an automated text summary.</summary>
-
-**STILL IN DEVELOPMENT**
-  
-</details>
-
-:::
-:::
-
-`r tab_explainers$scale_tabs`
-
-#### Province Level
-
-::: card
-
-::: {.card-img-top .p-2}
-
-```{r include = TRUE, cache = FALSE}
-dl
-table
-```
-
-:::
-
-::: card-body
-
-The "worst day" for PM<sub>2.5</sub> concentrations **for each province**. The "worst day" is determined by the day with the most number of observation sites (FEM or PA) having a daily mean exceeding 100 {{< var units.pm >}} with ties broken by the highest mean of the site daily mean concentrations across the province/territory.
-
-:::
-
-:::
-
-#### Region Level
-
-::: card
-
-::: {.card-img-top .p-2}
-
-```{r include = TRUE, cache=FALSE}
-dl2
-table2
-```
-
-:::
-
-::: card-body
-
-The "worst day" for PM<sub>2.5</sub> concentrations **for each forecast zone**. Click on the arrow beside a prov./terr. name to expand the table to view the zones for that area. The "worst day" is determined by the day with the most number of observation sites (FEM or PA) having a daily mean exceeding 100 {{< var units.pm >}} with ties broken by the highest mean of the site daily mean concentrations across the province/territory.
-
-:::
-
-:::
-
-### Which regions were most impacted, and for which days?
 
 ```{r analysis7, cache= FALSE}
 
@@ -966,13 +693,13 @@ dat1 = summaries$overall |>
   as.data.frame() |>
   dplyr::select(14, 2, 9, 3:4, 5:6, 13)
 
-table = reactable(
+zone_table <- reactable(
   data = dat1,
   defaultSorted = c("# Hours above 60 μg/m3", "# Hours above 100 μg/m3"),
   defaultSortOrder = "desc",
   defaultPageSize = 15 #,
 )
-dl = dat1 |>
+zone_dl <- dat1 |>
   setNames(names(dat1) |> stringr::str_replace_all("\n", " ")) |>
   dplyr::mutate(
     "Day(s) of Month w/ 12+ hours Above 100 μg/m3" = paste0(
@@ -993,6 +720,279 @@ dl = dat1 |>
   )
 ```
 
+`r if(run_future_month) paste0("<center><h4>**WARNING - This report is incomplete. It only contains data up to ",max(obs$date) |> format("%B %d"),"**</h4></center>") |> HTML()`
+
+|  
+
+## Overview {.unlisted .unnumbered}
+
+`r build_overview_card(type = params$type, report_dropdown = old_report_dropdown)`
+
+`r loading_div`
+
+## Analysis of Past Month of PM<sub>2.5</sub> Observations
+
+### How many observation sites at each risk level?
+
+`r build_prov_donut_summary(summaries$donuts$data, type = params$type)`
+
+`r tab_explainers$network_tabs`
+
+#### FEM and PA
+
+```{r include=TRUE, results = 'asis'}
+summaries$donuts$paths$median_fem_and_pa |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$median_donuts$`FEM and PA`)
+```
+
+```{r include=TRUE, results = 'asis'}
+summaries$donuts$paths$max_fem_and_pa |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$max_donuts$`FEM and PA`)
+```
+
+#### FEM Only
+
+```{r include=TRUE, results = 'asis'}
+summaries$donuts$paths$median_fem |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$median_donuts$`FEM`)
+```
+
+```{r include=TRUE, results = 'asis'}
+summaries$donuts$paths$max_fem |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$max_donuts$`FEM`)
+```
+
+#### PA Only
+
+```{r include=TRUE, results = 'asis'}
+summaries$donuts$paths$median_pa |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$median_donuts$`PA`)
+```
+
+```{r include=TRUE, results = 'asis'}
+summaries$donuts$paths$max_pa |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$max_donuts$`PA`)
+```
+
+### Who had access to nearby observations? {.panel-tabset}
+
+`r build_coverage_summary(coverage_table_data)`
+
+`r tab_explainers$scale_tabs`
+
+#### Total Population
+
+```{r include=TRUE, results = 'asis'}
+coverage_table_paths$total |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$coverage$total)
+```
+
+#### First Nations and Inuit Communities
+
+```{r include=TRUE, results = 'asis'}
+coverage_table_paths$fnic |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$coverage$fnic)
+```
+
+#### Urban Population
+
+```{r include=TRUE, results = 'asis'}
+coverage_table_paths$urban |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$coverage$urban)
+```
+
+#### Rural Population
+
+```{r include=TRUE, results = 'asis'}
+coverage_table_paths$rural |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$coverage$rural)
+```
+
+#### Coverage Table
+
+```{r include = TRUE, cache = FALSE}
+coverage_dl
+coverage_table
+```
+
+### Where and when were PM<sub>2.5</sub> concentrations high? {.panel-tabset}
+
+`r build_map_summary(summaries$aqhi_p_counts, type = params$type, worst_day = summaries$worst_day)`
+
+`r tab_explainers$scale_tabs`
+
+#### Daily
+
+```{r include=TRUE, results = 'asis'}
+daily_zone_path |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$daily_zones, iframe = TRUE, plot_title)
+```
+
+#### Monthly
+
+```{r include=TRUE, results = 'asis'}
+monthly_zone_path |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(
+    quarto_captions$monthly_zones,
+    iframe = TRUE,
+    plot2_title,
+    iframe_height = 625
+  )
+```
+
+### Where and when did PM<sub>2.5</sub> events occur? {.panel-tabset}
+
+`r tab_explainers$scale_tabs`
+
+:::: panel-tabset
+
+## Province Level
+
+`r tab_explainers$network_tabs`
+
+`r build_tabs(params$monitor_groups, prov_grid_paths, quarto_captions$prov_grids, params$type, plot_timestamp = plot_timestamp)`
+
+## Region Level 
+
+`r tab_explainers$prov_terr_tabs`
+
+`r build_tabs(provinces_n_territories, fcst_grid_paths, quarto_captions$zone_grids, params$type, plot_timestamp = plot_timestamp)`
+
+::::
+
+### Which sites had the highest concentrations? {.panel-tabset}
+
+`r build_boxplot_summary(boxplots$summary_values, type = params$type)`  
+
+`r tab_explainers$network_tabs`
+
+#### FEM and PA
+
+```{r include=TRUE, results = 'asis'}
+boxplot_paths[["FEM and PA"]] |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$boxplots[["FEM and PA"]], iframe = TRUE)
+```
+
+#### FEM Only
+
+```{r include=TRUE, results = 'asis'}
+boxplot_paths[["FEM"]] |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$boxplots[["FEM"]], iframe = TRUE)
+```
+
+#### PA Only
+
+```{r include=TRUE, results = 'asis'}
+boxplot_paths[["PA"]] |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$boxplots[["PA"]], iframe = TRUE)
+```
+
+### Which communities [with data] had very high PM<sub>2.5</sub>? {.panel-tabset}
+
+`r build_community_summary(summaries$community, type = params$type)`
+
+`r tab_explainers$network_tabs`
+
+#### FEM and PA
+
+```{r include=TRUE, results = 'asis'}
+community_boxplot_paths[["FEM and PA"]] |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$community_boxplots[["FEM and PA"]], iframe = TRUE)
+```
+
+#### FEM Only
+
+```{r include=TRUE, results = 'asis'}
+community_boxplot_paths[["FEM"]] |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$community_boxplots[["FEM"]], iframe = TRUE)
+```
+
+#### PA Only
+
+```{r include=TRUE, results = 'asis'}
+community_boxplot_paths[["PA"]] |>
+  stringr::str_replace(report_dir_esc, "./") |>
+  plot_card(quarto_captions$community_boxplots[["PA"]], iframe = TRUE)
+```
+
+### What was the worst day this month? {.panel-tabset}
+
+::: card
+::: card-body
+
+<details>
+<summary>Click for an automated text summary.</summary>
+
+**STILL IN DEVELOPMENT**
+  
+</details>
+
+:::
+:::
+
+`r tab_explainers$scale_tabs`
+
+#### Province Level
+
+::: card
+
+::: {.card-img-top .p-2}
+
+```{r include = TRUE, cache = FALSE}
+worst_day_dl
+worst_day_table
+```
+
+:::
+
+::: card-body
+
+The "worst day" for PM<sub>2.5</sub> concentrations **for each province**. The "worst day" is determined by the day with the most number of observation sites (FEM or PA) having a daily mean exceeding 100 {{< var units.pm >}} with ties broken by the highest mean of the site daily mean concentrations across the province/territory.
+
+:::
+
+:::
+
+#### Region Level
+
+::: card
+
+::: {.card-img-top .p-2}
+
+```{r include = TRUE, cache=FALSE}
+worst_day_dl2
+worst_day_table2
+```
+
+:::
+
+::: card-body
+
+The "worst day" for PM<sub>2.5</sub> concentrations **for each forecast zone**. Click on the arrow beside a prov./terr. name to expand the table to view the zones for that area. The "worst day" is determined by the day with the most number of observation sites (FEM or PA) having a daily mean exceeding 100 {{< var units.pm >}} with ties broken by the highest mean of the site daily mean concentrations across the province/territory.
+
+:::
+
+:::
+
+### Which regions were most impacted, and for which days?
+
 ::: card
 ::: card-body
 
@@ -1011,8 +1011,8 @@ dl = dat1 |>
 ::: {.card-img-top .p-2}
 
 ```{r include = TRUE, cache=FALSE}
-dl
-table
+zone_dl
+zone_table
 ```
 
 :::
