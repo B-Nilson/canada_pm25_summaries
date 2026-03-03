@@ -136,7 +136,7 @@ gg = daily_monitor_counts |>
     x = ggplot2::element_blank(),
     y = bquote("Number of PM"[2.5] * " Monitors w/ Valid Data"),
     fill = bquote("PM"[2.5] * " Monitor"),
-    caption = plot_captions$`FEM and PA`
+    caption = plot_captions[[all_monitors_group]]
   ) +
   ggplot2::theme(
     axis.text.x = ggplot2::element_text(hjust = -0.1),
@@ -286,11 +286,7 @@ monitor_count_text = list(
   most = table_data |>
     dplyr::mutate(t = FEM + PA) |>
     dplyr::arrange(desc(t)) |>
-    dplyr::pull(
-      `
-Prov. / Terr.
-`
-    ) |>
+    dplyr::pull("Prov. / Terr.") |>
     head(3),
   change = tmp |>
     list(
@@ -544,11 +540,7 @@ gg = daily_zone_means |>
     y = bquote("Daily Mean PM"[2.5] ~ "(" * mu * "g m"^-3 * ")"),
     x = element_blank(),
     colour = element_blank(),
-    caption = plot_captions$`
-FEM
-and
-PA
-`
+    caption = plot_captions[[all_monitors_group]]
   )
 
 seasonal_zone_summary_paths$ts = paste0(
@@ -626,89 +618,61 @@ event_table = reactable(
   data = table_data,
   defaultPageSize = 13,
   columns = list(
-    `
-Mean
-` = reactable::colDef(
+    Mean = reactable::colDef(
       header = with_tooltip(
         "Mean",
         "Average of the forecast zone seasonal mean PM2.5 concentrations within each province/territory"
       )
     ),
-    `
-Max
-` = reactable::colDef(
+    Max = reactable::colDef(
       header = with_tooltip(
         "Max",
         "Maximum of the forecast zone seasonal mean PM2.5 concentrations within each province/territory"
       )
     ),
-    `
-98
-th
-Percentile
-` = reactable::colDef(
+    "98th Percentile" = reactable::colDef(
       header = with_tooltip(
         "98th Percentile",
         "98th Percentile of the forecast zone seasonal mean PM2.5 concentrations within each province/territory"
       )
     ),
-    `
-Mean
-Hours >= 60
-` = reactable::colDef(
+    "Mean Hours >= 60" = reactable::colDef(
       header = with_tooltip(
         "Mean Hours >= 60",
         "Average of the forecast zone seasonal counts of hourly PM2.5 concentrations of 60 ug/mm3 or greater (High - Very High risk) within each province/territory"
       )
     ),
-    `
-Mean
-Hours >= 100
-` = reactable::colDef(
+    "Mean Hours >= 100" = reactable::colDef(
       header = with_tooltip(
         "Mean Hours >= 100",
         "Average of the forecast zone seasonal counts of hourly PM2.5 concentrations of 100 ug/mm3 or greater (Very High risk) within each province/territory"
       )
     ),
-    `
-Count
-` = reactable::colDef(
+    Count = reactable::colDef(
       header = with_tooltip(
         "Count",
         "Total number of elevated PM2.5 events detected within the province/territory"
       )
     ),
-    `
-Mean
-Count
-` = reactable::colDef(
+    "Mean Count" = reactable::colDef(
       header = with_tooltip(
         "Mean Count",
         "Average of the number of elevated PM2.5 events detected within each forecast zone in the province/territory"
       )
     ),
-    `
-Zones
-w / Events
-` = reactable::colDef(
+    "Zones w/ Events" = reactable::colDef(
       header = with_tooltip(
         "Zones w/ Events",
         "Count of the number of forecast zones with at least one elevated PM2.5 event"
       )
     ),
-    `
-Mean
-Duration(days)
-` = reactable::colDef(
+    "Mean Duration (days)" = reactable::colDef(
       header = with_tooltip(
         "Mean Duration (days)",
         "Average duration of elevated PM2.5 events this season in the province/territory"
       )
     ),
-    `
-Max
-Duration(days)
-` = reactable::colDef(
+    "Max Duration (days)" = reactable::colDef(
       header = with_tooltip(
         "Max Duration (days)",
         "Maximum duration of elevated PM2.5 events this season in the province/territory"
@@ -872,7 +836,7 @@ for (stat in names(pd)) {
     ggpubr::theme_pubr(border = TRUE) +
     labs(
       y = "Daily % of Forecast Zones",
-      caption = plot_captions$`FEM and PA`,
+      caption = plot_captions[[all_monitors_group]],
       x = element_blank(),
       fill = paste(
         "Daily",
@@ -1007,25 +971,17 @@ event_texts <- lapply(months, \(month) {
   e_data = table_data |>
     dplyr::filter(format(Start, "%B") %in% month | format(End, "%B") %in% month)
   e_prov_counts = e_data |>
-    dplyr::group_by(
-      `
-Prov. / Terr.
-`
-    ) |>
+    dplyr::group_by(`Prov. / Terr.`) |>
     dplyr::summarise(n = n()) |>
     dplyr::arrange(desc(n)) |>
     head(3)
   e_prov_max_dur = e_data |>
     dplyr::group_by(
-      `
-Prov. / Terr.
-`
+      `Prov. / Terr.`
     ) |>
     dplyr::summarise(
       dur = max(
-        `
-Duration(days)
-`
+        `Duration(days)`
       )
     ) |>
     dplyr::arrange(desc(dur)) |>
@@ -1048,31 +1004,23 @@ Duration(days)
     nrow(e_data),
     " detected events in Canada where the daily max PM<sub>2.5</sub> concentration in a forecast zone exceeded 30 {{< var units.pm >}} for more than 1 day in a row. The most events this month occurred in ",
     paste(
-      e_prov_counts$`
-Prov. / Terr.
-`[1:2],
+      e_prov_counts$`Prov. / Terr.`[1:2],
       collapse = ", "
     ) |>
       paste(
         "and",
-        e_prov_counts$`
-Prov. / Terr.
-`[3]
+        e_prov_counts$`Prov. / Terr.`[3]
       ),
     " (",
     paste(min(e_prov_counts$n), "-", max(e_prov_counts$n)),
     " events). The longest events this month occurred in ",
     paste(
-      e_prov_max_dur$`
-Prov. / Terr.
-`[1:2],
+      e_prov_max_dur$`Prov. / Terr.`[1:2],
       collapse = ", "
     ) |>
       paste(
         "and",
-        e_prov_max_dur$`
-Prov. / Terr.
-`[3]
+        e_prov_max_dur$`Prov. / Terr.`[3]
       ),
     " (max ",
     paste(min(e_prov_max_dur$dur), "-", max(e_prov_max_dur$dur)),
@@ -1095,15 +1043,11 @@ Prov. / Terr.
       )
     p_e_data = e_data |>
       dplyr::filter(
-        `
-Prov. / Terr.
-` ==
+        `Prov. / Terr.` ==
           prov
       ) |>
       dplyr::arrange(desc(
-        `
-Mean * Duration
-`
+        `Mean * Duration`
       ))
 
     if (nrow(p_m_data) == 1 & p_m_data$aqhip[1] == "Low [0-30)") {
@@ -1413,11 +1357,7 @@ for (pt in names(prov_pretty)) {
     labs(
       y = bquote("Hourly PM"[2.5] ~ "Concentration (" * mu * "g m"^-3 * ")"),
       x = element_blank(),
-      caption = plot_captions$`
-FEM
-and
-PA
-`,
+      caption = plot_captions[[all_monitors_group]],
       colour = bquote("PM"[2.5] ~ "Monitor")
     ) +
     guides(
@@ -1500,10 +1440,7 @@ worst_event_texts = sapply(prov_pretty, \(prov) {
     paste0(
       "In ",
       prov,
-      " during the `
-r
-report_season
-` season, no events of continued elevated PM<sub>2.5</sub> occurred where observations were available."
+      " during the `r report_season` season, no events of continued elevated PM<sub>2.5</sub> occurred where observations were available."
     )
   } else {
     paste0(
