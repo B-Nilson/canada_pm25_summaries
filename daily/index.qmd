@@ -168,17 +168,17 @@ community_table <- summaries$community |>
 
 `r tab_explainers$summary_tabs`
 
-## Median PM~2.5~
-
-`r tab_explainers$network_tabs`
-
-`r build_tabs(params$monitor_groups, summaries$donuts$paths$median, quarto_captions$median_donuts, params$type, plot_timestamp = plot_timestamp)`
-
 ## Max PM~2.5~
 
 `r tab_explainers$network_tabs`
 
 `r build_tabs(params$monitor_groups, summaries$donuts$paths$max, quarto_captions$max_donuts, params$type, plot_timestamp = plot_timestamp)`
+
+## Median PM~2.5~
+
+`r tab_explainers$network_tabs`
+
+`r build_tabs(params$monitor_groups, summaries$donuts$paths$median, quarto_captions$median_donuts, params$type, plot_timestamp = plot_timestamp)`
 
 ::::
 
