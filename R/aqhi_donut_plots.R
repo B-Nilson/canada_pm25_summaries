@@ -5,14 +5,13 @@ save_aqhi_donuts_plots <- function(
   avg = "24-hour",
   report_dir,
   figure_dir,
-  fig_dims = list(h = 7, w = 11, u = 'in'),
+  fig_dims = list(h = 770, w = 1063, u = 'px'),
   plot_timestamp = format(Sys.time(), "%Y%m%d%H%M%S")
 ) {
-  dir.create(file.path(report_dir, figure_dir), showWarnings = FALSE)
   # Prov/Terr monitor counts for centers of donuts
   labels <- overall_summary |>
     dplyr::bind_rows(
-      overall_summary |> dplyr::mutate(monitor = monitor_groups[1])
+      overall_summary |> dplyr::mutate(monitor = monitor |> unique() |> join_list_sentence())
     ) |>
     tidyr::complete(prov_terr, monitor) |>
     dplyr::summarise(n = sum(!is.na(pm25_max)), .by = c(prov_terr, monitor)) |>
@@ -25,7 +24,7 @@ save_aqhi_donuts_plots <- function(
   plot_types <- stats |>
     rep(each = length(monitor_groups)) |>
     paste(monitors_clean |> rep(times = length(stats)), sep = "_")
-  plot_names <- "monitor_donuts_%s_%s.png" |>
+  plot_names <- "monitor_donuts_%s_%s.svg" |>
     sprintf(plot_types, plot_timestamp)
   plot_paths <- report_dir |>
     file.path(figure_dir, plot_names) |>
@@ -47,7 +46,7 @@ save_aqhi_donuts_plots <- function(
           make_donut_plot(
             labels = labels |>
               dplyr::filter(monitor == group_name),
-            stat = stringr::str_to_title(stat),
+            stat = stat,
             networks = group_name,
             plot_caption = plot_captions[[group_name]],
             avg = avg
@@ -71,7 +70,6 @@ save_aqhi_donuts_plots <- function(
       new_names <- stat_plot_names |>
         stringr::str_replace(stat |> paste0("_"), "") |>
         stringr::str_replace_all("_", " ") |>
-        stringr::str_replace("only", "Only") |>
         stringr::str_replace("pa", "PA") |>
         stringr::str_replace("fem", "FEM")
       plot_paths[is_stat] |>
@@ -91,39 +89,43 @@ make_donut_plot <- function(
   labels,
   plot_caption = NULL,
   networks,
-  stat = "Mean",
+  stat = "mean",
   avg = "24-hour"
 ) {
   legend_position <- c(4 / 5, 1 / 5.5)
   base_outline <- data.frame(xmin = 3, xmax = 4, ymin = 0, ymax = 1)
-  outline_colour <- "black"
+  outline_colour <- "#2b2a2a"
 
   base_plot <- plot_data |>
     ggplot2::ggplot() +
     ggplot2::geom_rect(
       data = base_outline,
       ggplot2::aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-      colour = outline_colour,
+      colour = NA,
       fill = NA
     ) +
     ggplot2::coord_polar(theta = "y") +
-    ggplot2::theme_void() +
+    ggplot2::theme_void(base_size = 5, base_family = "Inter") +
     ggplot2::xlim(c(2, 4)) +
     ggplot2::facet_wrap(~prov_terr, nrow = 3) +
     ggplot2::labs(
-      fill = bquote(.(avg) ~ .(stat) ~ "PM"[2.5] ~ (mu * "g m"^-3)),
+      fill = bquote(.(avg) ~ "site" ~ .(stat) ~ "PM"[2.5] ~ "AQHI"),
       title = bquote(
-        .(networks) ~ "Monitor Counts and Site" ~ .(stat) ~ "PM"[2.5] ~
-          "Distributions by Province/Territory"
+        "Canadian" ~ .(networks) ~ "monitor counts and site" ~ .(stat) ~ "PM"[2.5] ~
+          "AQHI distributions"
       ),
       caption = plot_caption
     ) +
     ggplot2::theme(
       legend.position = legend_position,
       legend.direction = "horizontal",
+      legend.key.size = ggplot2::unit(8, "pt"),
       plot.background = ggplot2::element_rect(fill = "white", colour = NA),
-      plot.subtitle = ggplot2::element_text(
-        margin = ggplot2::margin(b = 6, unit = "pt")
+      plot.title = ggplot2::element_text(
+        margin = ggplot2::margin_part(b = 3, l = 3, unit = "pt")
+      ),
+      plot.caption = ggplot2::element_text(
+        margin = ggplot2::margin_part(r = 3, unit = "pt")
       )
     ) +
     ggplot2::guides(
@@ -157,7 +159,8 @@ make_donut_plot <- function(
       hjust = 0.5,
       vjust = 0.5,
       show.legend = FALSE,
-      size = 3
+      size = 3,
+      size.unit = "pt"
     ) +
     ggplot2::scale_colour_manual(
       values = c("FALSE" = "black", "TRUE" = "white")
