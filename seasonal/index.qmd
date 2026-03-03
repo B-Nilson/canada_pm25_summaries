@@ -17,7 +17,7 @@ params:
       Summer: 5, 6, 7, 8, 9, 10
       Winter: 11, 12, 1, 2, 3, 4
   report: !expr source("../R/set_params.R"); set_params(type = "seasonal", default_report_date = "2026-01-02 00", months_in_seasons = list(Summer = 5:10, Wincter = c(11:12, 1:4)))
-title: "Canadian PM<sub>2.5</sub> Observations Seasonal Summary for <mark class='bg-info'>`r params$report$display_name`</mark>"
+title: "Canadian PM~2.5~ Observations Seasonal Summary for <mark class='bg-info'>`r params$report$display_name`</mark>"
 subtitle: | 
   Non-validated, auto-QA/QCed data representing `r params$report$date_ranges$utc`<br>
   `r params$report$date_ranges$vancouver` in Vancouver |
@@ -197,7 +197,7 @@ ggsave(
 #        width = fig_dims$w, height = fig_dims$h, units = fig_dims$u, dpi = 300)
 #
 # # Define plot summary text (figure titles essentially)
-# plot_text = 'Daily counts of active fine particulate matter (PM<sub>2.5</sub>) monitors in each Canadian province/territory.
+# plot_text = 'Daily counts of active fine particulate matter (PM~2.5~) monitors in each Canadian province/territory.
 #
 # The National Air Pollution Service (NAPS) Federal Equivelant Method (FEM) monitors are the gold standard for hourly observations. The PurpleAir (PA) low cost monitors are not as accurate, but are cheaper/easier to install allowing for a larger network. These PA monitors are recorded as either owned by Environment and Climate Change Canada\'s Air Quality Science Units (ECCC AQSU) or by anyone else ("Non-ECCC").
 #
@@ -259,7 +259,7 @@ monitor_counts_table <- reactable(
     PA = reactable::colDef(
       header = with_tooltip(
         "PA",
-        "PurpleAir low-cost PM<sub>2.5</sub> monitors."
+        "PurpleAir low-cost PM~2.5~ monitors."
       )
     )
   ),
@@ -369,10 +369,10 @@ seasonal_zone_summaries = obs |>
       ", PA: ",
       n_pa,
       ")<br>",
-      "Seasonal mean PM<sub>2.5</sub>: <b>",
+      "Seasonal mean PM~2.5~: <b>",
       handyr::swap(round(zone_mean_pm25, 1), NA, with = "-"),
       " {{< var units.pm >}}</b><br>",
-      "Seasonal max PM<sub>2.5</sub>: <b>",
+      "Seasonal max PM~2.5~: <b>",
       handyr::swap(round(zone_max_pm25, 1), NA, with = "-"),
       " {{< var units.pm >}}</b>"
     ) |>
@@ -389,7 +389,7 @@ pal = colorBin(
 
 legend_title = paste0(
   report_season,
-  "<br>Max PM<sub>2.5</sub> ({{< var units.pm >}})"
+  "<br>Max PM~2.5~ ({{< var units.pm >}})"
 )
 pm_legend = paste0(
   '<div style="margin-bottom:3px"><strong><span>',
@@ -422,7 +422,7 @@ max_map = leaflet(height = 605) |>
 
 legend_title = paste0(
   report_season,
-  "<br>Mean PM<sub>2.5</sub> ({{< var units.pm >}})"
+  "<br>Mean PM~2.5~ ({{< var units.pm >}})"
 )
 pm_legend = paste0(
   '<div style="margin-bottom:3px"><strong><span>',
@@ -1002,7 +1002,7 @@ event_texts <- lapply(months, \(month) {
     month,
     " there was ",
     nrow(e_data),
-    " detected events in Canada where the daily max PM<sub>2.5</sub> concentration in a forecast zone exceeded 30 {{< var units.pm >}} for more than 1 day in a row. The most events this month occurred in ",
+    " detected events in Canada where the daily max PM~2.5~ concentration in a forecast zone exceeded 30 {{< var units.pm >}} for more than 1 day in a row. The most events this month occurred in ",
     paste(
       e_prov_counts$`Prov. / Terr.`[1:2],
       collapse = ", "
@@ -1064,7 +1064,7 @@ event_texts <- lapply(months, \(month) {
         format(p_m_data$worst_day[1], "%b %d"),
         ", where ",
         round(p_m_data$p[1] * 100, 1),
-        "% of forecast zones had a maximum daily PM<sub>2.5</sub> concentration ",
+        "% of forecast zones had a maximum daily PM~2.5~ concentration ",
         p_m_data$desc[1],
         " {{< var units.pm >}}."
       )
@@ -1440,7 +1440,7 @@ worst_event_texts = sapply(prov_pretty, \(prov) {
     paste0(
       "In ",
       prov,
-      " during the `r report_season` season, no events of continued elevated PM<sub>2.5</sub> occurred where observations were available."
+      " during the `r report_season` season, no events of continued elevated PM~2.5~ occurred where observations were available."
     )
   } else {
     paste0(
@@ -1450,7 +1450,7 @@ worst_event_texts = sapply(prov_pretty, \(prov) {
       report_season,
       " season, ",
       nrow(e_data),
-      " events of continued elevated PM<sub>2.5</sub> occurred. The most significant events occurred in ",
+      " events of continued elevated PM~2.5~ occurred. The most significant events occurred in ",
       worst_text,
       ". These events ranged from ",
       worst_summs$dur_range,
@@ -1768,14 +1768,14 @@ community_text$provs_over_60 = paste0(
 
 `r loading_div`
 
-## Analysis of Past 6-months of PM<sub>2.5</sub> Observations
+## Analysis of Past 6-months of PM~2.5~ Observations
 
 ### Where/when did we have observations? {.panel-tabset}
 
 ::: card
 ::: card-body
 
-`r monitor_count_text$most[1]`, `r monitor_count_text$most[2]`, and `r monitor_count_text$most[3]` had the most PM<sub>2.5</sub> monitors in Canada in the `r report_season` season. `r monitor_count_text$change$abs[1]` and `r monitor_count_text$change$abs[2]` experienced the greatest absolute increase in monitors over this season. `r monitor_count_text$change$rel[1]` and `r monitor_count_text$change$rel[2]` experienced the greatest relative increase. 
+`r monitor_count_text$most[1]`, `r monitor_count_text$most[2]`, and `r monitor_count_text$most[3]` had the most PM~2.5~ monitors in Canada in the `r report_season` season. `r monitor_count_text$change$abs[1]` and `r monitor_count_text$change$abs[2]` experienced the greatest absolute increase in monitors over this season. `r monitor_count_text$change$rel[1]` and `r monitor_count_text$change$rel[2]` experienced the greatest relative increase. 
 
 PurpleAir monitors purchased by ECCC's AQSU increased by `r monitor_count_text$tot$change[1]` this season, totaling `r monitor_count_text$tot$max[1]` across Canada at the end of the season (compared to `r monitor_count_text$tot$min[1]` at the start). Approximately `r round(monitor_count_text$tot$max[1]/(monitor_count_text$tot$max[1]+monitor_count_text$tot$max[2])*100,1)`% of the PurpleAir monitors in Canada at the end of the `r report_season` season were owned by ECCC.
 

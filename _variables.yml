@@ -1,5 +1,5 @@
 units: 
-  pm: "&mu;g m<sup>-3</sup>"
+  pm: "&mu;g m^-3^"
 
 terms:
   aqmap: "[AQmap](https://aqmap.ca/)"
@@ -7,6 +7,6 @@ terms:
   FEM: "regulatory (FEM)"
   naps: "National Air Pollution Surveillance (NAPS) program"
   pm25:
-    long: "fine particulate matter (PM<sub>2.5</sub>)"
-    short: "PM<sub>2.5</sub>"
+    long: "fine particulate matter (PM~2.5~)"
+    short: "PM~2.5~"
   pt: "province/territory"

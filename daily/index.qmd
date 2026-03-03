@@ -13,7 +13,7 @@ params:
       lib: libs
   run_current: false
   report: !expr source("../R/set_params.R"); set_params(type = "daily", default_report_date = "2026-01-02 00")
-title: "Canadian PM<sub>2.5</sub> Observations Daily Summary for <mark class='bg-info'>`r params$report$display_name`</mark>"
+title: "Canadian PM~2.5~ Observations Daily Summary for <mark class='bg-info'>`r params$report$display_name`</mark>"
 subtitle: | 
   Non-validated, auto-QA/QCed data representing `r params$report$date_ranges$utc`<br>
   `r params$report$date_ranges$vancouver` in Vancouver |
@@ -160,7 +160,7 @@ community_table <- summaries$community |>
 
 `r build_overview_card(type = params$type, report_dropdown = old_report_dropdown)`
 
-## Past 24-Hours of PM<sub>2.5</sub> Observations
+## Past 24-Hours of PM~2.5~ Observations
 
 `r build_prov_donut_summary(summaries$donuts$data, type = params$type)`
 
@@ -168,13 +168,13 @@ community_table <- summaries$community |>
 
 `r tab_explainers$summary_tabs`
 
-## Mean PM<sub>2.5</sub>
+## Mean PM~2.5~
 
 `r tab_explainers$network_tabs`
 
 `r build_tabs(params$monitor_groups, summaries$donuts$paths$median, quarto_captions$median_donuts, params$type, plot_timestamp = plot_timestamp)`
 
-## Max PM<sub>2.5</sub>
+## Max PM~2.5~
 
 `r tab_explainers$network_tabs`
 
@@ -182,7 +182,7 @@ community_table <- summaries$community |>
 
 ::::
 
-### Where were PM<sub>2.5</sub> concentrations high?
+### Where were PM~2.5~ concentrations high?
 
 `r build_map_summary(summaries$aqhi_p_counts, type = params$type)`
 
@@ -194,7 +194,7 @@ community_table <- summaries$community |>
 
 `r community_table$card`
 
-### When did PM<sub>2.5</sub> events occur?
+### When did PM~2.5~ events occur?
 
 `r build_prov_grid_summary(grid_data, type = params$type)`
 
@@ -218,7 +218,7 @@ community_table <- summaries$community |>
 
 ::::
 
-### Where were the worst PM<sub>2.5</sub> concentrations?
+### Where were the worst PM~2.5~ concentrations?
 
 `r build_boxplot_summary(boxplots$summary_values, type = params$type)`  
 

@@ -53,7 +53,7 @@ build_overview_card <- function(
     )
   )[[type]]
 
-  report_overview <- 'This automated report is a summary of the **fine particulate matter (PM<sub>2.5</sub>)** observation data in Canada
+  report_overview <- 'This automated report is a summary of the **fine particulate matter (PM~2.5~)** observation data in Canada
 for the **past %s** from the regulatory **Federal Equivalent Method (FEM)** monitors
 and the network of low-cost monitors from **PurpleAir (PA)**.
 This report is automatically updated every %s.'
@@ -62,13 +62,13 @@ This report is automatically updated every %s.'
 <summary>Click here for more details.</summary>
 
 <p>
-  <strong>PM<sub>2.5</sub></strong> is a major constituent of wildfire smoke and has significant health risks associated with acute and chronic exposure.
-  <strong>FEM monitors are the gold-standard</strong> for real-time data quality for PM<sub>2.5</sub>; however installations are limited by capital and maintenance costs.
+  <strong>PM~2.5~</strong> is a major constituent of wildfire smoke and has significant health risks associated with acute and chronic exposure.
+  <strong>FEM monitors are the gold-standard</strong> for real-time data quality for PM~2.5~; however installations are limited by capital and maintenance costs.
   <strong>PA monitors are less accurate</strong> than their FEM counterparts, but are <strong>much less cost prohibitive</strong> allowing large numbers to be installed. 
   FEM monitors provide <strong>great</strong> data (in <strong>limited areas</strong>), but PA monitors provide <strong>good</strong> data (in <strong>many areas</strong>), and are very useful as "smoke detectors" during wildfire smoke events.
 </p>
 
-<p>All PM<sub>2.5</sub> data are sourced from the <a href="https://aqmap.ca/aqmap">UNBC AQmap</a> data repository.</p>
+<p>All PM~2.5~ data are sourced from the <a href="https://aqmap.ca/aqmap">UNBC AQmap</a> data repository.</p>
 
 <ul>
   <li>
@@ -127,7 +127,7 @@ build_prov_donut_summary <- function(
     })
   average_text <- list(daily = "24-hour", monthly = "1-month")[[type]]
 
-  template <- 'There was <strong>%s FEM sites</strong> and <strong>%s PA sites</strong> reporting PM<sub>2.5</sub> in Canada for this report (@fig-monitor_donuts_median_fem_and_pa, @fig-monitor_donuts_max_fem_and_pa). 
+  template <- 'There was <strong>%s FEM sites</strong> and <strong>%s PA sites</strong> reporting PM~2.5~ in Canada for this report (@fig-monitor_donuts_median_fem_and_pa, @fig-monitor_donuts_max_fem_and_pa). 
 
 - <strong>%s</strong> of the FEM sites in Canada have a %s median exceeding 100 {{< var units.pm >}},
 <strong>%s</strong> are between 60 and 100 {{< var units.pm >}},
@@ -217,7 +217,7 @@ build_map_summary <- function(
           p,
           ": ",
           w,
-          " - 24-hour mean PM<sub>2.5</sub>: ",
+          " - 24-hour mean PM~2.5~: ",
           m,
           " {{< var units.pm >}}"
         )
@@ -227,15 +227,15 @@ build_map_summary <- function(
   }
 
   template <- 'There was <strong>%s FEM monitors</strong> and <strong>%s PA monitors</strong> in Canada
-with a %s mean PM<sub>2.5</sub> concentration <strong>exceeding 100 {{< var units.pm >}}</strong>
+with a %s mean PM~2.5~ concentration <strong>exceeding 100 {{< var units.pm >}}</strong>
 *(very high AQHI risk)* (@tbl-overall_table_fem_and_pa, @fig-site_mean_map_fem_and_pa).%s%s
 
 There was <strong>%s FEM monitors</strong> and <strong>%s PA monitors</strong> in Canada
-with a %s mean PM<sub>2.5</sub> concentration <strong>between 60 and 100 {{< var units.pm >}}</strong>
+with a %s mean PM~2.5~ concentration <strong>between 60 and 100 {{< var units.pm >}}</strong>
 *(high AQHI risk)*.%s%s
   
 There was <strong>%s FEM monitors</strong> and <strong>%s PA monitors</strong> in Canada
-with a %s mean PM<sub>2.5</sub> concentration <strong>between 30 and 60 {{< var units.pm >}}</strong>
+with a %s mean PM~2.5~ concentration <strong>between 30 and 60 {{< var units.pm >}}</strong>
 *(moderate AQHI risk)*.%s%s
   
 %s'
@@ -287,7 +287,7 @@ format_count_summary <- function(
       paste0(
         ', and ',
         dplyr::last(x),
-        " had a mean PM<sub>2.5</sub> concentration ",
+        " had a mean PM~2.5~ concentration ",
         range_text,
         " {{< var units.pm >}}."
       )
@@ -298,7 +298,7 @@ format_count_summary <- function(
         sep = paste0(" ", monitor, " monitor(s) in ")
       ) |>
       paste0(
-        " had a mean PM<sub>2.5</sub> concentration ",
+        " had a mean PM~2.5~ concentration ",
         range_text,
         " {{< var units.pm >}}."
       )
@@ -314,14 +314,14 @@ build_boxplot_summary <- function(
 ) {
   average_text <- list(daily = "24-hour", monthly = "1-month")[[type]]
   template <- '
-*%s* (a %s monitor located %s km from %s, %s) had the highest observed hourly maximum PM<sub>2.5</sub>
+*%s* (a %s monitor located %s km from %s, %s) had the highest observed hourly maximum PM~2.5~
 concentration in Canada from the FEM network for this report (%s {{< var units.pm >}}) (@fig-site_mean_boxplots_fem_and_pa, @fig-site_mean_boxplots_fem).
-*%s* (a %s monitor located %s km from %s, %s) had the highest observed %s mean PM<sub>2.5</sub>
+*%s* (a %s monitor located %s km from %s, %s) had the highest observed %s mean PM~2.5~
 concentration in Canada from the FEM network (%s {{< var units.pm >}}).
 
-*%s* (a %s monitor located %s km from %s, %s) had the highest observed hourly maximum PM<sub>2.5</sub>
+*%s* (a %s monitor located %s km from %s, %s) had the highest observed hourly maximum PM~2.5~
 concentration in Canada from the PA network for this report (%s {{< var units.pm >}})  (@fig-site_mean_boxplots_fem_and_pa, @fig-site_mean_boxplots_pa).
-*%s* (a %s monitor located %s km from %s, %s) had the highest observed %s mean PM<sub>2.5</sub>
+*%s* (a %s monitor located %s km from %s, %s) had the highest observed %s mean PM~2.5~
 concentration in Canada from the PA network (%s {{< var units.pm >}}).'
 
   template |>
@@ -376,10 +376,10 @@ build_prov_grid_summary <- function(
     })
 
   template <- "%s had a significant amount of locations with elevated
-PM<sub>2.5</sub> concentrations  (> 30 {{< var units.pm >}})
+PM~2.5~ concentrations  (> 30 {{< var units.pm >}})
 for at least 3 %s (See @fig-prov_medianpeak_grid_fem_and_pa \"Median\"). 
 %s had at least one location with elevated 
-PM<sub>2.5</sub> concentrations (> 30 {{< var units.pm >}})
+PM~2.5~ concentrations (> 30 {{< var units.pm >}})
 for at least 3 %s (See @fig-prov_medianpeak_grid_fem_and_pa \"Maximum\")."
 
   template |>
@@ -415,7 +415,7 @@ build_fcst_grid_summary <- function(
   }
 
   average_text <- list(daily = "hours", monthly = "days")[[type]]
-  template <- "The following forecast regions experienced elevated PM<sub>2.5</sub> concentrations 
+  template <- "The following forecast regions experienced elevated PM~2.5~ concentrations 
 (> 30 {{< var units.pm >}}) for at least 3 %s):
 
 %s"
@@ -467,7 +467,7 @@ build_community_summary <- function(
   )
 
   template <- "*%s* (a community in %s with %s FEM and %s PA monitors within at least %s km)
-had the highest observed hourly PM<sub>2.5</sub> concentration in Canada for this report (%s {{< var units.pm >}}) (@tbl-community_summary). 
+had the highest observed hourly PM~2.5~ concentration in Canada for this report (%s {{< var units.pm >}}) (@tbl-community_summary). 
 *%s* (a community in %s with %s FEM and %s PA monitors within at least %s km) 
 had the highest %s mean in Canada (%s {{< var units.pm >}}).
 
@@ -546,31 +546,31 @@ build_coverage_summary <- function(coverage_data) {
 
   template <- "Across Canada, %s of the population (%s of rural and %s of urban)
 and %s of Indigenous communities were within 25 km of a regulatory
-or low-cost PurpleAir PM<sub>2.5</sub> monitor during this report.
+or low-cost PurpleAir PM~2.5~ monitor during this report.
 
-In the west, %s of the *total population* was within 25 km of a PA or FEM PM<sub>2.5</sub> monitor
+In the west, %s of the *total population* was within 25 km of a PA or FEM PM~2.5~ monitor
 (%s for BC, %s for AB, %s for SK and %s for MB). 
-For the central provinces, %s of the population (%s for ON and %s for QC) was within 25 km of a PM<sub>2.5</sub> monitor. 
-In the east, %s of the population (%s for NS, %s for NB, %s for NL and %s for PE) was within 25 km of a PM<sub>2.5</sub> monitor. 
-For the territories, %s of the population (%s for YT, %s for NT and %s for NU) was within 25 km of a PM<sub>2.5</sub> monitor.
+For the central provinces, %s of the population (%s for ON and %s for QC) was within 25 km of a PM~2.5~ monitor. 
+In the east, %s of the population (%s for NS, %s for NB, %s for NL and %s for PE) was within 25 km of a PM~2.5~ monitor. 
+For the territories, %s of the population (%s for YT, %s for NT and %s for NU) was within 25 km of a PM~2.5~ monitor.
 
-In the west, %s of the *Indigenous communities* were within 25 km of a PA or FEM PM<sub>2.5</sub> monitor
+In the west, %s of the *Indigenous communities* were within 25 km of a PA or FEM PM~2.5~ monitor
 (%s for BC, %s for AB, %s for SK and %s for MB). 
-For the central provinces, %s of the Indigenous communities (%s for ON and %s for QC) was within 25 km of a PM<sub>2.5</sub> monitor. 
-In the east, %s of the Indigenous communities (%s for NS, %s for NB, %s for NL and %s for PE) was within 25 km of a PM<sub>2.5</sub> monitor. 
-For the territories, %s of the Indigenous communities (%s for YT, %s for NT and %s for NU) was within 25 km of a PM<sub>2.5</sub> monitor.
+For the central provinces, %s of the Indigenous communities (%s for ON and %s for QC) was within 25 km of a PM~2.5~ monitor. 
+In the east, %s of the Indigenous communities (%s for NS, %s for NB, %s for NL and %s for PE) was within 25 km of a PM~2.5~ monitor. 
+For the territories, %s of the Indigenous communities (%s for YT, %s for NT and %s for NU) was within 25 km of a PM~2.5~ monitor.
   
-In the west, %s of the *urban population* was within 25 km of a PA or FEM PM<sub>2.5</sub> monitor
+In the west, %s of the *urban population* was within 25 km of a PA or FEM PM~2.5~ monitor
 (%s for BC, %s for AB, %s for SK and %s for MB). 
-For the central provinces, %s of the urban population (%s for ON and %s for QC) was within 25 km of a PM<sub>2.5</sub> monitor. 
-In the east, %s of the urban population (%s for NS, %s for NB, %s for NL and %s for PE) was within 25 km of a PM<sub>2.5</sub> monitor. 
-For the territories, %s of the urban population (%s for YT, %s for NT and %s for NU) was within 25 km of a PM<sub>2.5</sub> monitor.
+For the central provinces, %s of the urban population (%s for ON and %s for QC) was within 25 km of a PM~2.5~ monitor. 
+In the east, %s of the urban population (%s for NS, %s for NB, %s for NL and %s for PE) was within 25 km of a PM~2.5~ monitor. 
+For the territories, %s of the urban population (%s for YT, %s for NT and %s for NU) was within 25 km of a PM~2.5~ monitor.
 
-In the west, %s of the *rural population* was within 25 km of a PA or FEM PM<sub>2.5</sub> monitor
+In the west, %s of the *rural population* was within 25 km of a PA or FEM PM~2.5~ monitor
 (%s for BC, %s for AB, %s for SK and %s for MB). 
-For the central provinces, %s of the rural population (%s for ON and %s for QC) was within 25 km of a PM<sub>2.5</sub> monitor. 
-In the east, %s of the rural population (%s for NS, %s for NB, %s for NL and %s for PE) was within 25 km of a PM<sub>2.5</sub> monitor. 
-For the territories, %s of the rural population (%s for YT, %s for NT and %s for NU) was within 25 km of a PM<sub>2.5</sub> monitor.
+For the central provinces, %s of the rural population (%s for ON and %s for QC) was within 25 km of a PM~2.5~ monitor. 
+In the east, %s of the rural population (%s for NS, %s for NB, %s for NL and %s for PE) was within 25 km of a PM~2.5~ monitor. 
+For the territories, %s of the rural population (%s for YT, %s for NT and %s for NU) was within 25 km of a PM~2.5~ monitor.
   "
 
   template |>

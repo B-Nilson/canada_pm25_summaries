@@ -13,9 +13,9 @@ make_community_table <- function(
     n_pa = "PA",
     nc_dist_km_network_mean_comm_mean = "Mean Dist.",
     nc_dist_km_network_max_comm_max = "Max Dist.",
-    n_hours_above_30_network_max_comm_max = gt::md("30 &mu;g/m<sup>3</sup>"),
-    n_hours_above_60_network_max_comm_max = gt::md("60 &mu;g/m<sup>3</sup>"),
-    n_hours_above_100_network_max_comm_max = gt::md("100 &mu;g/m<sup>3</sup>"),
+    n_hours_above_30_network_max_comm_max = gt::md("30 &mu;g/m^3^"),
+    n_hours_above_60_network_max_comm_max = gt::md("60 &mu;g/m^3^"),
+    n_hours_above_100_network_max_comm_max = gt::md("100 &mu;g/m^3^"),
     pm25_current_network_mean_comm_mean = "Last",
     pm25_mean_network_mean_comm_mean = "Mean",
     pm25_max_network_max_comm_max = "Max"
@@ -67,7 +67,7 @@ make_community_table <- function(
       columns = c("nearest_community", "fcst_zone")
     ) |>
     gt::tab_spanner(
-      label = gt::md("PM<sub>2.5</sub> Monitoring Sites"),
+      label = gt::html("PM<sub>2.5</sub> Monitoring Sites"),
       columns = c(
         n_pa,
         n_fem,
@@ -76,11 +76,11 @@ make_community_table <- function(
       )
     ) |>
     gt::tab_spanner(
-      label = gt::md("PM<sub>2.5</sub> Concentration (&mu;g m<sup>-3</sup>)"),
+      label = gt::html("PM<sub>2.5</sub> Concentration (&mu;g m<sup>-3</sup>)"),
       columns = dplyr::starts_with("pm25")
     ) |>
     gt::tab_spanner(
-      label = gt::md("Hours Above PM<sub>2.5</sub> Threshold"),
+      label = gt::html("Hours Above PM<sub>2.5</sub> Threshold"),
       columns = dplyr::starts_with("n_hours"),
       id = "hours_above_spanner"
     ) |>
