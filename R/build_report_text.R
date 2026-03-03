@@ -58,30 +58,27 @@ for the **past %s** from the regulatory **Federal Equivalent Method (FEM)** moni
 and the network of low-cost monitors from **PurpleAir (PA)**.
 This report is automatically updated every %s.'
 
-  report_details <- '<details>
-<summary>Click here for more details.</summary>
+  report_details <- '<div>
+  <p>
+    <strong>PM~2.5~</strong> is a major constituent of wildfire smoke and has significant health risks associated with acute and chronic exposure.
+    <strong>FEM monitors are the gold-standard</strong> for real-time data quality for PM~2.5~; however installations are limited by capital and maintenance costs.
+    <strong>PA monitors are less accurate</strong> than their FEM counterparts, but are <strong>much less cost prohibitive</strong> allowing large numbers to be installed. 
+    FEM monitors provide <strong>great</strong> data (in <strong>limited areas</strong>), but PA monitors provide <strong>good</strong> data (in <strong>many areas</strong>), and are very useful as "smoke detectors" during wildfire smoke events.
+  </p>
 
-<p>
-  <strong>PM~2.5~</strong> is a major constituent of wildfire smoke and has significant health risks associated with acute and chronic exposure.
-  <strong>FEM monitors are the gold-standard</strong> for real-time data quality for PM~2.5~; however installations are limited by capital and maintenance costs.
-  <strong>PA monitors are less accurate</strong> than their FEM counterparts, but are <strong>much less cost prohibitive</strong> allowing large numbers to be installed. 
-  FEM monitors provide <strong>great</strong> data (in <strong>limited areas</strong>), but PA monitors provide <strong>good</strong> data (in <strong>many areas</strong>), and are very useful as "smoke detectors" during wildfire smoke events.
-</p>
+  <p>All PM~2.5~ data are sourced from the <a href="https://aqmap.ca/aqmap">UNBC AQmap</a> data repository.</p>
 
-<p>All PM~2.5~ data are sourced from the <a href="https://aqmap.ca/aqmap">UNBC AQmap</a> data repository.</p>
-
-<ul>
-  <li>
-    Data from the FEM network originate from <a href="https://www.airnow.gov/about-airnow/">AirNow</a>, and are NOT VALIDATED. 
-    No QA/QC is applied after retrieval from AirNow, and official values may differ from those presented here.
-  </li>
-  <li>
-    Data from the PA network originate from the <a href="https://api.purpleair.com/">PurpleAir API</a>, and a rigorous automated QA/QC method is applied to ensure the best available data are used. 
-    The <a href="https://amt.copernicus.org/articles/15/3315/2022/">UNBC/ECCC bias correction</a> is applied to all PA data to improve comparability with FEM values.
-  </li>
-</ul>
-
-</details>'
+  <ul>
+    <li>
+      Data from the FEM network originate from <a href="https://www.airnow.gov/about-airnow/">AirNow</a>, and are NOT VALIDATED. 
+      No QA/QC is applied after retrieval from AirNow, and official values may differ from those presented here.
+    </li>
+    <li>
+      Data from the PA network originate from the <a href="https://api.purpleair.com/">PurpleAir API</a>, and a rigorous automated QA/QC method is applied to ensure the best available data are used. 
+      The <a href="https://amt.copernicus.org/articles/15/3315/2022/">UNBC/ECCC bias correction</a> is applied to all PA data to improve comparability with FEM values.
+    </li>
+  </ul>
+</div>'
 
   template <- "
 ::: overview-card
