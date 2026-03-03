@@ -81,16 +81,18 @@ make_quarto_captions <- function(
       sprintf(monitor_groups, fig_caption_date_range) |>
       setNames(monitor_groups),
     prov_grids = paste(
-      "Median and maximum hourly PM2.5 concentrations for all %s monitoring sites in each p/t from %s.",
-      "The median is useful for identifying large scale impacts across the p/t,",
-      "while the maximum can be used to identify impacts in at least one area."
+      "Median and maximum hourly PM2.5 concentrations for all %s monitors in each p/t from %s.",
+      "A white cell indicates there was no data for that hour from any monitor within that p/t.",
+      "See @tbl-overall_table_fem_and_pa and @fig-site_mean_map_fem_and_pa for sites within each p/t.",
+      "Provinces are sorted west to east, followed by territories."
     ) |>
       sprintf(monitor_groups, fig_caption_date_range) |>
       setNames(monitor_groups),
     zone_grids = paste(
-      "Hourly median PM2.5 concentrations for all %s monitors within each %s forecast zone for %s.",
-      "A white cell indicates there was no data for that hour from any monitor within that zone.",
-      "Zones are grouped into those with and those without monitors and are sorted alphabetically."
+      "Median and maximum hourly PM2.5 concentrations for all %s monitors within each %s forecast zone for %s.",
+      "A white cell indicates there was no data for that hour from any monitor within that region.",
+      "See @tbl-overall_table_fem_and_pa and @fig-site_mean_map_fem_and_pa for sites within each region.",
+      "Regions are sorted alphabetically."
     ) |>
       sprintf(
         all_monitors_group,

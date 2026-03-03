@@ -156,7 +156,7 @@ make_overall_map <- function(
     ) |>
     leaflet::addPolygons(
       data = zone_summary |>
-        dplyr::filter_out(fcst_zone == "Not inside a zone"),
+        dplyr::filter_out(fcst_zone == "Not inside a defined zone"),
       fillColor = ~ aqhi_pal(get(mean_pm25_col)),
       color = "black",
       weight = 1,

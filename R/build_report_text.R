@@ -393,35 +393,41 @@ build_fcst_grid_summary <- function(
   type = c("daily", "monthly")[1]
 ) {
   text <- grid_data |>
-    dplyr::filter(y != "Not inside a zone") |>
-    dplyr::summarise(n = sum(as.numeric(fill) > 3), .by = c(z, y)) |>
-    dplyr::filter(n >= 3) |>
-    dplyr::arrange(z, desc(n))
-
-  if (nrow(text) == 0) {
-    text <- ""
-  } else {
-    text <- "- %s (@fig-zone_median_grid_%s): %s" |>
-      sprintf(
-        unique(text$z),
-        unique(text$z),
-        unique(text$z) |>
+    lapply(\(stat_data) {
+      text <- stat_data |>
+        dplyr::filter(y != "Not inside a defined zone") |>
+        dplyr::summarise(n = sum(as.numeric(fill) > 3), .by = c(z, y)) |>
+        dplyr::filter(n >= 3) |>
+        dplyr::arrange(z, desc(n))
+      if (nrow(text) == 0) {
+        text <- ""
+      } else {
+        pts <- unique(text$z)
+        zones <- pts |>
           sapply(\(p) {
             text$y[text$z == p] |>
+              as.character() |>
               join_list_sentence(oxford = TRUE)
           })
-      ) |>
-      paste(collapse = "\n\n")
-  }
+        text <- "- %s (@fig-zone_median_max_grid_%s): %s" |>
+          sprintf(pts, pts, zones) |>
+          paste(collapse = "\n\n")
+      }
+    })
 
   average_text <- list(daily = "hours", monthly = "days")[[type]]
-  template <- "The following forecast regions experienced elevated PM~2.5~ concentrations 
-(> 30 {{< var units.pm >}}) for at least 3 %s):
+  template <- "The following forecast regions had a significant amount of locations that experienced elevated PM~2.5~ concentrations 
+(> 30 {{< var units.pm >}}) for at least 3 %s:
+
+%s
+  
+The following forecast regions had at least one location that experienced elevated PM~2.5~ concentrations 
+(> 30 {{< var units.pm >}}) for at least 3 %s:
 
 %s"
 
   template |>
-    sprintf(average_text, text) |>
+    sprintf(average_text, text$median, average_text, text$maximum) |>
     make_summary_chunk() |>
     knitr::asis_output()
 }
