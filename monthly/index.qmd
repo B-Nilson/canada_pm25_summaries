@@ -736,87 +736,31 @@ zone_dl <- dat1 |>
 
 `r build_prov_donut_summary(summaries$donuts$data, type = params$type)`
 
+:::: panel-tabset
+
+`r tab_explainers$summary_tabs`
+
+## Mean PM<sub>2.5</sub>
+
 `r tab_explainers$network_tabs`
 
-#### FEM and PA
+`r build_tabs(params$monitor_groups, summaries$donuts$paths$median, quarto_captions$median_donuts, params$type, plot_timestamp = plot_timestamp)`
 
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$median_fem_and_pa |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$median_donuts$`FEM and PA`)
-```
+## Max PM<sub>2.5</sub>
 
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$max_fem_and_pa |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$max_donuts$`FEM and PA`)
-```
+`r tab_explainers$network_tabs`
 
-#### FEM Only
+`r build_tabs(params$monitor_groups, summaries$donuts$paths$max, quarto_captions$max_donuts, params$type, plot_timestamp = plot_timestamp)`
 
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$median_fem |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$median_donuts$`FEM`)
-```
+::::
 
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$max_fem |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$max_donuts$`FEM`)
-```
-
-#### PA Only
-
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$median_pa |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$median_donuts$`PA`)
-```
-
-```{r include=TRUE, results = 'asis'}
-summaries$donuts$paths$max_pa |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$max_donuts$`PA`)
-```
-
-### Who had access to nearby observations? {.panel-tabset}
+### Who had access to nearby observations?
 
 `r build_coverage_summary(coverage_table_data)`
 
 `r tab_explainers$scale_tabs`
 
-#### Total Population
-
-```{r include=TRUE, results = 'asis'}
-coverage_table_paths$total |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$coverage$total)
-```
-
-#### First Nations and Inuit Communities
-
-```{r include=TRUE, results = 'asis'}
-coverage_table_paths$fnic |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$coverage$fnic)
-```
-
-#### Urban Population
-
-```{r include=TRUE, results = 'asis'}
-coverage_table_paths$urban |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$coverage$urban)
-```
-
-#### Rural Population
-
-```{r include=TRUE, results = 'asis'}
-coverage_table_paths$rural |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$coverage$rural)
-```
+`r build_tabs(c("total", "fnic", "urban", "rural"), coverage_table_paths, quarto_captions$coverage, params$type, plot_timestamp = plot_timestamp)`
 
 #### Coverage Table
 
@@ -825,34 +769,15 @@ coverage_dl
 coverage_table
 ```
 
-### Where and when were PM<sub>2.5</sub> concentrations high? {.panel-tabset}
+### Where and when were PM<sub>2.5</sub> concentrations high?
 
 `r build_map_summary(summaries$aqhi_p_counts, type = params$type, worst_day = summaries$worst_day)`
 
 `r tab_explainers$scale_tabs`
 
-#### Daily
+`r build_tabs(c("daily_zones", "monthly_zones"), list(daily_zones = daily_zone_path, monthly_zones = monthly_zone_path), quarto_captions[c("daily_zones", "monthly_zones")], params$type, plot_timestamp = plot_timestamp, iframe = TRUE, iframe_height = 625)`
 
-```{r include=TRUE, results = 'asis'}
-daily_zone_path |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$daily_zones, iframe = TRUE, plot_title)
-```
-
-#### Monthly
-
-```{r include=TRUE, results = 'asis'}
-monthly_zone_path |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(
-    quarto_captions$monthly_zones,
-    iframe = TRUE,
-    plot2_title,
-    iframe_height = 625
-  )
-```
-
-### Where and when did PM<sub>2.5</sub> events occur? {.panel-tabset}
+### Where and when did PM<sub>2.5</sub> events occur?
 
 `r tab_explainers$scale_tabs`
 
@@ -872,65 +797,21 @@ monthly_zone_path |>
 
 ::::
 
-### Which sites had the highest concentrations? {.panel-tabset}
+### Which sites had the highest concentrations?
 
 `r build_boxplot_summary(boxplots$summary_values, type = params$type)`  
 
 `r tab_explainers$network_tabs`
 
-#### FEM and PA
+`r build_tabs(params$monitor_groups, boxplots$paths, quarto_captions$boxplots, params$type, iframe = TRUE, iframe_height = 526, plot_timestamp = plot_timestamp)`
 
-```{r include=TRUE, results = 'asis'}
-boxplot_paths[["FEM and PA"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$boxplots[["FEM and PA"]], iframe = TRUE)
-```
-
-#### FEM Only
-
-```{r include=TRUE, results = 'asis'}
-boxplot_paths[["FEM"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$boxplots[["FEM"]], iframe = TRUE)
-```
-
-#### PA Only
-
-```{r include=TRUE, results = 'asis'}
-boxplot_paths[["PA"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$boxplots[["PA"]], iframe = TRUE)
-```
-
-### Which communities [with data] had very high PM<sub>2.5</sub>? {.panel-tabset}
+### Which communities [with data] had very high PM<sub>2.5</sub>?
 
 `r build_community_summary(summaries$community, type = params$type)`
 
 `r tab_explainers$network_tabs`
 
-#### FEM and PA
-
-```{r include=TRUE, results = 'asis'}
-community_boxplot_paths[["FEM and PA"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$community_boxplots[["FEM and PA"]], iframe = TRUE)
-```
-
-#### FEM Only
-
-```{r include=TRUE, results = 'asis'}
-community_boxplot_paths[["FEM"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$community_boxplots[["FEM"]], iframe = TRUE)
-```
-
-#### PA Only
-
-```{r include=TRUE, results = 'asis'}
-community_boxplot_paths[["PA"]] |>
-  stringr::str_replace(report_dir_esc, "./") |>
-  plot_card(quarto_captions$community_boxplots[["PA"]], iframe = TRUE)
-```
+`r build_tabs(params$monitor_groups, community_boxplot_paths, quarto_captions$community_boxplots, params$type, iframe = TRUE, iframe_height = 526, plot_timestamp = plot_timestamp)`
 
 ### What was the worst day this month? {.panel-tabset}
 
