@@ -168,7 +168,7 @@ community_table <- summaries$community |>
 
 `r tab_explainers$summary_tabs`
 
-## Mean PM~2.5~
+## Median PM~2.5~
 
 `r tab_explainers$network_tabs`
 
