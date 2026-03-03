@@ -88,8 +88,8 @@ overall_summary_cards <- summaries$overall |>
     figure_dir = params$dirs$plots,
     lib_dir = params$dirs$lib,
     plot_timestamp = plot_timestamp,
-    map_caption = quarto_captions$map,
-    table_caption = quarto_captions$table
+    map_caption = quarto_captions$overall_map,
+    table_caption = quarto_captions$overall_table
   )
 
 ```

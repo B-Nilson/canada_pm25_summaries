@@ -32,30 +32,19 @@ make_and_save_overall_summary_cards <- function(
     ) |>
     knitr::asis_output()
 
-  table <- summaries$overall |>
+  table <- overall_summary |>
     make_overall_summary_table(
-      report_dir = type,
+      type = type,
       monitor_group = all_monitors_group,
       data_dir = data_dir,
       figure_dir = figure_dir,
-      plot_timestamp = plot_timestamp
+      plot_timestamp = plot_timestamp,
+      table_caption = table_caption
     )
-
-  table <- table$path |>
-    stringr::str_replace(stringr::fixed(type), "./") |>
-    plot_card(
-      text = table_caption,
-      iframe = TRUE,
-      is_table = TRUE,
-      iframe_height = 590,
-      plot_timestamp = plot_timestamp
-    ) |>
-    append_gt_dl_button(dl_button = table$dl_button) |>
-    knitr::asis_output()
 
   list(
     map = map,
-    table = table
+    table = table$card
   )
 }
 
@@ -359,12 +348,13 @@ make_map_popup <- function(
 make_overall_summary_table <- function(
   table_data,
   monitor_group,
-  report_dir,
+  type,
   data_dir,
   figure_dir,
-  plot_timestamp
+  plot_timestamp,
+  table_caption
 ) {
-  dir.create(file.path(report_dir, data_dir), showWarnings = FALSE)
+  dir.create(file.path(type, data_dir), showWarnings = FALSE)
   display_names <- list(
     name = "Name",
     monitor = "Type",
@@ -460,7 +450,7 @@ make_overall_summary_table <- function(
     stringr::str_replace_all(" ", "_")
   file_path <- "%s/pm2.5_monitor_sites_%s_%s.csv" |>
     sprintf(
-      file.path(report_dir, data_dir),
+      file.path(type, data_dir),
       m_group_cleaned,
       plot_timestamp
     )
@@ -470,16 +460,28 @@ make_overall_summary_table <- function(
   # Save table to .html
   table_path <- "%s/overall_table_%s_%s.html" |>
     sprintf(
-      file.path(report_dir, figure_dir),
+      file.path(type, figure_dir),
       m_group_cleaned,
       plot_timestamp
     )
   table |> gt::gtsave(filename = table_path)
 
+  card <- table_path |>
+    stringr::str_replace(stringr::fixed(type), "./") |>
+    plot_card(
+      text = table_caption,
+      iframe = TRUE,
+      is_table = TRUE,
+      iframe_height = 590,
+      plot_timestamp = plot_timestamp
+    ) |>
+    append_gt_dl_button(dl_button) |>
+    knitr::asis_output()
+
   list(
     html = table,
     path = table_path,
-    dl_button = dl_button
+    card = card
   )
 }
 

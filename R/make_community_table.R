@@ -132,7 +132,7 @@ make_community_table <- function(
     sprintf(type, figure_dir, plot_timestamp)
   community_table |> gt::gtsave(filename = table_path)
 
-  card <- community_table$path |>
+  card <- table_path |>
     stringr::str_replace(stringr::fixed(type), "./") |>
     plot_card(
       text = plot_caption,

@@ -48,7 +48,7 @@ make_quarto_captions <- function(
         coverage_sources
       ) |>
       setNames(names(coverage_types)),
-    map = paste(
+    overall_map = paste(
       "Interactive map of 24-hour mean PM2.5 concentrations from %s monitoring sites (shown as diamonds and cirles, repsectively) within Canada for %s.",
       "Canadian forecast zones are shown coloured by the mean of the 24-hour mean concentrations from all monitors within the zone.",
       "Hover over a monitor or click on a forecast zone for additional details.",
