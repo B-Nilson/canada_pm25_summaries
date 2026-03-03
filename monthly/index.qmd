@@ -722,8 +722,6 @@ zone_dl <- dat1 |>
 
 `r if(run_future_month) paste0("<center><h4>**WARNING - This report is incomplete. It only contains data up to ",max(obs$date) |> format("%B %d"),"**</h4></center>") |> HTML()`
 
-|  
-
 ## Overview {.unlisted .unnumbered}
 
 `r build_overview_card(type = params$type, report_dropdown = old_report_dropdown)`
@@ -905,5 +903,3 @@ Summary of the PM<sub>2.5</sub> concentration data within each Canadian forecast
 :::
 
 :::
-
-##
