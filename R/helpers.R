@@ -52,7 +52,9 @@ make_table_card <- function(
   table_caption,
   table_path,
   data_path,
-  data_rel_dir
+  data_rel_dir,
+  plot_timestamp,
+  type
 ) {
   dl_button <- table_data |>
     make_download_button(data_dir = data_rel_dir, file_path = data_path)
@@ -62,7 +64,7 @@ make_table_card <- function(
   card <- table_path |>
     stringr::str_replace(stringr::fixed(type), "./") |>
     plot_card(
-      text = plot_caption,
+      text = table_caption,
       iframe = TRUE,
       is_table = TRUE,
       iframe_height = 590,

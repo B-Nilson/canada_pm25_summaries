@@ -458,7 +458,9 @@ make_overall_summary_table <- function(
       table_caption = table_caption,
       table_path = table_path,
       data_path = data_path,
-      data_rel_dir = data_dir
+      data_rel_dir = data_dir,
+      plot_timestamp = plot_timestamp,
+      type = type
     )
 }
 

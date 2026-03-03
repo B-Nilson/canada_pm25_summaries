@@ -4,7 +4,7 @@ make_community_table <- function(
   data_dir,
   figure_dir,
   plot_timestamp,
-  plot_caption
+  table_caption
 ) {
   display_names <- list(
     nearest_community = "Name",
@@ -134,6 +134,8 @@ make_community_table <- function(
       table_caption = table_caption,
       table_path = table_path,
       data_path = data_path,
-      data_rel_dir = data_dir
+      data_rel_dir = data_dir,
+      plot_timestamp = plot_timestamp,
+      type = type
     )
 }

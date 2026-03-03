@@ -149,7 +149,7 @@ community_table <- summaries$community |>
     data_dir = params$dirs$data,
     figure_dir = params$dirs$plots,
     plot_timestamp = plot_timestamp,
-    plot_caption = quarto_captions$community_table
+    table_caption = quarto_captions$community_table
   )
 
 ```
