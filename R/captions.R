@@ -69,7 +69,7 @@ make_quarto_captions <- function(
     overall_table = paste(
       "Canadian %s monitor PM2.5 observation summary for %s.",
       table_helper,
-      "Click the link on a monitor name to view that monitor's location on AQmap."
+      "Click the link on a monitor name to view it's location on AQmap - right click the map then select 'Back' to return to the table."
     ) |>
       sprintf(all_monitors_group, fig_caption_date_range),
     boxplots = paste(
@@ -103,7 +103,7 @@ make_quarto_captions <- function(
     community_table = paste(
       "Canadian communities with at least one nearby PM2.5 monitor from the %s network(s) with data from %s.",
       table_helper,
-      "Click on a name to view that community on AQmap."
+      "Click on a name to view that community on AQmap - right click the map then select 'Back' to return to the table."
     ) |>
       sprintf(all_monitors_group, fig_caption_date_range),
     community_boxplots = paste0(
