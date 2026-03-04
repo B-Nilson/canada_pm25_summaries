@@ -15,7 +15,7 @@ make_and_save_site_boxplots <- function(
   # Create paths for plots
   plot_paths <- "%s/site_mean_boxplots_%s_%s.html" |>
     sprintf(
-      report_dir |> file.path(figure_dir),
+      report_dir |> file.path(figure_dir, plot_timestamp),
       monitor_groups_cleaned,
       plot_timestamp
     ) |>

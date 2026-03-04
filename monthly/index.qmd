@@ -62,6 +62,11 @@ obs <- report_date_range |>
 date_range <- range(obs$date)
 output_date_fmt <- date_range[2] |> format("%Y-%m")
 plot_timestamp <- date_range[2] |> format("%Y-%m")
+file.path(params$type, params$dirs$plots, plot_timestamp) |> 
+  dir.create(showWarnings = FALSE)
+file.path(params$type, params$dirs$data, plot_timestamp) |> 
+  dir.create(showWarnings = FALSE)
+
 plot_captions <- date_range |>
   make_plot_captions(networks = params$monitor_groups)
 quarto_captions <- date_range |>
@@ -333,7 +338,9 @@ coverage_barcharts = lapply(c_types, \(p) {
 
 coverage_table_paths <- paste0(
   params$type,
-  "plots/coverage_",
+  "plots/",
+  plot_timestamp,
+  "/coverage_",
   c_types,
   "_",
   output_date_fmt,
@@ -436,7 +443,9 @@ plot_title = paste0(
 )
 daily_zone_path = paste0(
   params$type,
-  "plots/fcstzone_mean_map_daily_",
+  "plots/",
+  plot_timestamp,
+  "/fcstzone_mean_map_daily_",
   output_date_fmt,
   ".html"
 )
@@ -455,7 +464,9 @@ plot2_title = paste0(
 )
 monthly_zone_path = paste0(
   params$type,
-  "plots/fcstzone_mean_map_",
+  "plots/",
+  plot_timestamp,
+  "/fcstzone_mean_map_",
   output_date_fmt,
   ".html"
 )
@@ -503,7 +514,9 @@ pd = summaries$overall |>
 # Make paths to files for saving plots
 community_boxplot_paths = paste0(
   params$type,
-  "plots/communities_veryHigh_hours_",
+  "plots/",
+  plot_timestamp,
+  "/communities_veryHigh_hours_",
   params$monitor_groups |>
     stringr::str_to_lower() |>
     stringr::str_replace_all(" ", "_"),

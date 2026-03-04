@@ -71,7 +71,7 @@ make_and_save_overall_map <- function(
       plot_timestamp
     )
   plot_path <- report_dir |>
-    file.path(plot_dir, plot_name)
+    file.path(plot_dir, plot_timestamp, plot_name)
 
   # Make and save maps
   pd <- map_data |>
@@ -447,10 +447,10 @@ make_overall_summary_table <- function(
   m_group_cleaned <- monitor_group |>
     stringr::str_to_lower() |>
     stringr::str_replace_all(" ", "_")
-  data_path <- "%s/%s/pm2.5_monitor_sites_%s_%s.csv" |>
-    sprintf(type, data_dir, m_group_cleaned, plot_timestamp)
-  table_path <- "%s/%s/overall_table_%s_%s.html" |>
-    sprintf(type, figure_dir, m_group_cleaned, plot_timestamp)
+  data_path <- "%s/%s/%s/pm2.5_monitor_sites_%s_%s.csv" |>
+    sprintf(type, data_dir, plot_timestamp, m_group_cleaned, plot_timestamp)
+  table_path <- "%s/%s/%s/overall_table_%s_%s.html" |>
+    sprintf(type, figure_dir, plot_timestamp, m_group_cleaned, plot_timestamp)
 
   table |>
     make_table_card(

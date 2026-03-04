@@ -27,7 +27,7 @@ save_aqhi_donuts_plots <- function(
   plot_names <- "monitor_donuts_%s_%s.svg" |>
     sprintf(plot_types, plot_timestamp)
   plot_paths <- report_dir |>
-    file.path(figure_dir, plot_names) |>
+    file.path(figure_dir, plot_timestamp, plot_names) |>
     as.list() |>
     setNames(plot_types)
 

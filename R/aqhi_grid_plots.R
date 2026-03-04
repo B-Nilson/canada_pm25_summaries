@@ -13,7 +13,7 @@ make_and_save_prov_terr_grids <- function(
   # Make paths to plot files
   plot_paths <- "%s/prov_median-peak_grid_%s_%s.svg" |>
     sprintf(
-      file.path(report_dir, figure_dir),
+      file.path(report_dir, figure_dir, plot_timestamp),
       monitor_groups_cleaned,
       plot_timestamp
     ) |>
@@ -53,7 +53,7 @@ make_and_save_fcst_zone_grids <- function(
   # Make paths to plot files
   plot_paths <- "%s/zone_median_max_grid_%s_%s.svg" |>
     sprintf(
-      file.path(report_dir, figure_dir),
+      file.path(report_dir, figure_dir, plot_timestamp),
       provinces_n_territories,
       plot_timestamp
     ) |>
