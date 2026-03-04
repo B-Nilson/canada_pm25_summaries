@@ -45,7 +45,7 @@ obs <- params$type |>
   get_report_start_end(
     type = params$type,
     run_future = params$run_current,
-    default_date = params$default_report_date |> lubridate::ymd_h(tz = "UTC")
+    default_date = params$default_date |> lubridate::ymd_h(tz = "UTC")
   ) |>
   load_report_data(
     meta_cols = meta_cols,
