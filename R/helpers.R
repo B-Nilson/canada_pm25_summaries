@@ -1,3 +1,11 @@
+setup_report_dirs <- function(type, dirs) {
+  paths <- file.path(type, dirs)
+  for (path in paths) {
+    path |> dir.create(showWarnings = FALSE, recursive = TRUE)
+  }
+  invisible()
+}
+
 get_season <- function(date = Sys.time(), months_in_seasons) {
   season <- names(months_in_seasons)[
     sapply(months_in_seasons, \(months) lubridate::month(date) %in% months)

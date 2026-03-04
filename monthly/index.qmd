@@ -37,6 +37,8 @@ format:
 source("R/report-functions.R")
 source("R/report-constants.R")
 
+params$type |> setup_report_dirs(dirs = params$dirs)
+
 all_monitors_group <- params$monitor_groups[1]
 
 report_dir_esc <- params$type |> stringr::str_escape()
