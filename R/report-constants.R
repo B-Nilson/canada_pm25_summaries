@@ -6,8 +6,7 @@
 # }else{
 #   extrafont::font_import("~/.fonts", pattern = "Inter", prompt = FALSE)
 # }
-
-extrafont::loadfonts(device = "all")
+# extrafont::loadfonts(device = "all")
 
 # File meta ------
 
