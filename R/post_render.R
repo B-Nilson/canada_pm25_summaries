@@ -111,6 +111,10 @@ report_dirs <- c("daily", "monthly", "seasonal")
 fix_no_date_citations(report_dirs)
 
 # Copy index and related files over to historic dir
+to_transfer <- c("index.html", "index_files", "plots", "data")
+if (is_production) {
+  to_transfer <- "index.html" # uses symlinks for remainder
+}
 for (report_dir in report_dirs) {
-  copy_index_to_historic(report_dir)
+  copy_index_to_historic(report_dir, to_transfer = to_transfer)
 }
