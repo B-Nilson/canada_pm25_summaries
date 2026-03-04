@@ -120,6 +120,7 @@ make_donut_plot <- function(
       legend.position = legend_position,
       legend.direction = "horizontal",
       legend.key.size = ggplot2::unit(8, "pt"),
+      strip.text = ggplot2::element_text(size = 3),
       plot.background = ggplot2::element_rect(fill = "white", colour = NA),
       plot.title = ggplot2::element_text(
         margin = ggplot2::margin_part(b = 3, l = 3, unit = "pt")
