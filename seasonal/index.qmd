@@ -45,14 +45,20 @@ params$type |> setup_report_dirs(dirs = params$dirs)
 
 all_monitors_group <- params$monitor_groups[1]
 
-old_report_dropdown <- params$type |> build_report_dropdown()
-
-obs <- params$type |>
+report_date_range <- params$type |>
   get_report_start_end(
     months_in_seasons = params$months_in_seasons,
     run_future = params$run_current,
     default_date = params$default_date |> lubridate::ymd_h(tz = "UTC")
-  ) |>
+  )
+
+old_report_dropdown <- params$type |>
+  build_report_dropdown(
+    current_report = report_date_range[2],
+    months_in_seasons = months_in_seasons
+  )
+
+obs <- report_date_range |>
   load_report_data(
     meta_cols = meta_cols,
     cache_path = file.path(params$type, "index_obs.rds"), # used when db not available
