@@ -104,6 +104,9 @@ stopifnot(end_dates == end_dates_2)
 
 # get report name from within html file report
 extract_file_report_name <- function(file_path) {
+  if (!file.exists(file_path)) {
+    return(NA_character_)
+  }
   readLines(file_path) |>
     suppressWarnings() |>
     stringr::str_subset("<h1 class=\"title\">") |>
