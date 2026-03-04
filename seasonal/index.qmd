@@ -49,7 +49,6 @@ old_report_dropdown <- params$type |> build_report_dropdown()
 
 obs <- params$type |>
   get_report_start_end(
-    type = params$type,
     months_in_seasons = params$months_in_seasons,
     run_future = params$run_current,
     default_date = params$default_date |> lubridate::ymd_h(tz = "UTC")

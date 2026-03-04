@@ -1,5 +1,4 @@
 get_report_start_end <- function(
-  report_dir,
   type = c("daily", "monthly", "seasonal")[1],
   run_future = FALSE,
   months_in_seasons = list(
@@ -9,10 +8,9 @@ get_report_start_end <- function(
   default_date = lubridate::now(tzone = "UTC")
 ) {
   default_date <- default_date |> lubridate::with_tz("UTC")
-  index_exists <- file.exists(file.path(report_dir, "index.html"))
-  last_report_date <- report_dir |>
+  index_exists <- file.exists(file.path(type, "index.html"))
+  last_report_date <- type |>
     get_last_report_date(
-      type = type,
       months_in_seasons = months_in_seasons,
       index_exists = index_exists
     )
@@ -76,7 +74,6 @@ get_report_start_end <- function(
 }
 
 get_last_report_date <- function(
-  report_dir,
   type,
   months_in_seasons = list(
     "Summer" = 5:10,
@@ -90,7 +87,7 @@ get_last_report_date <- function(
     seasonal = "Summer\\.html|Winter\\.html"
   )
 
-  last_report_name <- report_dir |>
+  last_report_name <- type |>
     list.files(pattern = report_patterns[[type]], recursive = TRUE) |>
     sort() |>
     dplyr::last() |>
