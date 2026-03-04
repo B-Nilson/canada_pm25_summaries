@@ -20,7 +20,7 @@ get_report_start_end <- function(
       lubridate::floor_date("12 hours") -
       lubridate::hours(1)
     if (!is.null(last_report_date)) {
-      max_date <- pmin(
+      max_date <- pmax(
         last_report_date + lubridate::hours(12),
         max_date
       )
@@ -37,7 +37,7 @@ get_report_start_end <- function(
         lubridate::hours(1)
     }
     if (!is.null(last_report_date)) {
-      max_date <- pmin(
+      max_date <- pmax(
         (last_report_date + lubridate::hours(2)) |>
           lubridate::ceiling_date("1 months") -
           lubridate::hours(1),
@@ -53,7 +53,7 @@ get_report_start_end <- function(
       get_season_end(months_in_seasons = months_in_seasons)
 
     if (!is.null(last_report_date)) {
-      max_date <- pmin(
+      max_date <- pmax(
         (last_report_date + lubridate::days(30 * 6)) |>
           get_season(months_in_seasons = months_in_seasons) |>
           get_season_end(months_in_seasons = months_in_seasons),
