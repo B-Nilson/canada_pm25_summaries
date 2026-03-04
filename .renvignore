@@ -1,0 +1,7 @@
+# ignore all directories by default
+*/
+
+!R/
+!daily/index.qmd
+!monthly/index.qmd
+!seasonal/index.qmd
