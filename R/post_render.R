@@ -1,3 +1,4 @@
+message("Running R/post_render.R...")
 source("R/report_name_codec.R")
 fix_no_date_citations <- function(report_dirs, index_name = "index.html") {
   reports <- report_dirs |> file.path(index_name)

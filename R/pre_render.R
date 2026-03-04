@@ -1,3 +1,4 @@
+message("Running R/pre_render.R...")
 # relative to project dir
 input_dirs <- c("css", "js", "icons")
 output_dirs <- c("daily", "monthly", "seasonal") |>
