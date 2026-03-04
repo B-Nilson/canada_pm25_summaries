@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+cd ../
+quarto render seasonal
+cd run_control
