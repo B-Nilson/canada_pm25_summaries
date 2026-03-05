@@ -78,7 +78,7 @@ file.path(params$type, params$dirs$plots, plot_timestamp) |>
   dir.create(showWarnings = FALSE)
 file.path(params$type, params$dirs$data, plot_timestamp) |> 
   dir.create(showWarnings = FALSE)
-if (in_production) {
+if (is_production) {
   "ln -s ../%s %s/%s" |>
     sprintf(
       params$dirs$lib,
