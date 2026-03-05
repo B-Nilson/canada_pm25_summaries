@@ -66,6 +66,15 @@ file.path(params$type, params$dirs$plots, plot_timestamp) |>
   dir.create(showWarnings = FALSE)
 file.path(params$type, params$dirs$data, plot_timestamp) |> 
   dir.create(showWarnings = FALSE)
+if (in_production) {
+  "ln -s ../%s %s/%s" |>
+    sprintf(
+      params$dirs$lib,
+      file.path(params$type, params$dirs$plots, plot_timestamp),
+      params$dirs$lib
+    ) |>
+    system()
+}
 
 plot_captions <- date_range |>
   make_plot_captions(networks = params$monitor_groups)
