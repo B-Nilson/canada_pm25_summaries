@@ -1,7 +1,6 @@
 # able to set daily params
 {
   setwd("daily")
-  on.exit(setwd("../"))
 
   # Read yaml header and parse params
   daily_lines <- "index.qmd" |> readLines(n = 100)
@@ -16,4 +15,6 @@
       params[[param_name]] <- param$value
     }
   }
+  
+  setwd("../")
 }
