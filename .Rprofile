@@ -1,4 +1,4 @@
-is_production <- dir.exists("/srv") & !interactive()
+is_production <- dir.exists("/srv")
 
 if (!is_production) {
   source("renv/activate.R")
