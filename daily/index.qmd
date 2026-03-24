@@ -59,17 +59,13 @@ obs <- report_date_range |>
 
 date_range <- range(obs$date)
 plot_timestamp <- date_range[2] |> format("%F-%Hz")
-file.path(params$type, params$dirs$plots, plot_timestamp) |> 
-  dir.create(showWarnings = FALSE)
-file.path(params$type, params$dirs$data, plot_timestamp) |> 
-  dir.create(showWarnings = FALSE)
+run_plot_dir <- file.path(params$type, params$dirs$plots, plot_timestamp)
+run_data_dir <- file.path(params$type, params$dirs$data, plot_timestamp)
+run_plot_dir |> dir.create(showWarnings = FALSE)
+run_data_dir |> dir.create(showWarnings = FALSE)
 if (is_production) {
   "ln -s ../%s %s/%s" |>
-    sprintf(
-      params$dirs$lib,
-      file.path(params$type, params$dirs$plots, plot_timestamp),
-      params$dirs$lib
-    ) |>
+    sprintf(params$dirs$lib, run_plot_dir, params$dirs$lib) |>
     system()
 }
 
