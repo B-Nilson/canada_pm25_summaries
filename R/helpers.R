@@ -59,6 +59,7 @@ make_table_card <- function(
   table_data,
   table_caption,
   table_path,
+  table_path_tmp = table_path,
   data_path,
   data_rel_dir,
   plot_timestamp,
@@ -68,7 +69,10 @@ make_table_card <- function(
     make_download_button(data_dir = data_rel_dir, file_path = data_path)
 
   table_html |>
-    gt::gtsave(filename = table_path, libdir = "libs")
+    gt::gtsave(filename = table_path_tmp, libdir = "libs")
+  if (table_path != table_path_tmp) {
+    file.rename(table_path_tmp, table_path)
+  }
 
   card <- table_path |>
     stringr::str_replace(stringr::fixed(type), "./") |>

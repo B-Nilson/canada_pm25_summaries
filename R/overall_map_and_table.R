@@ -70,6 +70,8 @@ make_and_save_overall_map <- function(
         stringr::str_replace_all(" ", "_"),
       plot_timestamp
     )
+  plot_path_tmp <- report_dir |>
+    file.path(plot_dir, plot_name) # for initial write - otherwise symlinks expanded and libs in /plots/ not referenced correctly by html files in /plots/{date}/
   plot_path <- report_dir |>
     file.path(plot_dir, plot_timestamp, plot_name)
 
@@ -89,6 +91,9 @@ make_and_save_overall_map <- function(
       library_dir = lib_dir,
       self_contained = FALSE
     )
+  
+  # Move into date folder now that libs setup correctly
+  file.rename(plot_path_tmp, plot_path)
 
   return(plot_path)
 }
@@ -449,14 +454,19 @@ make_overall_summary_table <- function(
     stringr::str_replace_all(" ", "_")
   data_path <- "%s/%s/%s/pm2.5_monitor_sites_%s_%s.csv" |>
     sprintf(type, data_dir, plot_timestamp, m_group_cleaned, plot_timestamp)
-  table_path <- "%s/%s/%s/overall_table_%s_%s.html" |>
-    sprintf(type, figure_dir, plot_timestamp, m_group_cleaned, plot_timestamp)
+  table_name <- "overall_table_%s_%s.html" |> 
+    sprintf(m_group_cleaned, plot_timestamp)
+  table_path_tmp <- type |>
+    file.path(figure_dir, table_name)
+  table_path <- type |>
+    file.path(figure_dir, plot_timestamp, table_name)
 
   table |>
     make_table_card(
       table_data = table_data,
       table_caption = table_caption,
       table_path = table_path,
+      table_path_tmp = table_path_tmp,
       data_path = data_path,
       data_rel_dir = data_dir,
       plot_timestamp = plot_timestamp,
