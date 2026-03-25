@@ -63,9 +63,10 @@ run_plot_dir <- file.path(params$type, params$dirs$plots, plot_timestamp)
 run_data_dir <- file.path(params$type, params$dirs$data, plot_timestamp)
 run_plot_dir |> dir.create(showWarnings = FALSE)
 run_data_dir |> dir.create(showWarnings = FALSE)
-if (is_production) {
-  "ln -s ../%s %s/%s" |>
-    sprintf(params$dirs$lib, run_plot_dir, params$dirs$lib) |>
+run_plot_lib_dir <- file.path(run_plot_dir, params$dirs$lib)
+if (is_production & !file.exists(run_plot_lib_dir)) {
+  "ln -s ../%s %s" |>
+    sprintf(params$dirs$lib, run_plot_lib_dir) |>
     system()
 }
 
