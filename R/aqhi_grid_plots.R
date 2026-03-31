@@ -73,7 +73,7 @@ make_and_save_fcst_zone_grids <- function(
     PE = 4,
     YT = 5,
     NT = 7,
-    NU = 7.5 
+    NU = 7.5
   )
 
   # Make and save plots

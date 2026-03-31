@@ -5,7 +5,7 @@ output_dirs <- c("daily", "monthly", "seasonal") |>
   file.path("index_files")
 
 # skip if on production server (uses symlinks instead)
-if (!is_production){
+if (!is_production) {
   for (output_dir in output_dirs) {
     dir.create(output_dir, showWarnings = FALSE)
     for (input_dir in input_dirs) {

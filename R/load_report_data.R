@@ -57,7 +57,7 @@ load_report_data <- function(
     dplyr::union_all(lcm_report_data_query) |>
     dplyr::collect() |>
     dplyr::mutate(
-      prov_terr = prov_terr |> 
+      prov_terr = prov_terr |>
         dplyr::replace_values("Québec" ~ "Quebec") |> # TODO: remove once db updated
         factor(levels = names(provinces_n_territories)),
       dplyr::across(

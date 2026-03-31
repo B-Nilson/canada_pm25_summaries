@@ -16,8 +16,8 @@ build_report_dropdown <- function(
     sort(decreasing = TRUE)
 
   # Remove date of current report
-  current_report_name <- current_report |> 
-    get_report_file_names(type = type, months_in_seasons = months_in_seasons) |> 
+  current_report_name <- current_report |>
+    get_report_file_names(type = type, months_in_seasons = months_in_seasons) |>
     get_report_display_names(type = type)
   existing_report_names <- basename(existing_reports) |>
     get_report_display_names(type = type)

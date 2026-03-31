@@ -91,7 +91,7 @@ make_and_save_overall_map <- function(
       library_dir = lib_dir,
       self_contained = FALSE
     )
-  
+
   # Move into date folder now that libs setup correctly
   file.rename(plot_path_tmp, plot_path)
 
@@ -438,7 +438,7 @@ make_overall_summary_table <- function(
     stringr::str_replace_all(" ", "_")
   data_path <- "%s/%s/%s/pm2.5_monitor_sites_%s_%s.csv" |>
     sprintf(type, data_dir, plot_timestamp, m_group_cleaned, plot_timestamp)
-  table_name <- "overall_table_%s_%s.html" |> 
+  table_name <- "overall_table_%s_%s.html" |>
     sprintf(m_group_cleaned, plot_timestamp)
   table_path_tmp <- type |>
     file.path(figure_dir, table_name)

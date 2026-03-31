@@ -108,7 +108,8 @@ make_overall_summary <- function(obs, meta_cols) {
 make_zone_summary <- function(overall_summary, fcst_zones) {
   overall_summary |>
     dplyr::mutate(
-      fcst_zone = fcst_zone |> dplyr::replace_values(NA ~ "Not inside a defined zone")
+      fcst_zone = fcst_zone |>
+        dplyr::replace_values(NA ~ "Not inside a defined zone")
     ) |>
     dplyr::group_by(fcst_zone, monitor) |>
     dplyr::summarise(

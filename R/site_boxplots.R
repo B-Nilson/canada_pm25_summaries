@@ -42,9 +42,9 @@ make_and_save_site_boxplots <- function(
         libdir = lib_dir,
         selfcontained = FALSE
       )
-    
+
     # Move into plot timestamp directory
-    plot_paths_tmp[[monitor_group]] |> 
+    plot_paths_tmp[[monitor_group]] |>
       file.rename(to = plot_paths[[monitor_group]])
 
     list(

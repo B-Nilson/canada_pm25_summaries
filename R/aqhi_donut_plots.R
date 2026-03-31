@@ -11,7 +11,8 @@ save_aqhi_donuts_plots <- function(
   # Prov/Terr monitor counts for centers of donuts
   labels <- overall_summary |>
     dplyr::bind_rows(
-      overall_summary |> dplyr::mutate(monitor = monitor |> unique() |> join_list_sentence())
+      overall_summary |>
+        dplyr::mutate(monitor = monitor |> unique() |> join_list_sentence())
     ) |>
     tidyr::complete(prov_terr, monitor) |>
     dplyr::summarise(n = sum(!is.na(pm25_max)), .by = c(prov_terr, monitor)) |>
@@ -111,7 +112,9 @@ make_donut_plot <- function(
     ggplot2::labs(
       fill = bquote(.(avg) ~ "site" ~ .(stat) ~ "PM"[2.5] ~ "AQHI"),
       title = bquote(
-        "Canadian" ~ .(networks) ~ "monitor counts and site" ~ .(stat) ~ "PM"[2.5] ~
+        "Canadian" ~ .(networks) ~ "monitor counts and site" ~ .(stat) ~ "PM"[
+          2.5
+        ] ~
           "AQHI distributions"
       ),
       caption = plot_caption
