@@ -87,7 +87,7 @@ make_and_save_overall_map <- function(
       map_timestamps = map_timestamps
     ) |>
     aqmapr::save_map(
-      save_to = plot_path,
+      save_to = plot_path_tmp,
       library_dir = lib_dir,
       self_contained = FALSE
     )
