@@ -123,15 +123,20 @@ make_community_table <- function(
     gt::sub_missing(dplyr::starts_with("n_hours") | dplyr::starts_with("pm25"))
 
   # Save table to .html and data to .csv, link within a plot_card
-  data_path <- "%s/%s/community_summary_%s.csv" |>
-    sprintf(type, data_dir, plot_timestamp)
-  table_path <- "%s/%s/community_summary_%s.html" |>
-    sprintf(type, figure_dir, plot_timestamp)
+  data_path <- "%s/%s/%s/community_summary_%s.csv" |>
+    sprintf(type, data_dir, plot_timestamp, plot_timestamp)
+  table_name <- "community_summary_%s.html" |>
+    sprintf(plot_timestamp)
+  table_path_tmp <- type |>
+    file.path(figure_dir, table_name)
+  table_path <- type |>
+    file.path(figure_dir, plot_timestamp, table_name)
 
   community_table |>
     make_table_card(
       table_data = table_data,
       table_caption = table_caption,
+      table_path_tmp = table_path_tmp,
       table_path = table_path,
       data_path = data_path,
       data_rel_dir = data_dir,

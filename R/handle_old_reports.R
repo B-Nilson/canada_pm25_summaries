@@ -1,7 +1,8 @@
 build_report_dropdown <- function(
   type = c("daily", "monthly", "seasonal")[1],
   historic_dir = "historic",
-  current_report = "index.html"
+  current_report = Sys.time(),
+  months_in_seasons = list("Summer" = 5:10, "Winter" = c(11:12, 1:4))
 ) {
   # Find existing reports
   report_pattern <- type |>
@@ -15,13 +16,13 @@ build_report_dropdown <- function(
     sort(decreasing = TRUE)
 
   # Remove date of current report
-  index_report_name <- type |>
-    file.path(current_report) |>
-    extract_file_report_name()
+  current_report_name <- current_report |>
+    get_report_file_names(type = type, months_in_seasons = months_in_seasons) |>
+    get_report_display_names(type = type)
   existing_report_names <- basename(existing_reports) |>
     get_report_display_names(type = type)
   existing_reports <- existing_reports[
-    existing_report_names != index_report_name
+    existing_report_names != current_report_name
   ]
 
   if (length(existing_reports) > 0) {

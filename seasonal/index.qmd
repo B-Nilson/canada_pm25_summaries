@@ -41,17 +41,24 @@ format:
 source("R/report-functions.R")
 source("R/report-constants.R")
 
+params$type |> setup_report_dirs(dirs = params$dirs)
+
 all_monitors_group <- params$monitor_groups[1]
 
-old_report_dropdown <- params$type |> build_report_dropdown()
-
-obs <- params$type |>
+report_date_range <- params$type |>
   get_report_start_end(
-    type = params$type,
     months_in_seasons = params$months_in_seasons,
     run_future = params$run_current,
-    default_date = params$default_report_date |> lubridate::ymd_h(tz = "UTC")
-  ) |>
+    default_date = params$default_date |> lubridate::ymd_h(tz = "UTC")
+  )
+
+old_report_dropdown <- params$type |>
+  build_report_dropdown(
+    current_report = report_date_range[2],
+    months_in_seasons = months_in_seasons
+  )
+
+obs <- report_date_range |>
   load_report_data(
     meta_cols = meta_cols,
     cache_path = file.path(params$type, "index_obs.rds"), # used when db not available
@@ -65,6 +72,22 @@ summary_months <- date_range |>
   seq(by = "1 months")
 report_season <- date_range[2] |>
   get_season(months_in_seasons = params$months_in_seasons)
+
+plot_timestamp <- date_range[2] |> format("%F-%Hz")
+file.path(params$type, params$dirs$plots, plot_timestamp) |> 
+  dir.create(showWarnings = FALSE)
+file.path(params$type, params$dirs$data, plot_timestamp) |> 
+  dir.create(showWarnings = FALSE)
+if (is_production) {
+  "ln -s ../%s %s/%s" |>
+    sprintf(
+      params$dirs$lib,
+      file.path(params$type, params$dirs$plots, plot_timestamp),
+      params$dirs$lib
+    ) |>
+    system()
+}
+
 plot_captions <- date_range |>
   make_plot_captions(networks = monitor_groups)
 quarto_captions <- date_range |> 
@@ -156,6 +179,8 @@ gg = daily_monitor_counts |>
 
 monitor_counts_path <- paste0(
   "../../deployments/reports/seasonal/plots/",
+  plot_timestamp, 
+  "/",
   report_season,
   "_monitor_counts.png"
 )
@@ -192,7 +217,8 @@ ggsave(
 #         panel.spacing.y=ggplot2::unit(0, "lines"))+
 #   ggplot2::guides(fill = ggplot2::guide_legend(title.position="top", title.hjust = 0,nrow = 2, byrow = TRUE))
 #
-# plot_path = "../reports/seasonal/plots/2023-summer_monitor_counts.png"
+# plot_path = "../reports/seasonal/plots/%s/2023-summer_monitor_counts.png" |>
+#   sprintf(plot_timestamp)
 # ggplot2::ggsave(gg, filename = plot_path,
 #        width = fig_dims$w, height = fig_dims$h, units = fig_dims$u, dpi = 300)
 #
@@ -455,12 +481,14 @@ mean_map = leaflet(height = 605) |>
 seasonal_zone_summary_paths = list()
 seasonal_zone_summary_paths$mean_map = paste0(
   "../../deployments/reports/seasonal/plots/",
+  plot_timestamp, "/",
   report_season,
   "_zone_mean_map.html"
 )
 htmltools::save_html(mean_map, seasonal_zone_summary_paths$mean_map, libdir = "./libs")
 seasonal_zone_summary_paths$max_map = paste0(
   "../../deployments/reports/seasonal/plots/",
+  plot_timestamp, "/",
   report_season,
   "_zone_max_map.html"
 )
@@ -545,6 +573,8 @@ gg = daily_zone_means |>
 
 seasonal_zone_summary_paths$ts = paste0(
   "../../deployments/reports/seasonal/plots/",
+  plot_timestamp,
+  "/",
   report_season,
   "_daily_zone_means.png"
 )
@@ -788,6 +818,8 @@ pd$median = test_data |>
 
 zone_aqhi_paths = paste0(
   "../../deployments/reports/seasonal/plots/",
+  plot_timestamp,
+  "/",
   report_season,
   "_",
   stringr::str_to_title(names(pd)),
@@ -1211,6 +1243,8 @@ fills = fills |>
 
 worst_event_paths = paste0(
   "../../deployments/reports/seasonal/plots/",
+  plot_timestamp,
+  "/",
   report_season,
   names(prov_pretty),
   "_worst_events.png"

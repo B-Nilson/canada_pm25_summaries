@@ -70,8 +70,10 @@ make_and_save_overall_map <- function(
         stringr::str_replace_all(" ", "_"),
       plot_timestamp
     )
+  plot_path_tmp <- report_dir |>
+    file.path(plot_dir, plot_name) # for initial write - otherwise symlinks expanded and libs in /plots/ not referenced correctly by html files in /plots/{date}/
   plot_path <- report_dir |>
-    file.path(plot_dir, plot_name)
+    file.path(plot_dir, plot_timestamp, plot_name)
 
   # Make and save maps
   pd <- map_data |>
@@ -85,10 +87,13 @@ make_and_save_overall_map <- function(
       map_timestamps = map_timestamps
     ) |>
     aqmapr::save_map(
-      save_to = plot_path,
+      save_to = plot_path_tmp,
       library_dir = lib_dir,
       self_contained = FALSE
     )
+
+  # Move into date folder now that libs setup correctly
+  file.rename(plot_path_tmp, plot_path)
 
   return(plot_path)
 }
@@ -135,7 +140,10 @@ make_overall_map <- function(
 
   map <- leaflet::leaflet(height = 600, width = "100%") |>
     leaflet::addProviderTiles(leaflet::providers$OpenStreetMap) |>
-    add_map_date_range(date_range = map_timestamps) |>
+    aqmapr::add_map_timestamps(
+      timestamps = map_timestamps,
+      prefixes = c("From: ", "Up to: ")
+    ) |>
     leaflet::addMarkers(
       data = layers[[1]],
       lng = ~lng,
@@ -215,28 +223,6 @@ make_overall_map <- function(
   return(map)
 }
 
-add_map_date_range <- function(map, date_range) {
-  date_range_placeholders <- date_range |>
-    lubridate::with_tz(tzone = "UTC") |>
-    format("%Y-%m-%dT%H:%M:%SZ")
-  map |>
-    # includes JS, will be replaced by next control
-    aqmapr::add_map_timestamp(timestamp = date_range[1]) |>
-    # Add custom timestamp with both dates
-    leaflet::addControl(
-      html = paste0(
-        '<big><strong>From: ',
-        date_range_placeholders[1],
-        '</strong></big><br>',
-        '<big><strong>Up to: ',
-        date_range_placeholders[2],
-        '</strong></big>'
-      ),
-      layerId = "map_timestamp",
-      position = "bottomleft"
-    )
-}
-
 make_map_data <- function(
   overall_summary,
   icon_dir = "https://aqmap.ca/aqmap/icons"
@@ -251,24 +237,43 @@ make_map_data <- function(
             ifelse(pm25_mean > 999, "+", round(pm25_mean))
           )
       ),
-      labels = "<big><strong>Site: %s (%s)</strong></big>" |>
-        c(
-          "<b>Nearby Community:</b> %s (~%s km)",
-          "<b>24hr mean PM<sub>2.5</sub>:</b> %s &mu;g m<sup>-3</sup>",
-          "<b>24hr max PM<sub>2.5</sub>:</b> %s &mu;g m<sup>-3</sup>",
-          "<b># Hours with PM<sub>2.5</sub> >= 60 &mu;g m<sup>-3</sup>:</b> %s"
-        ) |>
-        paste(collapse = "<br>") |>
-        sprintf(
-          name,
-          monitor,
-          nearest_community,
-          nc_dist_km,
-          pm25_mean,
-          pm25_max,
-          n_hours_above_60
+      labels = name |>
+        make_map_hover(
+          monitors = monitor,
+          nc_dists_km = nc_dist_km,
+          nearest_communities = nearest_community,
+          pm25_means = pm25_mean,
+          pm25_maxs = pm25_max,
+          n_hours_above_60s = n_hours_above_60
         ) |>
         lapply(htmltools::HTML)
+    )
+}
+
+make_map_hover <- function(
+  names,
+  monitors,
+  nc_dists_km,
+  nearest_communities,
+  pm25_means,
+  pm25_maxs,
+  n_hours_above_60s
+) {
+  paste(
+    "<big><strong>%s</strong></big>",
+    "%s ~%s km from %s",
+    "<b>24hr mean|max:</b> %s|%s &mu;g m<sup>-3</sup>",
+    "<b>Hours &ge; 60 &mu;g m<sup>-3</sup>:</b> %s",
+    sep = "<br>"
+  ) |>
+    sprintf(
+      names,
+      monitors,
+      nc_dists_km,
+      nearest_communities,
+      pm25_means,
+      pm25_maxs,
+      n_hours_above_60s
     )
 }
 
@@ -284,14 +289,12 @@ make_map_popup <- function(
   # Handle displayed text language
   text <- list(
     EN = c(
-      'Forecast Zone',
-      '# of Monitors',
-      'Mean 24hr PM<sub>2.5</sub>'
+      'Count',
+      'Mean 24hr PM<sub>2.5</sub> (&mu;g m<sup>-3</sup>)'
     ),
     FR = c(
-      'Zone de prévision',
-      '# de moniteurs',
-      'Moyenne sur 24 h PM<sub>2,5</sub>'
+      'Compte',
+      'Moyenne sur 24 h PM<sub>2,5</sub> (&mu;g m<sup>-3</sup>)'
     )
   )[[language]]
   fem_label <- list(
@@ -303,46 +306,32 @@ make_map_popup <- function(
     FR = 'TOUT'
   )[[language]]
 
-  "
-    <big><strong>%s: %s</strong></big>
-    <table style='margin: auto;'>
-      <thead><tr>
-          <th style='text-align:center'></th>
-          <th style='text-align:center'>%s</th>
-          <th style='text-align:center'>PA</th>
-          <th style='text-align:center'>%s</th>
-        </tr>
-      </thead>
+  "<big><strong>%s</strong></big>
+    <table class='zone-popup-table'>
+      <thead><tr><th></th><th>%s</th><th>PA</th><th>%s</th></tr></thead>
       <tbody>
-        <tr>
-          <td style='font-weight: bold;text-align:center'>%s</td>
-          <td style='text-align:center'>%s</td>
-          <td style='text-align:center'>%s</td>
-          <td style='text-align:center'>%s</td>
-        </tr>
-        <tr>
-          <td style='font-weight: bold;text-align:center'>%s</td>
-          <td style='text-align:center'>%s &mu;g m<sup>-3</sup></td>
-          <td style='text-align:center'>%s &mu;g m<sup>-3</sup></td>
-          <td style='text-align:center'>%s &mu;g m<sup>-3</sup></td>
-        </tr>
+        <tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>
+        <tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>
       </tbody>
     </table>" |>
     sprintf(
-      text[1],
+      # header
       name,
       fem_label,
       all_label,
-      text[2],
+      # row 1 (counts)
+      text[1],
       n_fem,
       n_pa,
       n_fem + n_pa,
-      text[3],
+      # row 2 (means)
+      text[2],
       pm25_24_fem,
       pm25_24_pa,
       pm25_24_all
     ) |>
-    stringr::str_replace_all(">NA &mu;g m<sup>-3</sup><", ">-<")
+    stringr::str_replace_all(">NA<", ">-<") |>
+    stringr::str_replace_all(">NaN<", ">-<")
 }
 
 make_overall_summary_table <- function(
@@ -447,16 +436,21 @@ make_overall_summary_table <- function(
   m_group_cleaned <- monitor_group |>
     stringr::str_to_lower() |>
     stringr::str_replace_all(" ", "_")
-  data_path <- "%s/%s/pm2.5_monitor_sites_%s_%s.csv" |>
-    sprintf(type, data_dir, m_group_cleaned, plot_timestamp)
-  table_path <- "%s/%s/overall_table_%s_%s.html" |>
-    sprintf(type, figure_dir, m_group_cleaned, plot_timestamp)
+  data_path <- "%s/%s/%s/pm2.5_monitor_sites_%s_%s.csv" |>
+    sprintf(type, data_dir, plot_timestamp, m_group_cleaned, plot_timestamp)
+  table_name <- "overall_table_%s_%s.html" |>
+    sprintf(m_group_cleaned, plot_timestamp)
+  table_path_tmp <- type |>
+    file.path(figure_dir, table_name)
+  table_path <- type |>
+    file.path(figure_dir, plot_timestamp, table_name)
 
   table |>
     make_table_card(
       table_data = table_data,
       table_caption = table_caption,
       table_path = table_path,
+      table_path_tmp = table_path_tmp,
       data_path = data_path,
       data_rel_dir = data_dir,
       plot_timestamp = plot_timestamp,

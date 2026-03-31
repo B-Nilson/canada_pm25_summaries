@@ -12,13 +12,15 @@ make_and_save_site_boxplots <- function(
   monitor_groups_cleaned <- monitor_groups |>
     stringr::str_to_lower() |>
     stringr::str_replace_all(" ", "_")
-  # Create paths for plots
-  plot_paths <- "%s/site_mean_boxplots_%s_%s.html" |>
-    sprintf(
-      report_dir |> file.path(figure_dir),
-      monitor_groups_cleaned,
-      plot_timestamp
-    ) |>
+  # Create paths for plots - save to plots/ so libs/ works right then move into plots/{date}
+  plot_names <- "site_mean_boxplots_%s_%s.html" |>
+    sprintf(monitor_groups_cleaned, plot_timestamp)
+  plot_paths_tmp <- report_dir |>
+    file.path(figure_dir, plot_names) |>
+    setNames(monitor_groups) |>
+    as.list()
+  plot_paths <- report_dir |>
+    file.path(figure_dir, plot_timestamp, plot_names) |>
     setNames(monitor_groups) |>
     as.list()
 
@@ -36,10 +38,14 @@ make_and_save_site_boxplots <- function(
         monitor_group = monitor_group
       ) |>
       htmlwidgets::saveWidget(
-        plot_paths[[monitor_group]],
+        plot_paths_tmp[[monitor_group]],
         libdir = lib_dir,
         selfcontained = FALSE
       )
+
+    # Move into plot timestamp directory
+    plot_paths_tmp[[monitor_group]] |>
+      file.rename(to = plot_paths[[monitor_group]])
 
     list(
       # Worst site by MAX

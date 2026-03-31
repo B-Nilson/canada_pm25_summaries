@@ -11,7 +11,8 @@ save_aqhi_donuts_plots <- function(
   # Prov/Terr monitor counts for centers of donuts
   labels <- overall_summary |>
     dplyr::bind_rows(
-      overall_summary |> dplyr::mutate(monitor = monitor |> unique() |> join_list_sentence())
+      overall_summary |>
+        dplyr::mutate(monitor = monitor |> unique() |> join_list_sentence())
     ) |>
     tidyr::complete(prov_terr, monitor) |>
     dplyr::summarise(n = sum(!is.na(pm25_max)), .by = c(prov_terr, monitor)) |>
@@ -27,7 +28,7 @@ save_aqhi_donuts_plots <- function(
   plot_names <- "monitor_donuts_%s_%s.svg" |>
     sprintf(plot_types, plot_timestamp)
   plot_paths <- report_dir |>
-    file.path(figure_dir, plot_names) |>
+    file.path(figure_dir, plot_timestamp, plot_names) |>
     as.list() |>
     setNames(plot_types)
 
@@ -111,7 +112,9 @@ make_donut_plot <- function(
     ggplot2::labs(
       fill = bquote(.(avg) ~ "site" ~ .(stat) ~ "PM"[2.5] ~ "AQHI"),
       title = bquote(
-        "Canadian" ~ .(networks) ~ "monitor counts and site" ~ .(stat) ~ "PM"[2.5] ~
+        "Canadian" ~ .(networks) ~ "monitor counts and site" ~ .(stat) ~ "PM"[
+          2.5
+        ] ~
           "AQHI distributions"
       ),
       caption = plot_caption
@@ -120,6 +123,7 @@ make_donut_plot <- function(
       legend.position = legend_position,
       legend.direction = "horizontal",
       legend.key.size = ggplot2::unit(8, "pt"),
+      strip.text = ggplot2::element_text(size = 3),
       plot.background = ggplot2::element_rect(fill = "white", colour = NA),
       plot.title = ggplot2::element_text(
         margin = ggplot2::margin_part(b = 3, l = 3, unit = "pt")

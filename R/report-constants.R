@@ -6,8 +6,7 @@
 # }else{
 #   extrafont::font_import("~/.fonts", pattern = "Inter", prompt = FALSE)
 # }
-
-extrafont::loadfonts(device = "all")
+# extrafont::loadfonts(device = "all")
 
 # File meta ------
 
@@ -39,7 +38,6 @@ loading_div <- '
 
 provinces_n_territories <- canadata::provinces_and_territories$abbreviation |>
   as.character() |>
-  dplyr::replace_values("Quebec" ~ "Québec") |> # TODO: remove once database in cync with canadata
   setNames(canadata::provinces_and_territories$name_en) |>
   as.list()
 
