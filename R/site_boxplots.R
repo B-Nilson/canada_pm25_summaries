@@ -16,11 +16,11 @@ make_and_save_site_boxplots <- function(
   plot_names <- "site_mean_boxplots_%s_%s.html" |>
     sprintf(monitor_groups_cleaned, plot_timestamp)
   plot_paths_tmp <- report_dir |>
-    file.path(figure_dir, plot_timestamp, plot_names) |>
+    file.path(figure_dir, plot_names) |>
     setNames(monitor_groups) |>
     as.list()
   plot_paths <- report_dir |>
-    file.path(figure_dir, plot_names) |>
+    file.path(figure_dir, plot_timestamp, plot_names) |>
     setNames(monitor_groups) |>
     as.list()
 
