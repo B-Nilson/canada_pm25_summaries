@@ -44,3 +44,17 @@ figure>div>button {
   margin-left: 0.2rem !important;
   margin-bottom: 0.2rem !important;
 }
+
+/* zone popup table styling */
+.zone-popup-table {
+  margin: auto;
+}
+
+.zone-popup-table>thead>tr>th,
+.zone-popup-table>thead>tr>td {
+  text-align: center;
+}
+
+.zone-popup-table>thead>tr>td:first-child {
+  font-weight: bold;
+}
