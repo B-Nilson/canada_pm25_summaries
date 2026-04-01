@@ -430,8 +430,14 @@ make_overall_summary_table <- function(
       fn = \(x) x |> aqhi::get_aqhi_colours(types = "pm25_1hr")
     ) |>
     gt::sub_missing(dplyr::starts_with("n_hours") | dplyr::starts_with("pm25")) |> 
-    aqmapr::include_scripts(paths = "js/truncate_reactable_column.js") |>
-    htmlwidgets::onRender("(el, x) => {add_truncate_listeners(['Name', 'Region']);}")
+    htmltools::as.tags()
+  
+  js_code <- c("js/truncate_reactable_column.js") |> 
+    sapply(\(x) readLines(x) |> paste(collapse = "\n")) |> 
+    paste(collapse = "\n\n") |> 
+    htmltools::HTML() |>
+    htmltools::tags$script(type = "text/javascript")
+  table <- js_code |> htmltools::tagList(table)
 
   # Save table to .html and data to .csv, link within a plot_card
   m_group_cleaned <- monitor_group |>

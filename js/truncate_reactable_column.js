@@ -34,3 +34,8 @@ function truncate_long_text(x) {
     let styles = ["display:table; table-layout:fixed; width:100%", "overflow-x:hidden; text-overflow:ellipsis; white-space:nowrap"];
     return `<div style="${styles[0]}"><p title="${xSafe}" style="${styles[1]}">${x}</p></div>`;
 }
+
+// TODO: allow this to be controlled via R so not hardcoded names
+document.addEventListener('DOMContentLoaded', function() {
+  add_truncate_listeners(['Name', 'Region']);
+});
