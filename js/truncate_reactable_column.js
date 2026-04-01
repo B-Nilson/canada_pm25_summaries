@@ -6,6 +6,7 @@ function add_truncate_listeners(columns) {
 }
 
 function truncate_reactable_columns(table_id, columns) {
+    insert_aqmap_links(); // ensure any visible entries setup for aqmap links formatted correctly
     const tbl_cols = get_reactable_columns(table_id);
     for (let j = 0; j < columns.length; j++) {
         let header_label = columns[j];

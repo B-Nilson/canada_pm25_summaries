@@ -364,9 +364,8 @@ make_overall_summary_table <- function(
           labels = canadata::provinces_and_territories$abbreviation
         ),
       fcst_zone = prov_terr |> paste0(": ", fcst_zone),
-      aqmap_link = make_aqmap_link(lat = lat, lng = lng),
-      name = "<a title='%s' href='%s'>%s</a>" |>
-        sprintf(name |> htmltools::htmlEscape(), aqmap_link, name)
+      name = "<div data-lng=%s data-lat=%s>%s</div>" |>
+        sprintf(lng, lat, name)
     ) |>
     dplyr::select(dplyr::all_of(names(display_names))) |>
     dplyr::arrange(dplyr::desc(pm25_mean), pm25_current)
@@ -432,7 +431,7 @@ make_overall_summary_table <- function(
     gt::sub_missing(dplyr::starts_with("n_hours") | dplyr::starts_with("pm25")) |> 
     htmltools::as.tags()
   
-  js_code <- c("js/truncate_reactable_column.js") |> 
+  js_code <- c("js/truncate_reactable_column.js", "js/insert_aqmap_links.js") |> 
     sapply(\(x) readLines(x) |> paste(collapse = "\n")) |> 
     paste(collapse = "\n\n") |> 
     htmltools::HTML() |>

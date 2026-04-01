@@ -29,19 +29,6 @@ safe_mean <- function(x, digits = 1) {
     round(digits = digits)
 }
 
-make_aqmap_link <- function(lat, lng, zoom = 12, lang = "EN") {
-  paste0(
-    "https://aqmap.ca/aqmap/",
-    tolower(lang),
-    "/#",
-    zoom,
-    "/",
-    lat,
-    "/",
-    lng
-  )
-}
-
 join_list_sentence <- function(l, oxford = FALSE, type = "regions") {
   if (length(l) == 0) {
     return(paste("No", type))

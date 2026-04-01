@@ -36,14 +36,8 @@ make_community_table <- function(
       dplyr::across(c(n_pa, n_fem), \(x) {
         x |> as.numeric() |> dplyr::replace_values(NA ~ 0)
       }),
-      aqmap_link = nc_lat |>
-        make_aqmap_link(lng = nc_lng, zoom = 12, lang = "EN"),
-      nearest_community = "<a title='%s' href='%s'>%s</a>" |>
-        sprintf(
-          nearest_community |> htmltools::htmlEscape(),
-          aqmap_link,
-          nearest_community
-        )
+      nearest_community = "<div data-lng=%s data-lat=%s>%s</div>" |>
+        sprintf(nc_lng, nc_lat, nearest_community)
     ) |>
     dplyr::select(dplyr::all_of(names(display_names))) |>
     dplyr::arrange(dplyr::desc(pm25_mean_network_mean_comm_mean))
@@ -123,7 +117,7 @@ make_community_table <- function(
     gt::sub_missing(dplyr::starts_with("n_hours") | dplyr::starts_with("pm25")) |> 
     htmltools::as.tags()
   
-  js_code <- c("js/truncate_reactable_column.js") |> 
+  js_code <- c("js/truncate_reactable_column.js", "js/insert_aqmap_links.js") |>
     sapply(\(x) readLines(x) |> paste(collapse = "\n")) |> 
     paste(collapse = "\n\n") |> 
     htmltools::HTML() |>
