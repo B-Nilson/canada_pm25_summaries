@@ -22,6 +22,7 @@ make_community_table <- function(
   )
 
   table_data <- community_summary |>
+    dplyr::filter(nc_dist_km_network_mean_comm_mean <= 20) |> 
     dplyr::arrange(desc(pm25_mean_network_mean_comm_mean)) |>
     dplyr::mutate(
       prov_terr = prov_terr |>
