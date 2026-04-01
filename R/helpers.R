@@ -237,18 +237,6 @@ make_download_button <- function(data_for_download, data_dir, file_path) {
   dl_button_html(outdir = data_dir |> paste0("/"), file = basename(file_path))
 }
 
-abbrev_text <- function(x) {
-  x_safe <- x |>
-    stringr::str_replace_all("'", "&rsquo;") |>
-    stringr::str_replace_all("\"", "&quot;")
-
-  '<div style="display:table; table-layout:fixed; width:100%;">' |>
-    paste0(
-      '<p title="%s" style="overflow-x:hidden; text-overflow:ellipsis; white-space:nowrap">%s</p></div>' |>
-        sprintf(x_safe, x)
-    )
-}
-
 escape_md <- function(x) {
   # Order matters: escape backslash first
   x <- gsub("\\\\", "\\\\\\\\", x)

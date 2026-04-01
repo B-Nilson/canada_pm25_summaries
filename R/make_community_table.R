@@ -43,8 +43,7 @@ make_community_table <- function(
           nearest_community |> htmltools::htmlEscape(),
           aqmap_link,
           nearest_community
-        ),
-      dplyr::across(c(fcst_zone, nearest_community), \(x) abbrev_text(x))
+        )
     ) |>
     dplyr::select(dplyr::all_of(names(display_names))) |>
     dplyr::arrange(dplyr::desc(pm25_mean_network_mean_comm_mean))
@@ -121,7 +120,9 @@ make_community_table <- function(
       columns = dplyr::starts_with("pm25"),
       fn = \(x) x |> aqhi::get_aqhi_colours(types = "pm25_1hr")
     ) |>
-    gt::sub_missing(dplyr::starts_with("n_hours") | dplyr::starts_with("pm25"))
+    gt::sub_missing(dplyr::starts_with("n_hours") | dplyr::starts_with("pm25")) |> 
+    aqmapr::include_scripts(paths = "js/truncate_reactable_column.js") |>
+    htmlwidgets::onRender("(el, x) => {add_truncate_listeners(['Name', 'Region']);}")
 
   # Save table to .html and data to .csv, link within a plot_card
   data_path <- "%s/%s/%s/community_summary_%s.csv" |>

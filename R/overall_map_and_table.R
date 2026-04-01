@@ -366,8 +366,7 @@ make_overall_summary_table <- function(
       fcst_zone = prov_terr |> paste0(": ", fcst_zone),
       aqmap_link = make_aqmap_link(lat = lat, lng = lng),
       name = "<a title='%s' href='%s'>%s</a>" |>
-        sprintf(name |> htmltools::htmlEscape(), aqmap_link, name),
-      dplyr::across(c(fcst_zone, name, nearest_community), \(x) abbrev_text(x))
+        sprintf(name |> htmltools::htmlEscape(), aqmap_link, name)
     ) |>
     dplyr::select(dplyr::all_of(names(display_names))) |>
     dplyr::arrange(dplyr::desc(pm25_mean), pm25_current)
@@ -430,7 +429,9 @@ make_overall_summary_table <- function(
       columns = dplyr::starts_with("pm25"),
       fn = \(x) x |> aqhi::get_aqhi_colours(types = "pm25_1hr")
     ) |>
-    gt::sub_missing(dplyr::starts_with("n_hours") | dplyr::starts_with("pm25"))
+    gt::sub_missing(dplyr::starts_with("n_hours") | dplyr::starts_with("pm25")) |> 
+    aqmapr::include_scripts(paths = "js/truncate_reactable_column.js") |>
+    htmlwidgets::onRender("(el, x) => {add_truncate_listeners(['Name', 'Region']);}")
 
   # Save table to .html and data to .csv, link within a plot_card
   m_group_cleaned <- monitor_group |>
