@@ -33,7 +33,7 @@ function truncate_reactable_column(table_id, header_index) {
 function truncate_long_text(x, hover = x) {
     hover = hover.replace(/'/g, "&rsquo;").replace(/"/g, "&quot;");
     let styles = ["display:table; table-layout:fixed; width:100%", "overflow-x:hidden; text-overflow:ellipsis; white-space:nowrap"];
-    return `<div style="${styles[0]}"><p title="${hover}" style="${styles[1]}">${x}</p></div>`;
+    return `<div style="${styles[0]}"><div title="${hover}" style="${styles[1]}">${x}</div></div>`;
 }
 
 // TODO: allow this to be controlled via R so not hardcoded names
