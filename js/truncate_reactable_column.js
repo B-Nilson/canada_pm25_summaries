@@ -9,7 +9,6 @@ function truncate_reactable_columns(table_id, keys) {
     insert_aqmap_links();
     let table_data = Reactable.getState(table_id).data;
     table_data.map((row) => {
-        console.log(row);
         keys.forEach((key) => {
             if(row[key]) row[key] = truncate_long_text(row[key]);
         });
