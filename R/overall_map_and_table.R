@@ -346,12 +346,12 @@ make_overall_summary_table <- function(
   key_names <- c(
     name = "name",
     mon = "monitor",
-    zone ="fcst_zone",
+    zone = "fcst_zone",
     comm = "nearest_community",
     d_comm = "nc_dist_km",
-    hours_30 = "n_hours_above_30",
-    hours_60 = "n_hours_above_60",
-    hours_100 = "n_hours_above_100",
+    h_30 = "n_hours_above_30",
+    h_60 = "n_hours_above_60",
+    h_100 = "n_hours_above_100",
     pm_last = "pm25_current",
     pm_mean = "pm25_mean",
     pm_max = "pm25_max"
@@ -363,9 +363,9 @@ make_overall_summary_table <- function(
     zone = "Region",
     comm = "Name",
     d_comm = "Distance",
-    hours_30 = gt::md("30 &mu;g/m^3^"),
-    hours_60 = gt::md("60 &mu;g/m^3^"),
-    hours_100 = gt::md("100 &mu;g/m^3^"),
+    h_30 = gt::md("30 &mu;g/m^3^"),
+    h_60 = gt::md("60 &mu;g/m^3^"),
+    h_100 = gt::md("100 &mu;g/m^3^"),
     pm_last = "Last",
     pm_mean = "Mean",
     pm_max = "Max"
@@ -381,48 +381,48 @@ make_overall_summary_table <- function(
       name = "<div data-lng=%s data-lat=%s>%s</div>" |>
         sprintf(lng, lat, name)
     ) |>
-    dplyr::select(dplyr::all_of(key_names)) |>
-    dplyr::arrange(dplyr::desc(pm25_mean), pm25_current)
+    dplyr::arrange(dplyr::desc(pm25_mean), pm25_current) |>
+    dplyr::select(dplyr::all_of(key_names))
 
   table <- table_data |>
     gt::gt() |>
     gt::opt_interactive(use_filters = TRUE) |>
     gt::cols_width(
-      monitor ~ gt::px(62),
-      fcst_zone ~ gt::px(130),
-      nearest_community ~ gt::px(120),
-      nc_dist_km ~ gt::px(90),
-      dplyr::starts_with("n_hours") &
-        !dplyr::starts_with("n_hours_above_100") ~ gt::px(97),
-      n_hours_above_100 ~ gt::px(105),
-      dplyr::starts_with("pm25") ~ gt::px(78)
+      mon ~ gt::px(62),
+      zone ~ gt::px(130),
+      comm ~ gt::px(120),
+      d_comm ~ gt::px(90),
+      dplyr::starts_with("h_") &
+        !dplyr::starts_with("h_100") ~ gt::px(97),
+      h_100 ~ gt::px(105),
+      dplyr::starts_with("pm_") ~ gt::px(78)
     ) |>
     gt::tab_spanner(
       label = "Monitoring Site",
-      columns = c("name", "monitor", "fcst_zone")
+      columns = c("name", "mon", "zone")
     ) |>
     gt::tab_spanner(
       label = gt::html("PM<sub>2.5</sub> Concentration (&mu;g m<sup>-3</sup>)"),
-      columns = dplyr::starts_with("pm25")
+      columns = dplyr::starts_with("pm_")
     ) |>
     gt::tab_spanner(
       label = "Nearest Community",
-      columns = c("nearest_community", "nc_dist_km")
+      columns = c("comm", "d_comm")
     ) |>
     gt::tab_spanner(
       label = gt::html("Hours Above PM<sub>2.5</sub> Threshold"),
-      columns = dplyr::starts_with("n_hours"),
+      columns = dplyr::starts_with("h_"),
       id = "hours_above_spanner"
     ) |>
     gt::cols_label(.list = display_names) |>
-    gt::cols_align(dplyr::starts_with("n_hours"), align = "center") |>
-    gt::cols_align("nearest_community", align = "right") |>
-    gt::cols_align("nc_dist_km", align = "left") |>
-    gt::fmt_number(dplyr::starts_with("pm25"), decimals = 1) |>
-    gt::fmt_number("nc_dist_km", decimals = 1, pattern = "{x} km") |>
+    gt::cols_align(dplyr::starts_with("h_"), align = "center") |>
+    gt::cols_align("comm", align = "right") |>
+    gt::cols_align("d_comm", align = "left") |>
+    gt::fmt_number(dplyr::starts_with("pm_"), decimals = 1) |>
+    gt::fmt_number("d_comm", decimals = 1, pattern = "{x} km") |>
     gt::data_color(
       alpha = 0.6,
-      columns = nc_dist_km,
+      columns = d_comm,
       fn = function(x) {
         leaflet::colorNumeric(
           reverse = TRUE,
@@ -433,21 +433,23 @@ make_overall_summary_table <- function(
     ) |>
     gt::data_color(
       alpha = 0.6,
-      columns = dplyr::starts_with("n_hours"),
+      columns = dplyr::starts_with("h_"),
       palette = "plasma",
       domain = c(0, 24)
     ) |>
     gt::data_color(
       alpha = 0.6,
-      columns = dplyr::starts_with("pm25"),
+      columns = dplyr::starts_with("pm_"),
       fn = \(x) x |> aqhi::get_aqhi_colours(types = "pm25_1hr")
     ) |>
-    gt::sub_missing(dplyr::starts_with("n_hours") | dplyr::starts_with("pm25")) |> 
+    gt::sub_missing(
+      dplyr::starts_with("h_") | dplyr::starts_with("pm_")
+    ) |>
     htmltools::as.tags()
-  
-  js_code <- c("js/truncate_reactable_column.js", "js/insert_aqmap_links.js") |> 
-    sapply(\(x) readLines(x) |> paste(collapse = "\n")) |> 
-    paste(collapse = "\n\n") |> 
+
+  js_code <- c("js/truncate_reactable_column.js", "js/insert_aqmap_links.js") |>
+    sapply(\(x) readLines(x) |> paste(collapse = "\n")) |>
+    paste(collapse = "\n\n") |>
     htmltools::HTML() |>
     htmltools::tags$script(type = "text/javascript")
   table <- js_code |> htmltools::tagList(table)

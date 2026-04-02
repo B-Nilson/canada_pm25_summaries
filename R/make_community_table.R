@@ -8,7 +8,7 @@ make_community_table <- function(
 ) {
   key_names <- c(
     name = "nearest_community",
-    zone ="fcst_zone",
+    zone = "fcst_zone",
     fem = "n_fem",
     pa = "n_pa",
     d_mean = "nc_dist_km_network_mean_comm_mean",
@@ -36,7 +36,7 @@ make_community_table <- function(
   )
 
   table_data <- community_summary |>
-    dplyr::filter(nc_dist_km_network_mean_comm_mean <= 20) |> 
+    dplyr::filter(nc_dist_km_network_mean_comm_mean <= 20) |>
     dplyr::arrange(desc(pm25_mean_network_mean_comm_mean)) |>
     dplyr::mutate(
       prov_terr = prov_terr |>
@@ -53,56 +53,51 @@ make_community_table <- function(
       nearest_community = "<div data-lng=%s data-lat=%s>%s</div>" |>
         sprintf(nc_lng, nc_lat, nearest_community)
     ) |>
-    dplyr::select(dplyr::all_of(key_names)) |>
-    dplyr::arrange(dplyr::desc(pm25_mean_network_mean_comm_mean))
+    dplyr::arrange(dplyr::desc(pm25_mean_network_mean_comm_mean)) |>
+    dplyr::select(dplyr::all_of(key_names))
 
   community_table <- table_data |>
     gt::gt() |>
     gt::opt_interactive(use_filters = TRUE) |>
     gt::cols_width(
-      nearest_community ~ gt::px(120),
-      fcst_zone ~ gt::px(130),
-      n_pa ~ gt::px(50),
-      n_fem ~ gt::px(60),
-      dplyr::starts_with("nc_dist") ~ gt::px(104),
-      dplyr::starts_with("n_hours") &
-        !dplyr::starts_with("n_hours_above_100") ~ gt::px(97),
-      dplyr::starts_with("n_hours_above_100") ~ gt::px(105),
-      dplyr::starts_with("pm25") ~ gt::px(78)
+      name ~ gt::px(120),
+      zone ~ gt::px(130),
+      pa ~ gt::px(50),
+      fem ~ gt::px(60),
+      dplyr::starts_with("d_") ~ gt::px(104),
+      dplyr::starts_with("h_") &
+        !dplyr::starts_with("h_100") ~ gt::px(97),
+      h_100 ~ gt::px(105),
+      dplyr::starts_with("pm_") ~ gt::px(78)
     ) |>
     gt::tab_spanner(
       label = "Community Details",
-      columns = c("nearest_community", "fcst_zone")
+      columns = c("name", "zone")
     ) |>
     gt::tab_spanner(
       label = gt::html("PM<sub>2.5</sub> Monitoring Sites"),
-      columns = c(
-        n_pa,
-        n_fem,
-        nc_dist_km_network_max_comm_max,
-        nc_dist_km_network_mean_comm_mean
-      )
+      columns = c(pa, fem, d_max, d_mean)
     ) |>
     gt::tab_spanner(
       label = gt::html("PM<sub>2.5</sub> Concentration (&mu;g m<sup>-3</sup>)"),
-      columns = dplyr::starts_with("pm25")
+      columns = dplyr::starts_with("pm_")
     ) |>
     gt::tab_spanner(
       label = gt::html("Hours Above PM<sub>2.5</sub> Threshold"),
-      columns = dplyr::starts_with("n_hours"),
+      columns = dplyr::starts_with("h_"),
       id = "hours_above_spanner"
     ) |>
     gt::cols_label(.list = display_names) |>
-    gt::cols_align(dplyr::starts_with("n_"), align = "center") |>
-    gt::fmt_number(dplyr::starts_with("pm25"), decimals = 1) |>
+    gt::cols_align(dplyr::starts_with("h_"), align = "center") |>
+    gt::fmt_number(dplyr::starts_with("pm_"), decimals = 1) |>
     gt::fmt_number(
-      dplyr::starts_with("nc_dist_km"),
+      dplyr::starts_with("d_"),
       decimals = 1,
       pattern = "{x} km"
     ) |>
     gt::data_color(
       alpha = 0.6,
-      columns = dplyr::starts_with("nc_dist_km"),
+      columns = dplyr::starts_with("d_"),
       fn = function(x) {
         leaflet::colorNumeric(
           reverse = TRUE,
@@ -113,27 +108,27 @@ make_community_table <- function(
     ) |>
     gt::data_color(
       alpha = 0.6,
-      columns = dplyr::starts_with("n_hours"),
+      columns = dplyr::starts_with("h_"),
       palette = "plasma",
       domain = c(0, 24)
     ) |>
     gt::data_color(
       alpha = 0.6,
-      columns = dplyr::starts_with("n_") & !dplyr::starts_with("n_hours"),
+      columns = c("pa", "fem"),
       palette = "viridis",
-      domain = c(0, max(c(table_data$n_pa, table_data$n_fem)))
+      domain = c(0, max(c(table_data$pa, table_data$fem)))
     ) |>
     gt::data_color(
       alpha = 0.6,
-      columns = dplyr::starts_with("pm25"),
+      columns = dplyr::starts_with("pm_"),
       fn = \(x) x |> aqhi::get_aqhi_colours(types = "pm25_1hr")
     ) |>
-    gt::sub_missing(dplyr::starts_with("n_hours") | dplyr::starts_with("pm25")) |> 
+    gt::sub_missing(dplyr::starts_with("h_") | dplyr::starts_with("pm_")) |>
     htmltools::as.tags()
-  
+
   js_code <- c("js/truncate_reactable_column.js", "js/insert_aqmap_links.js") |>
-    sapply(\(x) readLines(x) |> paste(collapse = "\n")) |> 
-    paste(collapse = "\n\n") |> 
+    sapply(\(x) readLines(x) |> paste(collapse = "\n")) |>
+    paste(collapse = "\n\n") |>
     htmltools::HTML() |>
     htmltools::tags$script(type = "text/javascript")
   community_table <- js_code |> htmltools::tagList(community_table)
