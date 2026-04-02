@@ -6,19 +6,33 @@ make_community_table <- function(
   plot_timestamp,
   table_caption
 ) {
+  key_names <- c(
+    name = "nearest_community",
+    zone ="fcst_zone",
+    fem = "n_fem",
+    pa = "n_pa",
+    d_mean = "nc_dist_km_network_mean_comm_mean",
+    d_max = "nc_dist_km_network_max_comm_max",
+    h_30 = "n_hours_above_30_network_max_comm_max",
+    h_60 = "n_hours_above_60_network_max_comm_max",
+    h_100 = "n_hours_above_100_network_max_comm_max",
+    pm_last = "pm25_current_network_mean_comm_mean",
+    pm_mean = "pm25_mean_network_mean_comm_mean",
+    pm_max = "pm25_max_network_max_comm_max"
+  )
   display_names <- list(
-    nearest_community = "Name",
-    fcst_zone = "Region",
-    n_fem = "FEM",
-    n_pa = "PA",
-    nc_dist_km_network_mean_comm_mean = "Mean Dist.",
-    nc_dist_km_network_max_comm_max = "Max Dist.",
-    n_hours_above_30_network_max_comm_max = gt::md("30 &mu;g/m^3^"),
-    n_hours_above_60_network_max_comm_max = gt::md("60 &mu;g/m^3^"),
-    n_hours_above_100_network_max_comm_max = gt::md("100 &mu;g/m^3^"),
-    pm25_current_network_mean_comm_mean = "Last",
-    pm25_mean_network_mean_comm_mean = "Mean",
-    pm25_max_network_max_comm_max = "Max"
+    name = "Name",
+    zone = "Region",
+    fem = "FEM",
+    pa = "PA",
+    d_mean = "Mean Dist.",
+    d_max = "Max Dist.",
+    h_30 = gt::md("30 &mu;g/m^3^"),
+    h_60 = gt::md("60 &mu;g/m^3^"),
+    h_100 = gt::md("100 &mu;g/m^3^"),
+    pm_last = "Last",
+    pm_mean = "Mean",
+    pm_max = "Max"
   )
 
   table_data <- community_summary |>
@@ -39,7 +53,7 @@ make_community_table <- function(
       nearest_community = "<div data-lng=%s data-lat=%s>%s</div>" |>
         sprintf(nc_lng, nc_lat, nearest_community)
     ) |>
-    dplyr::select(dplyr::all_of(names(display_names))) |>
+    dplyr::select(dplyr::all_of(key_names)) |>
     dplyr::arrange(dplyr::desc(pm25_mean_network_mean_comm_mean))
 
   community_table <- table_data |>

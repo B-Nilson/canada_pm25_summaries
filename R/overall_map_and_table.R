@@ -343,18 +343,32 @@ make_overall_summary_table <- function(
   plot_timestamp,
   table_caption
 ) {
+  key_names <- c(
+    name = "name",
+    mon = "monitor",
+    zone ="fcst_zone",
+    comm = "nearest_community",
+    d_comm = "nc_dist_km",
+    hours_30 = "n_hours_above_30",
+    hours_60 = "n_hours_above_60",
+    hours_100 = "n_hours_above_100",
+    pm_last = "pm25_current",
+    pm_mean = "pm25_mean",
+    pm_max = "pm25_max"
+  )
+
   display_names <- list(
     name = "Name",
-    monitor = "Type",
-    fcst_zone = "Region",
-    nearest_community = "Name",
-    nc_dist_km = "Distance",
-    n_hours_above_30 = gt::md("30 &mu;g/m^3^"),
-    n_hours_above_60 = gt::md("60 &mu;g/m^3^"),
-    n_hours_above_100 = gt::md("100 &mu;g/m^3^"),
-    pm25_current = "Last",
-    pm25_mean = "Mean",
-    pm25_max = "Max"
+    mon = "Type",
+    zone = "Region",
+    comm = "Name",
+    d_comm = "Distance",
+    hours_30 = gt::md("30 &mu;g/m^3^"),
+    hours_60 = gt::md("60 &mu;g/m^3^"),
+    hours_100 = gt::md("100 &mu;g/m^3^"),
+    pm_last = "Last",
+    pm_mean = "Mean",
+    pm_max = "Max"
   )
   table_data <- table_data |>
     dplyr::mutate(
@@ -367,7 +381,7 @@ make_overall_summary_table <- function(
       name = "<div data-lng=%s data-lat=%s>%s</div>" |>
         sprintf(lng, lat, name)
     ) |>
-    dplyr::select(dplyr::all_of(names(display_names))) |>
+    dplyr::select(dplyr::all_of(key_names)) |>
     dplyr::arrange(dplyr::desc(pm25_mean), pm25_current)
 
   table <- table_data |>
