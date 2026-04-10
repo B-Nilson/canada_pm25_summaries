@@ -50,11 +50,33 @@ make_community_table <- function(
       dplyr::across(c(n_pa, n_fem), \(x) {
         x |> as.numeric() |> dplyr::replace_values(NA ~ 0)
       }),
-      nearest_community = "<div data-lng=%s data-lat=%s>%s</div>" |>
-        sprintf(nc_lng, nc_lat, nearest_community)
+      nearest_community = "<div data-lng=%s data-lat=%s><span title=\"%s\">%s</span></div>" |>
+        sprintf(
+          nc_lng,
+          nc_lat,
+          nearest_community |> gsub(pattern = '"', replacement = "&quot;"),
+          nearest_community
+        )
     ) |>
     dplyr::arrange(dplyr::desc(pm25_mean_network_mean_comm_mean)) |>
-    dplyr::select(dplyr::all_of(key_names))
+    dplyr::select(dplyr::all_of(key_names)) |>
+    dplyr::mutate(dplyr::across("zone", \(x) {
+      "<span title=\"%s\">%s</span>" |>
+        sprintf(x |> gsub(pattern = '"', replacement = "&quot;"), x)
+    }))
+
+  js_code <- "js/insert_aqmap_links.js" |>
+    sapply(\(x) readLines(x) |> paste(collapse = "\n")) |>
+    paste(collapse = "\n\n") |>
+    htmltools::HTML() |>
+    htmltools::tags$script(type = "text/javascript")
+
+  css <- ".rt-text-content {
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}" |>
+    htmltools::tags$style(type = "text/css")
 
   community_table <- table_data |>
     gt::gt() |>
@@ -124,14 +146,8 @@ make_community_table <- function(
       fn = \(x) x |> aqhi::get_aqhi_colours(types = "pm25_1hr")
     ) |>
     gt::sub_missing(dplyr::starts_with("h_") | dplyr::starts_with("pm_")) |>
-    htmltools::as.tags()
-
-  js_code <- c("js/truncate_reactable_column.js", "js/insert_aqmap_links.js") |>
-    sapply(\(x) readLines(x) |> paste(collapse = "\n")) |>
-    paste(collapse = "\n\n") |>
-    htmltools::HTML() |>
-    htmltools::tags$script(type = "text/javascript")
-  community_table <- js_code |> htmltools::tagList(community_table)
+    htmltools::as.tags() |>
+    htmltools::tagList(js_code, css)
 
   # Save table to .html and data to .csv, link within a plot_card
   data_path <- "%s/%s/%s/community_summary_%s.csv" |>
