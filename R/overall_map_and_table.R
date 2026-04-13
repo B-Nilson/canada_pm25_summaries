@@ -381,9 +381,9 @@ make_overall_summary_table <- function(
       name = "<a title=\"%s\" href=\"https:/aqmap.ca/aqmap/#12/%s/%s\">%s</a>" |>
         sprintf(
           name |> gsub(pattern = '"', replacement = "&quot;"),
-          name,
           lng |> round(digits = 4),
-          lat |> round(digits = 4)
+          lat |> round(digits = 4),
+          name
         )
     ) |>
     dplyr::arrange(dplyr::desc(pm25_mean), pm25_current) |>

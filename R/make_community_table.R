@@ -53,9 +53,9 @@ make_community_table <- function(
       nearest_community = "<a title=\"%s\" href=\"https:/aqmap.ca/aqmap/#12/%s/%s\">%s</a>" |>
         sprintf(
           nearest_community |> gsub(pattern = '"', replacement = "&quot;"),
-          nearest_community,
           nc_lng |> round(digits = 4),
-          nc_lat |> round(digits = 4)
+          nc_lat |> round(digits = 4),
+          nearest_community
         )
     ) |>
     dplyr::arrange(dplyr::desc(pm25_mean_network_mean_comm_mean)) |>
