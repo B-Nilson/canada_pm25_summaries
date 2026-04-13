@@ -1,0 +1,49 @@
+[project]
+name = "canada_pm25_summaries"
+description = "Automated Canada PM2.5 Summary Reports"
+
+[dependencies]
+cli = "*"
+DBI = "*"
+RPostgres = "*"
+"data.table" = "*"
+dbplyr = "*"
+dplyr = "*"
+extrafont = "*"
+forcats = "*"
+ggpattern = "*"
+ggplot2 = "*"
+ggpubr = "*"
+ggtext = "*"
+gt = "*"
+htmltools = "*"
+htmlwidgets = "*"
+knitr = "*"
+leaflet = "*"
+"leaflet.extras2" = "*"
+leafsync = "*"
+lubridate = "*"
+mapview = "*"
+patchwork = "*"
+plotly = "*"
+prismatic = "*"
+rmarkdown = "*"
+scales = "*"
+sf = "*"
+shiny = "*"
+sourcetools = "*"
+stringr = "*"
+tidyr = "*"
+xtable = "*"
+
+[dev-dependencies.aqhi]
+git = "B-Nilson/aqhi"
+
+[dev-dependencies.aqmapr]
+git = "B-Nilson/aqmapr"
+
+[dev-dependencies.canadata]
+git = "B-Nilson/canadata"
+
+[dev-dependencies.handyr]
+git = "B-Nilson/handyr"

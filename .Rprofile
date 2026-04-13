@@ -1,7 +1,11 @@
 is_production <- dir.exists("/srv")
 
-if (!is_production) {
-  source("renv/activate.R")
-}else {
-  .libPaths(new = Sys.glob("./renv/library/*/*/*/"))
-}
+# >>> uvr >>>
+local({
+  lib <- file.path(getwd(), ".uvr", "library")
+  if (dir.exists(lib)) {
+    cli::cli_alert_info("Linking to uvr library at {.path {lib}}")
+    .libPaths(lib)
+  }
+})
+# <<< uvr <<<
