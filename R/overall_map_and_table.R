@@ -378,12 +378,12 @@ make_overall_summary_table <- function(
           labels = canadata::provinces_and_territories$abbreviation
         ),
       fcst_zone = prov_terr |> paste0(": ", fcst_zone),
-      name = "<div data-lng=%s data-lat=%s><span title=\"%s\">%s</span></div>" |>
+      name = "<a title=\"%s\" href=\"https:/aqmap.ca/aqmap/#12/%s/%s\">%s</a>" |>
         sprintf(
-          lng,
-          lat,
           name |> gsub(pattern = '"', replacement = "&quot;"),
-          name
+          name,
+          lng |> round(digits = 4),
+          lat |> round(digits = 4)
         )
     ) |>
     dplyr::arrange(dplyr::desc(pm25_mean), pm25_current) |>
@@ -392,12 +392,6 @@ make_overall_summary_table <- function(
       "<span title=\"%s\">%s</span>" |>
         sprintf(x |> gsub(pattern = '"', replacement = "&quot;"), x)
     }))
-
-  js_code <- "js/insert_aqmap_links.js" |>
-    sapply(\(x) readLines(x) |> paste(collapse = "\n")) |>
-    paste(collapse = "\n\n") |>
-    htmltools::HTML() |>
-    htmltools::tags$script(type = "text/javascript")
 
   css <- ".rt-text-content {
   overflow-x: hidden;
@@ -468,7 +462,7 @@ make_overall_summary_table <- function(
       dplyr::starts_with("h_") | dplyr::starts_with("pm_")
     ) |>
     htmltools::as.tags() |>
-    htmltools::tagList(js_code, css)
+    htmltools::tagList(css)
 
   # Save table to .html and data to .csv, link within a plot_card
   m_group_cleaned <- monitor_group |>
