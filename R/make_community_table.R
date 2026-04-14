@@ -50,11 +50,11 @@ make_community_table <- function(
       dplyr::across(c(n_pa, n_fem), \(x) {
         x |> as.numeric() |> dplyr::replace_values(NA ~ 0)
       }),
-      nearest_community = "<a title=\"%s\" href=\"https:/aqmap.ca/aqmap/#12/%s/%s\">%s</a>" |>
+      nearest_community = "<a title=\"%s\" href=\"https://aqmap.ca/aqmap/#12/%s/%s\">%s</a>" |>
         sprintf(
           nearest_community |> gsub(pattern = '"', replacement = "&quot;"),
-          nc_lng |> round(digits = 4),
           nc_lat |> round(digits = 4),
+          nc_lng |> round(digits = 4),
           nearest_community
         )
     ) |>

@@ -378,11 +378,11 @@ make_overall_summary_table <- function(
           labels = canadata::provinces_and_territories$abbreviation
         ),
       fcst_zone = prov_terr |> paste0(": ", fcst_zone),
-      name = "<a title=\"%s\" href=\"https:/aqmap.ca/aqmap/#12/%s/%s\">%s</a>" |>
+      name = "<a title=\"%s\" href=\"https://aqmap.ca/aqmap/#12/%s/%s\">%s</a>" |>
         sprintf(
           name |> gsub(pattern = '"', replacement = "&quot;"),
-          lng |> round(digits = 4),
           lat |> round(digits = 4),
+          lng |> round(digits = 4),
           name
         )
     ) |>
