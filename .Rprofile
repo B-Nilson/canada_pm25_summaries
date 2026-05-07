@@ -4,7 +4,7 @@ is_production <- dir.exists("/srv")
 local({
   lib <- file.path(getwd(), ".uvr", "library")
   if (dir.exists(lib)) {
-    cli::cli_alert_info("Linking to uvr library at {.path {lib}}")
+    message("Linking to uvr library at {.path {lib}}")
     .libPaths(lib)
   }
 })
