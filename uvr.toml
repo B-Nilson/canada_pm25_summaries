@@ -1,6 +1,7 @@
 [project]
 name = "canada_pm25_summaries"
 description = "Automated Canada PM2.5 Summary Reports"
+r_version = ">=4.1.0"
 
 [dependencies]
 cli = "*"

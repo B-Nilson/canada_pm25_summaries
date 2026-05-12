@@ -2,6 +2,7 @@ Title: Automated Canada PM2.5 Summary Reports
 Description: 
     Daily, monthly, and seasonal (summer-half/winter-half) summaries of fine particulate matter (PM2.5) 
     observations from Canadian regulartory (FEM) and PurpleAir (PA) monitors.
+Depends: R (>= 4.1.0)
 Imports:
     aqhi,
     aqmapr,
