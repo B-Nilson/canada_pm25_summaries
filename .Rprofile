@@ -1,4 +1,7 @@
 is_production <- dir.exists("/srv")
+if (is_production){
+  Sys.setenv(QUARTO_R = "$HOME/opt/R-4.5.3/bin")
+}
 
 # >>> uvr >>>
 local({

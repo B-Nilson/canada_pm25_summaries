@@ -13,7 +13,8 @@ knitr:
     fig.height: 5
     fig.align: center
     out.width: "100%"
-
+    dev: "svglite" 
+    
 format:
   html: 
     page-layout: full
