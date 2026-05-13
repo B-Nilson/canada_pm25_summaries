@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+export PATH="/usr/lib/rstudio-server/bin/quarto/bin:$PATH"
+
 cd ../
 quarto render seasonal
 cd run_control
